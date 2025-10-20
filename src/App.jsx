@@ -11,7 +11,7 @@ function App() {
 
   useEffect(() => {
     // 2. Κάνουμε κλήση στο Backend URL
-    fetch(`${API_URL}/api/hello`) 
+    fetch(`${API_URL}/test`) 
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}. Πιθανότατα πρόβλημα CORS ή το BE δεν τρέχει.`);
