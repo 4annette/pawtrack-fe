@@ -10,8 +10,22 @@ const api = axios.create({
 //Add Token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  
+  console.log("---------------- REQUEST DEBUG ----------------");
+  console.log("URL:", config.url);
+  console.log("Token found in storage:", token ? "YES" : "NO");
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log("Attaching Header:", config.headers.Authorization);
+  } else {
+    console.warn("⚠️ Sending request without token! (Expect 403)");
+  }
+  console.log("-----------------------------------------------");
+  
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 //AUTH
@@ -31,11 +45,13 @@ export const fetchFoundReports = async (page = 0, size = 10, filters = {}) => {
   const params = new URLSearchParams({
     page: page,
     size: size,
-    sortBy: 'foundDate', 
+    sortBy: 'dateFound', 
     sortDirection: 'DESC'
   });
 
-  const response = await api.post(`/found-reports/filter?${params}`, filters);
+  const body = filters || {};
+
+  const response = await api.post( `/found-reports/filter?${params.toString()}`, body);
   return response.data;
 };
 
