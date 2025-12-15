@@ -5,8 +5,9 @@ import { Toaster } from "sonner";
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import CreateFoundReport from './pages/CreateFoundReport';
+import CreateLostReport from './pages/CreateLostReport';
 
 import "./index.css";
 
@@ -20,6 +21,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create-found-report" element={<CreateFoundReport />} />
+        {/* ADD THIS ROUTE */}
+        <Route path="/create-lost-report" element={<CreateLostReport />} />
         
       </Routes>
     </BrowserRouter>
