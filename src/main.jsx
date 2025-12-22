@@ -6,6 +6,10 @@ import { Toaster } from "sonner";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Profile from "./pages/User/Profile";
+import MyReports from "./pages/User/MyReports";
+import FoundReportDetails from "./pages/User/FoundReportDetails";
+import LostReportDetails from "./pages/User/LostReportDetails";
 import CreateFoundReport from './pages/CreateFoundReport';
 import CreateLostReport from './pages/CreateLostReport';
 
@@ -20,8 +24,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/my-reports" element={<MyReports />} />
+        <Route path="/found-report-details/:id" element={<FoundReportDetails />} />
+        <Route path="/lost-report-details/:id" element={<LostReportDetails />} />
         <Route path="/create-found-report" element={<CreateFoundReport />} />
-        {/* ADD THIS ROUTE */}
         <Route path="/create-lost-report" element={<CreateLostReport />} />
         
       </Routes>

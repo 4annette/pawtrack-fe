@@ -1,0 +1,266 @@
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  ArrowLeft, MapPin, Calendar, FileText, 
+  User, LogOut, ChevronLeft, ChevronRight, 
+  ChevronDown, Check, Settings2, Loader2, Trash2
+} from "lucide-react";
+import { fetchMyLostReportsList, fetchMyFoundReportsList, deleteLostReport, deleteFoundReport } from "../../services/api.js";
+import PawTrackLogo from "@/components/PawTrackLogo";
+import { toast } from "sonner";
+
+const AestheticDropdown = ({ label, value, options, onChange, type }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+  const isLost = type === 'lost';
+
+  return (
+    <div className="relative min-w-[140px]" ref={containerRef}>
+      <button 
+        type="button" 
+        onClick={() => setIsOpen(!isOpen)} 
+        className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all duration-200 bg-white shadow-sm text-xs font-bold ${
+          isOpen 
+            ? (isLost ? 'border-orange-500 ring-2 ring-orange-100' : 'border-emerald-500 ring-2 ring-emerald-100') 
+            : 'border-gray-100 hover:border-gray-300'
+        } text-gray-700`}
+      >
+        <span className="truncate">{selectedOption.label}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${isLost ? 'text-orange-500' : 'text-emerald-500'}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
+          <div className="p-1.5 space-y-1">
+            {options.map((option) => (
+              <div 
+                key={option.value} 
+                onClick={() => { onChange(option.value); setIsOpen(false); }} 
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                  option.value === value 
+                    ? (isLost ? 'bg-orange-600 text-white' : 'bg-emerald-600 text-white') 
+                    : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
+                }`}
+              >
+                <span className="font-bold">{option.label}</span>
+                {option.value === value && <Check className="w-3.5 h-3.5" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MyReports = () => {
+  const navigate = useNavigate();
+  const [reports, setReports] = useState([]);
+  const [activeTab, setActiveTab] = useState("lost");
+  const [loading, setLoading] = useState(true);
+  
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("lostDate"); 
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const res = activeTab === "lost" 
+        ? await fetchMyLostReportsList(page, pageSize, sortBy) 
+        : await fetchMyFoundReportsList(page, pageSize, sortBy);
+      
+      setReports(res.content || []);
+      
+      if (res.page) {
+        setTotalElements(res.page.totalElements || 0);
+        setTotalPages(res.page.totalPages || 0);
+      } else {
+        setTotalElements(res.totalElements || 0);
+        setTotalPages(res.totalPages || 0);
+      }
+    } catch (error) {
+      console.error("Failed to load list", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, [activeTab, page, pageSize, sortBy]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(0);
+    setSortBy(tab === "lost" ? "lostDate" : "foundDate");
+  };
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if(window.confirm("Delete this report permanently?")) {
+      try {
+        activeTab === 'lost' ? await deleteLostReport(id) : await deleteFoundReport(id);
+        toast.success("Report deleted");
+        loadReports();
+      } catch (err) {
+        toast.error("Failed to delete");
+      }
+    }
+  };
+
+  const sortOptions = [
+    { label: "Newest First", value: activeTab === "lost" ? "lostDate" : "foundDate" },
+    { label: "Alphabetical", value: "title" }
+  ];
+
+  const sizeOptions = [
+    { label: "Show 5", value: 5 },
+    { label: "Show 10", value: 10 },
+    { label: "Show 20", value: 20 }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
+      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <PawTrackLogo size="sm" />
+          </div>
+
+          <nav className="flex items-center p-1 bg-gray-100 rounded-xl">
+            <button onClick={() => handleTabChange("lost")} className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Lost</button>
+            <button onClick={() => handleTabChange("found")} className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Found</button>
+          </nav>
+
+          <div className="flex items-center gap-4" ref={userMenuRef}>
+             <div className="relative">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 ${activeTab === 'lost' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>U</button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-left"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
+                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
+                    <div className="h-px bg-gray-50 my-1"></div>
+                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"><LogOut className="w-4 h-4" /> Logout</button>
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        <div className={`rounded-2xl border p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm ${activeTab === 'lost' ? 'from-orange-50 via-white to-orange-50 bg-gradient-to-br border-orange-100' : 'from-emerald-50 via-white to-emerald-50 bg-gradient-to-br border-emerald-100'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${activeTab === 'lost' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className={`text-xl font-bold ${activeTab === 'lost' ? 'text-orange-900' : 'text-emerald-900'}`}>My {activeTab === 'lost' ? 'Lost' : 'Found'} Reports</h1>
+              <p className={`text-xs uppercase font-black tracking-widest ${activeTab === 'lost' ? 'text-orange-700' : 'text-emerald-700'}`}>{totalElements} Total Records</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AestheticDropdown value={sortBy} options={sortOptions} onChange={setSortBy} type={activeTab} />
+            <AestheticDropdown value={pageSize} options={sizeOptions} onChange={setPageSize} type={activeTab} />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-300">
+             <Loader2 className="w-10 h-10 animate-spin" />
+             <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
+          </div>
+        ) : (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {reports.length > 0 ? (
+              reports.map(report => (
+                <div 
+                  key={report.id} 
+                  onClick={() => navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`)}
+                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-emerald-300 hover:shadow-md transition-all duration-300 cursor-pointer"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">{report.title}</h3>
+                      <div className="flex items-center gap-4 mt-1.5 text-sm font-medium text-gray-400">
+                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1.5 text-gray-300">|</span>
+                        <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                      className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
+                    >
+                      <Settings2 className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={(e) => handleDelete(e, report.id)}
+                      className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-[40px] py-20 text-center border-2 border-dashed border-gray-100">
+                <Settings2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-800">No reports found</h3>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-10 mt-6 border-t border-gray-100">
+              <div className="flex items-center gap-4 bg-white px-5 py-2.5 rounded-2xl border border-gray-100 shadow-sm">
+                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Page</span>
+                 <span className={`text-sm font-bold ${activeTab === 'lost' ? 'text-orange-600' : 'text-emerald-600'}`}>{page + 1}</span>
+                 <span className="text-gray-200">/</span>
+                 <span className="text-sm font-bold text-gray-400">{totalPages || 1}</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <button disabled={page === 0} onClick={() => setPage(p => p - 1)} className="w-11 h-11 flex items-center justify-center bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 disabled:opacity-20 transition-all shadow-sm active:scale-90"><ChevronLeft className="w-5 h-5 text-gray-600" /></button>
+                <button disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)} className="w-11 h-11 flex items-center justify-center bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 disabled:opacity-20 transition-all shadow-sm active:scale-90"><ChevronRight className="w-5 h-5 text-gray-600" /></button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default MyReports;

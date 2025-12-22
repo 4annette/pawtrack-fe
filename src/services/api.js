@@ -2,13 +2,11 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
 
-// Global instance for JSON requests
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Add Token to every JSON request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -29,17 +27,18 @@ export const registerUser = async (userData) => {
 };
 
 // ==========================================
-//               FOUND REPORTS
+//                FOUND REPORTS
 // ==========================================
 
 export const fetchFoundReports = async (page = 0, size = 10, filters = {}) => {
-  const params = new URLSearchParams({
-    page: page,
-    size: size,
-    sortBy: 'dateFound', 
-    sortDirection: 'DESC'
-  });
+  const params = new URLSearchParams({ page, size, sortBy: 'dateFound', sortDirection: 'DESC' });
   const response = await api.post(`/found-reports/filter?${params.toString()}`, filters || {});
+  return response.data;
+};
+
+// GET /found-reports/{reportId}
+export const fetchFoundReportById = async (id) => {
+  const response = await api.get(`/found-reports/${id}`);
   return response.data;
 };
 
@@ -56,47 +55,54 @@ export const createFoundReport = async (reportData) => {
   return response.data;
 };
 
-// EXPLICIT ENDPOINT: Upload Image for Found Report
+// PUT /found-reports/{reportId}
+export const updateFoundReport = async (id, data) => {
+  const response = await api.put(`/found-reports/${id}`, data);
+  return response.data;
+};
+
+// DELETE /found-reports/{reportId}
+export const deleteFoundReport = async (id) => {
+  const response = await api.delete(`/found-reports/${id}`);
+  return response.data;
+};
+
 export const uploadFoundReportImage = async (reportId, file) => {
   const formData = new FormData();
   formData.append("file", file);
   const token = localStorage.getItem("token");
-
-  // Hits /found-reports/{id}/add-image
   const response = await fetch(`${BASE_URL}/found-reports/${reportId}/add-image`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Found report image upload failed: ${response.status} ${errorText}`);
-  }
-  
+  if (!response.ok) throw new Error(`Upload failed`);
   const contentType = response.headers.get("content-type");
-  return (contentType && contentType.includes("application/json")) 
-    ? await response.json() 
-    : await response.text();
+  return (contentType && contentType.includes("application/json")) ? await response.json() : await response.text();
+};
+
+// DELETE /found-reports/{reportId}/delete-image
+export const deleteFoundReportImage = async (id) => {
+  const response = await api.delete(`/found-reports/${id}/delete-image`);
+  return response.data;
 };
 
 // ==========================================
-//               LOST REPORTS
+//                LOST REPORTS
 // ==========================================
 
-// Matches image_abc603.png (POST /lost-reports/filter)
 export const fetchLostReports = async (page = 0, size = 10, filters = {}) => {
-  const params = new URLSearchParams({
-    page: page,
-    size: size,
-    sortBy: 'dateLost', 
-    sortDirection: 'DESC'
-  });
+  const params = new URLSearchParams({ page, size, sortBy: 'dateLost', sortDirection: 'DESC' });
   const response = await api.post(`/lost-reports/filter?${params.toString()}`, filters || {});
   return response.data;
 };
 
-// Matches image_abc5ff.png (POST /lost-reports)
+// GET /lost-reports/{reportId}
+export const fetchLostReportById = async (id) => {
+  const response = await api.get(`/lost-reports/${id}`);
+  return response.data;
+};
+
 export const createLostReport = async (reportData) => {
   const payload = {
     title: reportData.title,
@@ -110,57 +116,80 @@ export const createLostReport = async (reportData) => {
   return response.data;
 };
 
-// Matches image_abc5e5.png (POST /lost-reports/{id}/add-image)
-// EXPLICIT ENDPOINT: Upload Image for Lost Report
+// PUT /lost-reports/{reportId}
+export const updateLostReport = async (id, data) => {
+  const response = await api.put(`/lost-reports/${id}`, data);
+  return response.data;
+};
+
+// DELETE /lost-reports/{reportId}
+export const deleteLostReport = async (id) => {
+  const response = await api.delete(`/lost-reports/${id}`);
+  return response.data;
+};
+
 export const uploadLostReportImage = async (reportId, file) => {
   const formData = new FormData();
   formData.append("file", file);
   const token = localStorage.getItem("token");
-
-  // Hits /lost-reports/{id}/add-image
   const response = await fetch(`${BASE_URL}/lost-reports/${reportId}/add-image`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Lost report image upload failed: ${response.status} ${errorText}`);
-  }
-
+  if (!response.ok) throw new Error(`Upload failed`);
   const contentType = response.headers.get("content-type");
-  return (contentType && contentType.includes("application/json")) 
-    ? await response.json() 
-    : await response.text();
+  return (contentType && contentType.includes("application/json")) ? await response.json() : await response.text();
 };
 
-// ==========================================
-//               OTHER & LINKING
-// ==========================================
-
-export const fetchMyLostReports = async () => {
-  const response = await api.get(`/lost-reports?page=0&size=100&all=false`);
+// DELETE /lost-reports/{reportId}/delete-image
+export const deleteLostReportImage = async (id) => {
+  const response = await api.delete(`/lost-reports/${id}/delete-image`);
   return response.data;
 };
 
-export const fetchMyFoundReports = async () => {
-  const response = await api.get(`/found-reports?page=0&size=100&all=false`);
+// ==========================================
+//          USER & PROFILE ACTIONS
+// ==========================================
+
+export const updateUserProfile = async (userData) => {
+  const response = await api.put('/users', userData);
   return response.data;
 };
 
-// Matches image_abc31a.png (PATCH /lost-reports/{id}/add-found-report/{id})
+export const deleteUserAccount = async (userId) => {
+  const response = await api.delete(`/users?userId=${userId}`);
+  return response.data;
+};
+
+// ==========================================
+//      MY REPORTS (LIST VIEW SPECIFIC)
+// ==========================================
+
+export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate') => {
+  const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},desc&all=false`);
+  return response.data;
+};
+
+export const fetchMyFoundReportsList = async (page = 0, size = 5, sortBy = 'foundDate') => {
+  const response = await api.get(`/found-reports?page=${page}&size=${size}&sort=${sortBy},desc&all=false`);
+  return response.data;
+};
+
+export const fetchMyLostReports = fetchMyLostReportsList;
+export const fetchMyFoundReports = fetchMyFoundReportsList;
+
+// ==========================================
+//                LINKING
+// ==========================================
+
 export const linkFoundToLostReport = async (foundReportId, lostReportId) => {
-  const response = await api.patch(
-    `/lost-reports/${lostReportId}/add-found-report/${foundReportId}`
-  );
+  const response = await api.patch(`/lost-reports/${lostReportId}/add-found-report/${foundReportId}`);
   return response.data;
 };
 
 export const connectFoundReports = async (foundReportId, connectedFoundReportId) => {
-  const response = await api.patch(
-    `/found-reports/${foundReportId}/add-found-report/${connectedFoundReportId}`
-  );
+  const response = await api.patch(`/found-reports/${foundReportId}/add-found-report/${connectedFoundReportId}`);
   return response.data;
 };
 
