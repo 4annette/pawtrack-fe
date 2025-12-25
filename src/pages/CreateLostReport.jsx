@@ -97,7 +97,7 @@ const CreateLostReport = () => {
 
       const payload = {
         ...formData,
-        status: "ACTIVE",
+        status: "LESS_THAN_3_HOURS",
         dateLost: formattedDate
       };
 
