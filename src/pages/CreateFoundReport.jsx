@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Dog, Cat, CheckCircle, Calendar, Hash, 
   ChevronDown, Check, ChevronLeft, ChevronRight, Clock, 
-  Upload, Camera, Image as ImageIcon, Loader2, LogOut
+  Upload, Camera, Image as ImageIcon, Loader2, LogOut, User, FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
@@ -166,7 +166,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 // --- UPGRADED COMPONENT: CUSTOM IMAGE INPUT (Upload OR Camera) ---
 const CustomImageInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
-    const cameraInputRef = useRef(null); // Ref for camera input
+    const cameraInputRef = useRef(null);
 
     const handleFileChange = (e) => {
       const file = e.target.files[0];
@@ -177,72 +177,33 @@ const CustomImageInput = ({ label, onChange, selectedFile }) => {
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> {label}</label>
         
-        {/* Hidden Input 1: Standard File Upload */}
-        <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            accept="image/*" 
-            className="hidden" 
-        />
-
-        {/* Hidden Input 2: Camera Capture (Mobile) */}
-        <input 
-            type="file" 
-            ref={cameraInputRef} 
-            onChange={handleFileChange} 
-            accept="image/*" 
-            capture="environment" // Forces rear camera on mobile
-            className="hidden" 
-        />
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+        <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
 
         <div className={`w-full p-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 bg-white'}`}>
           {selectedFile ? (
-            // State: File Selected
             <div className="w-full flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-700 overflow-hidden">
                     <CheckCircle className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium truncate">{selectedFile.name}</span>
                 </div>
-                <button 
-                    type="button" 
-                    onClick={() => onChange(null)} 
-                    className="text-xs text-red-500 hover:underline ml-2"
-                >
-                    Remove
-                </button>
+                <button type="button" onClick={() => onChange(null)} className="text-xs text-red-500 hover:underline ml-2">Remove</button>
             </div>
           ) : (
-            // State: No File Selected (Two Buttons)
             <div className="w-full flex gap-3 justify-center">
-                
-                {/* Option 1: Upload */}
-                <button 
-                    type="button"
-                    onClick={() => fileInputRef.current.click()}
-                    className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group"
-                >
+                <button type="button" onClick={() => fileInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
                     <div className="p-2 bg-emerald-100 rounded-full mb-2 group-hover:bg-emerald-200 transition-colors">
                         <Upload className="w-5 h-5 text-emerald-600" />
                     </div>
                     <span className="text-xs font-semibold text-gray-600 group-hover:text-emerald-700">Upload Photo</span>
                 </button>
-
-                {/* Vertical Divider */}
                 <div className="w-px bg-gray-200 my-2"></div>
-
-                {/* Option 2: Camera */}
-                <button 
-                    type="button"
-                    onClick={() => cameraInputRef.current.click()}
-                    className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group"
-                >
+                <button type="button" onClick={() => cameraInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
                     <div className="p-2 bg-blue-100 rounded-full mb-2 group-hover:bg-blue-200 transition-colors">
                         <Camera className="w-5 h-5 text-blue-600" />
                     </div>
                     <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-700">Take Photo</span>
                 </button>
-
             </div>
           )}
         </div>
@@ -255,6 +216,10 @@ const CreateFoundReport = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  
+  // User Menu State
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -273,11 +238,18 @@ const CreateFoundReport = () => {
     navigate("/auth");
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setIsUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-        // 1. Date Logic
         let formattedDate = formData.dateFound;
         if (!formattedDate) {
             const now = new Date();
@@ -289,31 +261,21 @@ const CreateFoundReport = () => {
             formattedDate = `${year}-${month}-${day} ${hh}:${mm}:00`;
         }
 
-        // 2. Create Report
         const newReport = await createFoundReport({ ...formData, dateFound: formattedDate });
-        console.log("Report Created:", newReport);
 
-        // 3. Upload Image (if exists)
         if (imageFile && newReport?.id) {
             try {
                 await uploadFoundReportImage(newReport.id, imageFile);
                 toast.success("Report and image uploaded successfully!");
             } catch (err) {
-                console.error("Image upload failed:", err);
-                if (err.response && err.response.status === 403) {
-                    toast.warning("Report created, but you don't have permission to upload the image.");
-                } else {
-                    toast.warning("Report created, but image upload failed.");
-                }
+                toast.warning("Report created, but image upload failed.");
             }
         } else {
             toast.success("Found report created successfully!");
         }
 
         navigate("/dashboard");
-
     } catch (error) {
-        console.error("Failed to create report", error);
         toast.error("Failed to create report. Please try again.");
     } finally {
         setLoading(false);
@@ -321,34 +283,56 @@ const CreateFoundReport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
-      {/* HEADER */}
-      <header className="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+      {/* STYLISH HEADER */}
+      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
                 <PawTrackLogo size="sm" />
             </div>
-            <div className="flex items-center gap-4">
-               <button onClick={handleLogout} className="text-sm font-medium text-gray-500 hover:text-red-500 flex items-center gap-2">
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Logout</span>
-               </button>
-               <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs">U</div>
+            
+            <div className="relative" ref={userMenuRef}>
+                <button 
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} 
+                  className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform"
+                >
+                  U
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold">
+                        <User className="w-4 h-4 text-emerald-500" /> Edit Profile
+                    </button>
+                    <button onClick={() => navigate('/my-reports')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold">
+                        <FileText className="w-4 h-4 text-orange-500" /> My Reports
+                    </button>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold">
+                        <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                )}
             </div>
         </div>
       </header>
 
-      {/* CONTENT - GREEN CARD */}
+      {/* CONTENT */}
       <div className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
-        <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-2xl shadow-xl border border-emerald-100 p-6 md:p-8">
-            <h1 className="text-2xl font-bold text-emerald-900 mb-2">Details about the pet</h1>
-            <p className="text-emerald-700 mb-8">Please provide as much detail as possible to help the owner identify their pet.</p>
+        <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-[32px] shadow-xl border border-emerald-100 p-6 md:p-8">
+            <h1 className="text-2xl font-black text-emerald-900 mb-2">Details about the pet</h1>
+            <p className="text-emerald-700 mb-8 font-medium">Please provide as much detail as possible to help the owner identify their pet.</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Report Title</label>
+                    <input type="text" required placeholder="e.g. Golden Retriever found near Park" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm focus:ring-4 focus:ring-emerald-500/5 transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                </div>
                 
-                <div className="space-y-1.5"><label className="text-xs font-bold text-emerald-800 block">Report Title</label><input type="text" required placeholder="e.g. Golden Retriever found near Park" className="w-full p-3 rounded-xl border border-emerald-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white shadow-sm" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} /></div>
-                <div className="space-y-1.5"><label className="text-xs font-bold text-emerald-800 block">Description</label><textarea required placeholder="Describe the pet's appearance, behavior, and exactly where you found it..." className="w-full p-3 rounded-xl border border-emerald-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 h-32 resize-none transition-all bg-white shadow-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} /></div>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Description</label>
+                    <textarea required placeholder="Describe the pet's appearance, behavior..." className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none bg-white shadow-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <CustomDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => setFormData({...formData, species: val})} />
@@ -357,19 +341,19 @@ const CreateFoundReport = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <CustomDateTimePicker label="Date & Time Found" value={formData.dateFound} onChange={val => setFormData({...formData, dateFound: val})} />
-                    <div className="space-y-1.5"><label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Hash className="w-3 h-3"/> Chip Number</label><input type="number" placeholder="Optional (if scanned)" className="w-full p-3 rounded-xl border border-emerald-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm" value={formData.chipNumber} onChange={e => setFormData({...formData, chipNumber: e.target.value})} /></div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3"/> Chip Number</label>
+                        <input type="number" placeholder="Optional" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={formData.chipNumber} onChange={e => setFormData({...formData, chipNumber: e.target.value})} />
+                    </div>
                 </div>
 
-                {/* NEW UPGRADED IMAGE INPUT (Upload + Camera) */}
                 <CustomImageInput label="Add Photo" selectedFile={imageFile} onChange={setImageFile} />
 
                 <div className="pt-4">
-                    <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-transform active:scale-[0.99] shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
-                        {loading && <Loader2 className="w-5 h-5 animate-spin"/>}
-                        {loading ? "Creating..." : "Create Report"}
+                    <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all active:scale-[0.98] shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em]">
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin"/> : "Create Report"}
                     </button>
                 </div>
-
             </form>
         </div>
       </div>

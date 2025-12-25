@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, FileText } from "lucide-react"; 
+import { LogOut, User, FileText, ChevronDown } from "lucide-react"; 
 import PawTrackLogo from "@/components/PawTrackLogo";
 import FoundReports from "./FoundReports";
 import LostReports from "./LostReports";
@@ -11,23 +11,31 @@ const Dashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  // These refs track the containers to detect "outside" clicks
   const logoMenuRef = useRef(null);
   const userMenuRef = useRef(null);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // If clicking outside the logo/mobile menu area, close it
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
         setIsMobileMenuOpen(false);
       }
+      // If clicking outside the user profile area, close it
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     };
 
-    if (isMobileMenuOpen || isUserMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMobileMenuOpen, isUserMenuOpen]);
+    // Listen for both mouse and touch events
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => { 
     localStorage.removeItem("token"); 
@@ -41,40 +49,74 @@ const Dashboard = () => {
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           
+          {/* LEFT SIDE: LOGO & TABS */}
           <div className="flex items-center gap-6" ref={logoMenuRef}>
-            {/* LOGO BUTTON */}
+            {/* LOGO BUTTON - Toggles Mobile Menu */}
             <button 
+              type="button"
               onClick={() => {
                 setIsUserMenuOpen(false);
                 setIsMobileMenuOpen(!isMobileMenuOpen);
               }}
-              className="flex items-center gap-1 focus:outline-none md:cursor-default"
+              className="flex items-center gap-2 focus:outline-none md:cursor-default"
             >
               <PawTrackLogo size="sm" />
-              <div className={`md:hidden transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
-                <span className="text-gray-400 text-xs">▼</span>
+              <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
               </div>
             </button>
 
-            {/* DESKTOP NAV */}
+            {/* DESKTOP NAVIGATION (Hidden on Mobile) */}
             <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-lg">
-                <button 
-                    onClick={() => setActiveTab("lost")} 
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                >
-                    Lost Reports
-                </button>
-                <button 
-                    onClick={() => setActiveTab("found")} 
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                >
-                    Found Reports
-                </button>
+              <button 
+                onClick={() => setActiveTab("lost")} 
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Lost Reports
+              </button>
+              <button 
+                onClick={() => setActiveTab("found")} 
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Found Reports
+              </button>
             </nav>
+
+            {/* MOBILE OVERLAY MENU - Now inside the ref div */}
+            {isMobileMenuOpen && (
+              <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-[100]">
+                <div className="flex flex-col p-4 gap-2">
+                  <button 
+                    type="button"
+                    onPointerDown={() => { // Using PointerDown for faster response on mobile
+                      setActiveTab("lost");
+                      setIsMobileMenuOpen(false);
+                    }} 
+                    className={`w-full px-4 py-3 text-sm font-medium rounded-md text-left ${
+                      activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'
+                    }`}
+                  >
+                    Lost Reports
+                  </button>
+                  <button 
+                    type="button"
+                    onPointerDown={() => {
+                      setActiveTab("found");
+                      setIsMobileMenuOpen(false);
+                    }} 
+                    className={`w-full px-4 py-3 text-sm font-medium rounded-md text-left ${
+                      activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'
+                    }`}
+                  >
+                    Found Reports
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
+          {/* RIGHT SIDE: USER MENU */}
           <div className="flex items-center gap-4" ref={userMenuRef}>
-             {/* USER MENU */}
              <div className="relative">
                 <button 
                   onClick={() => {
@@ -87,7 +129,7 @@ const Dashboard = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[100] overflow-hidden">
                     <button 
                       onClick={() => navigate('/profile')} 
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-left"
@@ -112,26 +154,6 @@ const Dashboard = () => {
              </div>
           </div>
         </div>
-
-        {/* MOBILE OVERLAY MENU */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-50">
-            <div className="flex flex-col p-4 gap-2">
-              <button 
-                onClick={() => { setActiveTab("lost"); setIsMobileMenuOpen(false); }} 
-                className={`px-4 py-3 text-sm font-medium rounded-md text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-500'}`}
-              >
-                Lost Reports
-              </button>
-              <button 
-                onClick={() => { setActiveTab("found"); setIsMobileMenuOpen(false); }} 
-                className={`px-4 py-3 text-sm font-medium rounded-md text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500'}`}
-              >
-                Found Reports
-              </button>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* MAIN CONTENT AREA */}
