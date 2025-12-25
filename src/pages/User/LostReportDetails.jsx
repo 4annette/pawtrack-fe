@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Trash2, Save, Camera, Upload, 
   Loader2, Image as ImageIcon, Calendar, MapPin,
-  CheckCircle, XCircle
+  CheckCircle, XCircle, ChevronDown, User, FileText, LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -19,6 +19,21 @@ const LostReportDetails = () => {
   const [saving, setSaving] = useState(false);
   const [report, setReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const logoMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const getReport = async () => {
@@ -40,11 +55,7 @@ const LostReportDetails = () => {
     setSaving(true);
     try {
       await updateLostReport(id, report);
-
-      if (newImage) {
-        await uploadLostReportImage(id, newImage);
-      }
-      
+      if (newImage) await uploadLostReportImage(id, newImage);
       toast.success("Report updated successfully!");
       navigate("/my-reports");
     } catch (err) {
@@ -88,44 +99,80 @@ const LostReportDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 h-16 flex items-center px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto flex items-center justify-between relative">
+          
+          <div className="flex items-center gap-2 md:gap-4" ref={logoMenuRef}>
             <button onClick={() => navigate("/my-reports")} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <PawTrackLogo size="sm" />
+            <button 
+              onClick={() => {
+                setIsUserMenuOpen(false);
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
+              className="flex items-center gap-1 focus:outline-none"
+            >
+              <PawTrackLogo size="sm" />
+              <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
+            </button>
+
+            {isMobileMenuOpen && (
+              <div className="md:hidden absolute top-12 left-0 w-full bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
+                <div className="flex flex-col p-2 gap-1">
+                  <button onClick={() => navigate('/dashboard')} className="w-full px-4 py-3 text-sm font-bold text-gray-600 text-left hover:bg-gray-50 rounded-xl">Dashboard</button>
+                  <button onClick={() => navigate('/my-reports')} className="w-full px-4 py-3 text-sm font-bold text-gray-600 text-left hover:bg-gray-50 rounded-xl">My Reports</button>
+                </div>
+              </div>
+            )}
           </div>
-          <button 
-            onClick={handleDeleteReport}
-            className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors text-xs font-bold uppercase tracking-wider"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Report
-          </button>
+
+          <div className="flex items-center gap-4" ref={userMenuRef}>
+             <div className="relative">
+                <button 
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsUserMenuOpen(!isUserMenuOpen);
+                  }}
+                  className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs outline-none hover:ring-2 ring-emerald-50 transition-all active:scale-90"
+                >
+                  U
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold">
+                      <User className="w-4 h-4 text-emerald-500" /> Edit Profile
+                    </button>
+                    <button onClick={() => navigate('/my-reports')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold">
+                      <FileText className="w-4 h-4 text-orange-500" /> My Reports
+                    </button>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold">
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                )}
+             </div>
+          </div>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
         <div className="bg-gradient-to-br from-orange-50 via-white to-orange-50 rounded-[40px] shadow-xl border border-orange-100 p-6 md:p-10">
-          
           <div className="mb-8">
             <h1 className="text-2xl font-black text-gray-900 tracking-tight">Lost Report Details</h1>
             <p className="text-sm font-medium text-orange-600">Review and update your pet's information</p>
           </div>
 
           <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            
             <div className="space-y-6 text-center">
               <label className="text-xs font-black text-orange-800 uppercase tracking-widest block text-left">Report Photo</label>
               <div className="relative group mx-auto w-full aspect-square max-w-[280px] rounded-[32px] overflow-hidden border-4 border-white shadow-2xl bg-gray-100">
                 {newImage || report.imagePath ? (
-                  <img 
-                    src={newImage ? URL.createObjectURL(newImage) : report.imagePath} 
-                    className="w-full h-full object-cover" 
-                    alt="Pet Preview" 
-                  />
+                  <img src={newImage ? URL.createObjectURL(newImage) : report.imagePath} className="w-full h-full object-cover" alt="Pet Preview" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
                     <ImageIcon className="w-12 h-12 mb-2" />
@@ -140,15 +187,8 @@ const LostReportDetails = () => {
                   {report.imagePath ? "CHANGE PHOTO" : "ADD PHOTO"}
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewImage(e.target.files[0])} />
                 </label>
-                
                 {(report.imagePath || newImage) && (
-                  <button 
-                    type="button" 
-                    onClick={handleRemoveImage}
-                    className="w-full py-2 text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest"
-                  >
-                    Delete Photo
-                  </button>
+                  <button type="button" onClick={handleRemoveImage} className="w-full py-2 text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest">Delete Photo</button>
                 )}
               </div>
             </div>
@@ -156,25 +196,12 @@ const LostReportDetails = () => {
             <div className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-orange-800 uppercase tracking-widest">Title</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-semibold focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
-                  value={report.title}
-                  onChange={(e) => setReport({...report, title: e.target.value})}
-                />
+                <input type="text" required className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-semibold outline-none transition-all focus:ring-4 focus:ring-orange-500/10" value={report.title} onChange={(e) => setReport({...report, title: e.target.value})} />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-orange-800 uppercase tracking-widest">Description</label>
-                <textarea 
-                  required
-                  className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-semibold h-32 resize-none focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
-                  value={report.description}
-                  onChange={(e) => setReport({...report, description: e.target.value})}
-                />
+                <textarea required className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-semibold h-32 resize-none outline-none transition-all focus:ring-4 focus:ring-orange-500/10" value={report.description} onChange={(e) => setReport({...report, description: e.target.value})} />
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                  <div className="p-4 bg-white rounded-2xl border border-gray-100">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Status</p>
@@ -185,19 +212,13 @@ const LostReportDetails = () => {
                     <p className="text-xs font-bold text-gray-700 uppercase">{report.species || 'DOG'}</p>
                  </div>
               </div>
-
               <div className="pt-6">
-                <button 
-                  type="submit" 
-                  disabled={saving}
-                  className="w-full bg-orange-600 text-white font-black py-4 rounded-2xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 active:scale-95 flex items-center justify-center gap-3 tracking-widest text-xs"
-                >
+                <button type="submit" disabled={saving} className="w-full bg-orange-600 text-white font-black py-4 rounded-2xl hover:bg-orange-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 tracking-widest text-xs">
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                   {saving ? "SAVING..." : "SAVE ALL CHANGES"}
                 </button>
               </div>
             </div>
-
           </form>
         </div>
       </main>

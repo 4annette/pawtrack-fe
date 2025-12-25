@@ -2,10 +2,15 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Calendar, FileText, 
-  User, LogOut, ChevronLeft, ChevronRight, 
-  ChevronDown, Check, Settings2, Loader2, Trash2
+  User, LogOut, ChevronDown, Check, 
+  Settings2, Loader2, Trash2
 } from "lucide-react";
-import { fetchMyLostReportsList, fetchMyFoundReportsList, deleteLostReport, deleteFoundReport } from "../../services/api.js";
+import { 
+  fetchMyLostReportsList, 
+  fetchMyFoundReportsList, 
+  deleteLostReport, 
+  deleteFoundReport 
+} from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
 
@@ -67,6 +72,7 @@ const MyReports = () => {
   const [reports, setReports] = useState([]);
   const [activeTab, setActiveTab] = useState("lost");
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -76,10 +82,12 @@ const MyReports = () => {
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const logoMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -144,29 +152,86 @@ const MyReports = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
+      {/* HEADER - Updated to group elements on the left */}
+      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          
+          {/* LEFT SIDE: BACK + LOGO + NAV */}
+          <div className="flex items-center gap-4 md:gap-6" ref={logoMenuRef}>
+            <button 
+              onClick={() => navigate("/dashboard")} 
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <PawTrackLogo size="sm" />
+            
+            <div className="relative flex items-center gap-1">
+               <button 
+                 onClick={() => {
+                   setIsUserMenuOpen(false);
+                   setIsMobileMenuOpen(!isMobileMenuOpen);
+                 }} 
+                 className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
+               >
+                  <PawTrackLogo size="sm" />
+                  <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </div>
+               </button>
+
+               {/* MOBILE MENU DROPDOWN */}
+               {isMobileMenuOpen && (
+                 <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
+                   <div className="flex flex-col p-2 gap-1">
+                     <button 
+                       onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }} 
+                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
+                     >
+                       My Lost Reports
+                     </button>
+                     <button 
+                       onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }} 
+                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
+                     >
+                       My Found Reports
+                     </button>
+                   </div>
+                 </div>
+               )}
+            </div>
+
+            {/* DESKTOP TABS (Beside Logo) */}
+            <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-xl">
+              <button 
+                onClick={() => handleTabChange("lost")} 
+                className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Lost
+              </button>
+              <button 
+                onClick={() => handleTabChange("found")} 
+                className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Found
+              </button>
+            </nav>
           </div>
 
-          <nav className="flex items-center p-1 bg-gray-100 rounded-xl">
-            <button onClick={() => handleTabChange("lost")} className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Lost</button>
-            <button onClick={() => handleTabChange("found")} className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Found</button>
-          </nav>
-
+          {/* RIGHT SIDE: USER MENU */}
           <div className="flex items-center gap-4" ref={userMenuRef}>
              <div className="relative">
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 ${activeTab === 'lost' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>U</button>
+                <button 
+                  onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
+                >
+                  U
+                </button>
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors text-left"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
-                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
+                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
                     <div className="h-px bg-gray-50 my-1"></div>
-                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"><LogOut className="w-4 h-4" /> Logout</button>
+                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
                   </div>
                 )}
              </div>
@@ -175,6 +240,7 @@ const MyReports = () => {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        {/* Statistics Header */}
         <div className={`rounded-2xl border p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm ${activeTab === 'lost' ? 'from-orange-50 via-white to-orange-50 bg-gradient-to-br border-orange-100' : 'from-emerald-50 via-white to-emerald-50 bg-gradient-to-br border-emerald-100'}`}>
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${activeTab === 'lost' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -204,23 +270,40 @@ const MyReports = () => {
                 <div 
                   key={report.id} 
                   onClick={() => navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`)}
-                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-emerald-300 hover:shadow-md transition-all duration-300 cursor-pointer"
+                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between group hover:border-emerald-300 hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
+                  <div className="flex items-center gap-5 w-full">
+                    <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
                       <FileText className="w-5 h-5" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">{report.title}</h3>
-                      <div className="flex items-center gap-4 mt-1.5 text-sm font-medium text-gray-400">
-                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1.5 text-gray-300">|</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors truncate">{report.title}</h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
+                        <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
+                        <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
+                        <span className="flex items-center gap-1.5 truncate"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+                      </div>
+
+                      {/* Mobile Actions */}
+                      <div className="flex md:hidden items-center gap-3 mt-4">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
+                        >
+                          <Settings2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button 
+                          onClick={(e) => handleDelete(e, report.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  {/* Desktop Actions */}
+                  <div className="hidden md:flex items-center gap-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
                       className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
@@ -242,20 +325,6 @@ const MyReports = () => {
                 <h3 className="text-xl font-bold text-gray-800">No reports found</h3>
               </div>
             )}
-
-            <div className="flex items-center justify-between pt-10 mt-6 border-t border-gray-100">
-              <div className="flex items-center gap-4 bg-white px-5 py-2.5 rounded-2xl border border-gray-100 shadow-sm">
-                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Page</span>
-                 <span className={`text-sm font-bold ${activeTab === 'lost' ? 'text-orange-600' : 'text-emerald-600'}`}>{page + 1}</span>
-                 <span className="text-gray-200">/</span>
-                 <span className="text-sm font-bold text-gray-400">{totalPages || 1}</span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <button disabled={page === 0} onClick={() => setPage(p => p - 1)} className="w-11 h-11 flex items-center justify-center bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 disabled:opacity-20 transition-all shadow-sm active:scale-90"><ChevronLeft className="w-5 h-5 text-gray-600" /></button>
-                <button disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)} className="w-11 h-11 flex items-center justify-center bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 disabled:opacity-20 transition-all shadow-sm active:scale-90"><ChevronRight className="w-5 h-5 text-gray-600" /></button>
-              </div>
-            </div>
           </div>
         )}
       </main>
