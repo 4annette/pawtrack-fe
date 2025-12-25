@@ -110,7 +110,7 @@ export const createLostReport = async (reportData) => {
     dateLost: reportData.dateLost, 
     chipNumber: parseInt(reportData.chipNumber) || 0,
     species: reportData.species,
-    status: reportData.status || "ACTIVE"
+    status: reportData.status || "LESS_THAN_3_HOURS"
   };
   const response = await api.post('/lost-reports', payload);
   return response.data;
