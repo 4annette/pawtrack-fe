@@ -30,13 +30,18 @@ export const registerUser = async (userData) => {
 //                FOUND REPORTS
 // ==========================================
 
-export const fetchFoundReports = async (page = 0, size = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, size, sortBy: 'dateFound', sortDirection: 'DESC' });
-  const response = await api.post(`/found-reports/filter?${params.toString()}`, filters || {});
+export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound') => {
+  const response = await api.post(`/found-reports/filter`, filters || {}, {
+    params: {
+      page: page,
+      size: size,
+      sortBy: sortBy,
+      sortDirection: 'DESC'
+    }
+  });
   return response.data;
 };
 
-// GET /found-reports/{reportId}
 export const fetchFoundReportById = async (id) => {
   const response = await api.get(`/found-reports/${id}`);
   return response.data;
@@ -55,13 +60,11 @@ export const createFoundReport = async (reportData) => {
   return response.data;
 };
 
-// PUT /found-reports/{reportId}
 export const updateFoundReport = async (id, data) => {
   const response = await api.put(`/found-reports/${id}`, data);
   return response.data;
 };
 
-// DELETE /found-reports/{reportId}
 export const deleteFoundReport = async (id) => {
   const response = await api.delete(`/found-reports/${id}`);
   return response.data;
@@ -81,7 +84,6 @@ export const uploadFoundReportImage = async (reportId, file) => {
   return (contentType && contentType.includes("application/json")) ? await response.json() : await response.text();
 };
 
-// DELETE /found-reports/{reportId}/delete-image
 export const deleteFoundReportImage = async (id) => {
   const response = await api.delete(`/found-reports/${id}/delete-image`);
   return response.data;
@@ -91,13 +93,18 @@ export const deleteFoundReportImage = async (id) => {
 //                LOST REPORTS
 // ==========================================
 
-export const fetchLostReports = async (page = 0, size = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, size, sortBy: 'dateLost', sortDirection: 'DESC' });
-  const response = await api.post(`/lost-reports/filter?${params.toString()}`, filters || {});
+export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost') => {
+  const response = await api.post(`/lost-reports/filter`, filters || {}, {
+    params: {
+      page: page,
+      size: size,
+      sortBy: sortBy,
+      sortDirection: 'DESC'
+    }
+  });
   return response.data;
 };
 
-// GET /lost-reports/{reportId}
 export const fetchLostReportById = async (id) => {
   const response = await api.get(`/lost-reports/${id}`);
   return response.data;
@@ -107,21 +114,19 @@ export const createLostReport = async (reportData) => {
   const payload = {
     title: reportData.title,
     description: reportData.description,
-    dateLost: reportData.dateLost, 
+    species: reportData.species,
     chipNumber: parseInt(reportData.chipNumber) || 0,
-    species: reportData.species
+    date: reportData.date
   };
   const response = await api.post('/lost-reports', payload);
   return response.data;
 };
 
-// PUT /lost-reports/{reportId}
 export const updateLostReport = async (id, data) => {
   const response = await api.put(`/lost-reports/${id}`, data);
   return response.data;
 };
 
-// DELETE /lost-reports/{reportId}
 export const deleteLostReport = async (id) => {
   const response = await api.delete(`/lost-reports/${id}`);
   return response.data;
@@ -141,7 +146,6 @@ export const uploadLostReportImage = async (reportId, file) => {
   return (contentType && contentType.includes("application/json")) ? await response.json() : await response.text();
 };
 
-// DELETE /lost-reports/{reportId}/delete-image
 export const deleteLostReportImage = async (id) => {
   const response = await api.delete(`/lost-reports/${id}/delete-image`);
   return response.data;

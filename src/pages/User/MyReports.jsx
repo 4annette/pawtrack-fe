@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Calendar, FileText, 
   User, LogOut, ChevronDown, Check, 
-  Settings2, Loader2, Trash2
+  Settings2, Loader2, Trash2, ChevronLeft, ChevronRight,
+  ChevronsLeft, ChevronsRight
 } from "lucide-react";
 import { 
   fetchMyLostReportsList, 
@@ -247,8 +248,8 @@ const MyReports = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <AestheticDropdown value={sortBy} options={sortOptions} onChange={setSortBy} type={activeTab} />
-            <AestheticDropdown value={pageSize} options={sizeOptions} onChange={setPageSize} type={activeTab} />
+            <AestheticDropdown value={sortBy} options={sortOptions} onChange={(val) => {setSortBy(val); setPage(0);}} type={activeTab} />
+            <AestheticDropdown value={pageSize} options={sizeOptions} onChange={(val) => {setPageSize(val); setPage(0);}} type={activeTab} />
           </div>
         </div>
 
@@ -260,57 +261,113 @@ const MyReports = () => {
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {reports.length > 0 ? (
-              reports.map(report => (
-                <div 
-                  key={report.id} 
-                  onClick={() => navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`)}
-                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between group hover:border-emerald-300 hover:shadow-md transition-all duration-300 cursor-pointer"
-                >
-                  <div className="flex items-center gap-5 w-full">
-                    <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors truncate">{report.title}</h3>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
-                        <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
-                        <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
-                        <span className="flex items-center gap-1.5 truncate"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+              <>
+                {reports.map(report => (
+                  <div 
+                    key={report.id} 
+                    onClick={() => navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`)}
+                    className={`bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between group transition-all duration-300 cursor-pointer ${activeTab === 'lost' ? 'hover:border-orange-300' : 'hover:border-emerald-300'} hover:shadow-md`}
+                  >
+                    <div className="flex items-center gap-5 w-full">
+                      <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
+                        <FileText className="w-5 h-5" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{report.title}</h3>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
+                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
+                          <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
+                          <span className="flex items-center gap-1.5 truncate"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+                        </div>
 
-                      <div className="flex md:hidden items-center gap-3 mt-4">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
-                        >
-                          <Settings2 className="w-3.5 h-3.5" /> Edit
-                        </button>
-                        <button 
-                          onClick={(e) => handleDelete(e, report.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
-                        </button>
+                        <div className="flex md:hidden items-center gap-3 mt-4">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
+                          >
+                            <Settings2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button 
+                            onClick={(e) => handleDelete(e, report.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-2">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                        className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
+                      >
+                        <Settings2 className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={(e) => handleDelete(e, report.id)}
+                        className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
+                ))}
 
-                  <div className="hidden md:flex items-center gap-2">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
-                      className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
-                    >
-                      <Settings2 className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={(e) => handleDelete(e, report.id)}
-                      className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center mt-12 mb-6">
+                    <nav className={`flex items-center gap-1 p-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl transition-all duration-500 ${activeTab === 'lost' ? 'shadow-orange-900/5' : 'shadow-emerald-900/5'}`}>
+                     <button 
+                        disabled={page === 0} 
+                        onClick={() => setPage(0)} 
+                        className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                      >
+                        <ChevronsLeft className="w-5 h-5" />
+                      </button>
+
+                      <button 
+                        disabled={page === 0} 
+                        onClick={() => setPage(p => p - 1)} 
+                        className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex items-center gap-1">
+                        {[...Array(totalPages)].map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setPage(i)}
+                            className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all duration-200 ${
+                              page === i 
+                                ? (activeTab === 'lost' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-200') 
+                                : `text-gray-400 ${activeTab === 'lost' ? 'hover:bg-orange-50 hover:text-orange-600' : 'hover:bg-emerald-50 hover:text-emerald-600'}`
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button 
+                        disabled={page + 1 >= totalPages} 
+                        onClick={() => setPage(p => p + 1)} 
+                        className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+
+                      <button 
+                        disabled={page + 1 >= totalPages} 
+                        onClick={() => setPage(totalPages - 1)} 
+                        className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                      >
+                        <ChevronsRight className="w-5 h-5" />
+                      </button>
+                    </nav>
                   </div>
-                </div>
-              ))
+                )}
+              </>
             ) : (
               <div className="bg-white rounded-[40px] py-20 text-center border-2 border-dashed border-gray-100">
                 <Settings2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />

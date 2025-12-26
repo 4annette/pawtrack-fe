@@ -236,12 +236,29 @@ const CreateLostReport = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let formattedDate = formData.dateLost;
-      if (!formattedDate) {
+      let finalDateTime = formData.dateLost;
+      
+      if (!finalDateTime) {
            const now = new Date();
-           formattedDate = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')} ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:00`;
+           const localYear = now.getFullYear();
+           const localMonth = String(now.getMonth() + 1).padStart(2, '0');
+           const localDay = String(now.getDate()).padStart(2, '0');
+           const localHours = String(now.getHours()).padStart(2, '0');
+           const localMinutes = String(now.getMinutes()).padStart(2, '0');
+           finalDateTime = `${localYear}-${localMonth}-${localDay} ${localHours}:${localMinutes}:00`;
       }
-      const newReport = await createLostReport({ ...formData, dateLost: formattedDate });
+      
+      // Changed payload key from 'dateLost' to 'date' to match backend requirements
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        species: formData.species,
+        chipNumber: formData.chipNumber,
+        date: finalDateTime 
+      };
+
+      const newReport = await createLostReport(payload);
+      
       if (imageFile && newReport.id) {
         try { await uploadLostReportImage(newReport.id, imageFile); toast.success("Success!"); } 
         catch { toast.warning("Image failed, but report created."); }

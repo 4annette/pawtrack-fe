@@ -11,23 +11,19 @@ const Dashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // These refs track the containers to detect "outside" clicks
   const logoMenuRef = useRef(null);
   const userMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // If clicking outside the logo/mobile menu area, close it
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
         setIsMobileMenuOpen(false);
       }
-      // If clicking outside the user profile area, close it
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     };
 
-    // Listen for both mouse and touch events
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
     
@@ -45,13 +41,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
       
-      {/* HEADER */}
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="container mx-auto flex items-center justify-between">
           
-          {/* LEFT SIDE: LOGO & TABS */}
           <div className="flex items-center gap-6" ref={logoMenuRef}>
-            {/* LOGO BUTTON - Toggles Mobile Menu */}
             <button 
               type="button"
               onClick={() => {
@@ -66,7 +59,6 @@ const Dashboard = () => {
               </div>
             </button>
 
-            {/* DESKTOP NAVIGATION (Hidden on Mobile) */}
             <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-lg">
               <button 
                 onClick={() => setActiveTab("lost")} 
@@ -82,7 +74,6 @@ const Dashboard = () => {
               </button>
             </nav>
 
-            {/* MOBILE OVERLAY MENU */}
             {isMobileMenuOpen && (
               <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-[100]">
                 <div className="flex flex-col p-4 gap-2">
@@ -115,7 +106,6 @@ const Dashboard = () => {
             )}
           </div>
           
-          {/* RIGHT SIDE: USER MENU UPDATED */}
           <div className="relative" ref={userMenuRef}>
             <button 
               onClick={() => {
@@ -157,7 +147,6 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* MAIN CONTENT AREA */}
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'found' ? <FoundReports /> : <LostReports />}
       </main>

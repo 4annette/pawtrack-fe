@@ -323,15 +323,18 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
   const isLostReport = !!report.lostDate;
   const dateLabel = isLostReport ? "Date Lost" : "Date Found";
   const dateValue = isLostReport ? report.lostDate : report.foundDate;
-  const statusValue = isLostReport ? report.status : report.condition;
-  const getConditionColor = (c) => {
-    if (!c) return 'bg-gray-100 text-gray-800 border-gray-200';
-    const n = String(c).toUpperCase().trim();
-    if (n === 'EXCELLENT') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    if (n === 'GOOD') return 'bg-amber-100 text-amber-800 border-amber-200';
-    if (n === 'BAD') return 'bg-red-100 text-red-800 border-red-200';
+  
+  const getSpeciesLabelColor = () => {
+    if (isLostReport && report.statusColor) {
+      return `${report.statusColor} text-white border-transparent`;
+    }
+    const c = String(report.condition || report.status || '').toUpperCase().trim();
+    if (c === 'EXCELLENT') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    if (c === 'GOOD') return 'bg-amber-100 text-amber-800 border-amber-200';
+    if (c === 'BAD') return 'bg-red-100 text-red-800 border-red-200';
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
@@ -341,16 +344,30 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
             <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black hover:bg-gray-800 rounded-full text-white shadow-lg"><X className="w-5 h-5" /></button>
             <div className="absolute bottom-0 left-0 p-6 text-white w-full">
                 <div className="flex items-center gap-2 mb-2">
-                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getConditionColor(statusValue)} bg-white/90`}>{report.species}</span>
+                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getSpeciesLabelColor()}`}>
+                       {report.species}
+                     </span>
                 </div>
                 <h2 className="text-2xl font-bold leading-tight">{report.title}</h2>
             </div>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Description Section */}
             <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                 <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Description</h4>
                 <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{report.description || "No description."}</p>
             </div>
+            
+            {/* Status Section - MATCHES Description Aesthetic */}
+            {isLostReport && report.statusSentence && (
+              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                 <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> Status</h4>
+                 <div className="flex items-center gap-2 font-bold text-sm uppercase text-gray-700">
+                   {report.statusSentence.replace(/_/g, ' ')}
+                 </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
                     <span className="text-xs font-medium text-gray-500 block mb-1">{dateLabel}</span>
@@ -397,7 +414,6 @@ export const ClaimModal = ({ isOpen, onClose, foundReportId }) => {
   );
 };
 
-// --- MODAL: ADD SIGHTING ---
 export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND" }) => {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("NEW"); 
@@ -464,7 +480,6 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
   );
 };
 
-// --- MODAL: MAP ---
 export const MapModal = ({ isOpen, onClose, location }) => {
   if (!isOpen || !location) return null;
   return (
