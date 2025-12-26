@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
     Plus, Search, Filter, Dog, CheckCircle, Eye, MapPin, 
-    Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight 
+    Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Check 
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchFoundReports } from "@/services/api";
@@ -10,6 +10,55 @@ import {
     CustomDropdown, CustomDatePicker, ReportDetailsModal, 
     ClaimModal, AddSightingModal, MapModal 
 } from "@/components/DashboardComponents";
+
+const ToolbarDropdown = ({ label, value, options, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedLabel = options.find(opt => opt.value === value)?.label || value;
+
+    return (
+        <div className="relative" ref={containerRef}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
+            >
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-700">{selectedLabel}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-emerald-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </div>
+            </button>
+
+            {isOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-30 animate-in fade-in zoom-in-95">
+                    <div className="p-1.5">
+                        {options.map((option) => (
+                            <div 
+                                key={option.value} 
+                                onClick={() => { onChange(option.value); setIsOpen(false); }} 
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${option.value === value ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                {option.label}
+                                {option.value === value && <Check className="w-3.5 h-3.5 text-emerald-600" />}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const FoundReports = () => {
     const navigate = useNavigate();
@@ -111,29 +160,29 @@ const FoundReports = () => {
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 px-3 border-r border-gray-100">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Show</span>
-                        <select 
-                            value={pageSize} 
-                            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }} 
-                            className="text-xs font-bold text-emerald-600 bg-transparent outline-none cursor-pointer appearance-none"
-                        >
-                            {[6, 9, 12, 15].map(size => <option key={size} value={size}>{size}</option>)}
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-2 px-3">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sort</span>
-                        <select 
-                            value={sortBy} 
-                            onChange={(e) => { setSortBy(e.target.value); setPage(0); }} 
-                            className="text-xs font-bold text-emerald-600 bg-transparent outline-none cursor-pointer appearance-none"
-                        >
-                            <option value="dateFound">Newest</option>
-                            <option value="title">Title</option>
-                            <option value="species">Species</option>
-                        </select>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <ToolbarDropdown 
+                        label="Show" 
+                        value={pageSize} 
+                        options={[
+                            { label: "6", value: 6 },
+                            { label: "9", value: 9 },
+                            { label: "12", value: 12 },
+                            { label: "15", value: 15 }
+                        ]} 
+                        onChange={(val) => { setPageSize(val); setPage(0); }} 
+                    />
+
+                    <ToolbarDropdown 
+                        label="Sort" 
+                        value={sortBy} 
+                        options={[
+                            { label: "Newest", value: "dateFound" },
+                            { label: "Title", value: "title" },
+                            { label: "Species", value: "species" }
+                        ]} 
+                        onChange={(val) => { setSortBy(val); setPage(0); }} 
+                    />
                 </div>
             </div>
 
@@ -245,7 +294,6 @@ const FoundReports = () => {
                 </div>
             )}
 
-            {/* MODALS */}
             <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} />
             <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} />
             <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="FOUND" />

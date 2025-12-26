@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     Plus, Search, Filter, Dog, Eye, MapPin, 
     Loader2, Clock, ChevronLeft, ChevronRight,
-    ChevronsLeft, ChevronsRight 
+    ChevronsLeft, ChevronsRight, ChevronDown, Check 
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReports } from "@/services/api";
@@ -11,6 +11,55 @@ import {
     CustomDropdown, CustomDatePicker, ReportDetailsModal, 
     AddSightingModal, MapModal 
 } from "@/components/DashboardComponents";
+
+const ToolbarDropdown = ({ label, value, options, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedLabel = options.find(opt => opt.value === value)?.label || value;
+
+    return (
+        <div className="relative" ref={containerRef}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
+            >
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-700">{selectedLabel}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-emerald-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </div>
+            </button>
+
+            {isOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-30 animate-in fade-in zoom-in-95">
+                    <div className="p-1.5">
+                        {options.map((option) => (
+                            <div 
+                                key={option.value} 
+                                onClick={() => { onChange(option.value); setIsOpen(false); }} 
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${option.value === value ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                {option.label}
+                                {option.value === value && <Check className="w-3.5 h-3.5 text-emerald-600" />}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const LostReports = () => {
     const navigate = useNavigate();
@@ -24,9 +73,11 @@ const LostReports = () => {
     
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
+
     const [filters, setFilters] = useState({
         search: "",
         species: "",
+        status: "", 
         dateAfter: "",
         dateBefore: ""
     });
@@ -35,12 +86,45 @@ const LostReports = () => {
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
 
+    const parseDate = (dateInput) => {
+        if (!dateInput) return null;
+
+        if (Array.isArray(dateInput)) {
+            return new Date(
+                dateInput[0], 
+                dateInput[1] - 1, 
+                dateInput[2], 
+                dateInput[3] || 0, 
+                dateInput[4] || 0, 
+                dateInput[5] || 0
+            );
+        }
+
+        if (typeof dateInput === 'string') {
+            return new Date(dateInput.replace(" ", "T"));
+        }
+
+        return new Date(dateInput);
+    };
+
+    const formatDateTime = (dateObj) => {
+        if (!dateObj) return null;
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ` +
+               `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+    };
+
     const formatDateForBackend = (dateString) => dateString ? `${dateString} 00:00:00` : null;
 
-    function getLostStatus(dateLost) {
-        if (!dateLost) return "MORE_THAN_1_MONTH";
+    function getLostStatus(dateInput) {
+        if (!dateInput) return "MORE_THAN_1_MONTH";
+
+        const lostDate = parseDate(dateInput);
         const now = new Date();
-        const diffInMilliseconds = now - new Date(dateLost);
+
+        if (isNaN(lostDate.getTime())) return "MORE_THAN_1_MONTH";
+
+        const diffInMilliseconds = now - lostDate;
         const hours = diffInMilliseconds / (1000 * 60 * 60);
         const days = hours / 24;
 
@@ -64,15 +148,57 @@ const LostReports = () => {
         }
     }
 
+    const statusOptions = [
+        { label: "All Statuses", value: "" },
+        { label: "Less than 3 Hours", value: "LESS_THAN_3_HOURS" },
+        { label: "Less than 10 Hours", value: "LESS_THAN_10_HOURS" },
+        { label: "Less than 1 Day", value: "LESS_THAN_1_DAY" },
+        { label: "Less than 1 Week", value: "LESS_THAN_1_WEEK" },
+        { label: "Less than 1 Month", value: "LESS_THAN_1_MONTH" },
+        { label: "More than 1 Month", value: "MORE_THAN_1_MONTH" }
+    ];
+
     useEffect(() => {
         const fetchReports = async () => {
             setLoading(true);
             try {
+                let calculatedDateAfter = null;
+                let calculatedDateBefore = null;
+                const now = new Date();
+
+                if (filters.status) {
+                    switch (filters.status) {
+                        case "LESS_THAN_3_HOURS":
+                            calculatedDateAfter = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+                            break;
+                        case "LESS_THAN_10_HOURS":
+                            calculatedDateAfter = new Date(now.getTime() - (10 * 60 * 60 * 1000));
+                            break;
+                        case "LESS_THAN_1_DAY":
+                            calculatedDateAfter = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+                            break;
+                        case "LESS_THAN_1_WEEK":
+                            calculatedDateAfter = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                            break;
+                        case "LESS_THAN_1_MONTH":
+                            calculatedDateAfter = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+                            break;
+                        case "MORE_THAN_1_MONTH":
+                            calculatedDateBefore = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+                            break;
+                    }
+                    calculatedDateAfter = formatDateTime(calculatedDateAfter);
+                    calculatedDateBefore = formatDateTime(calculatedDateBefore);
+                } else {
+                    calculatedDateAfter = formatDateForBackend(filters.dateAfter);
+                    calculatedDateBefore = formatDateForBackend(filters.dateBefore);
+                }
+
                 const payload = {
                     search: filters.search || null,
                     species: filters.species ? [filters.species] : null,
-                    dateLostAfter: formatDateForBackend(filters.dateAfter),
-                    dateLostBefore: formatDateForBackend(filters.dateBefore)
+                    dateLostAfter: calculatedDateAfter,
+                    dateLostBefore: calculatedDateBefore
                 };
                 
                 const data = await fetchLostReports(page, pageSize, payload, sortBy);
@@ -97,6 +223,21 @@ const LostReports = () => {
         return () => clearTimeout(timer);
     }, [page, filters, pageSize, sortBy]);
 
+    const handleStatusChange = (val) => {
+        setFilters(prev => ({ 
+            ...prev, 
+            status: val, 
+            dateAfter: "", 
+            dateBefore: "" 
+        }));
+        setPage(0);
+    };
+
+    const handleDateChange = (field, val) => {
+        setFilters(prev => ({ ...prev, [field]: val, status: "" }));
+        setPage(0);
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in pb-12">
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-orange-100 shadow-sm">
@@ -115,21 +256,29 @@ const LostReports = () => {
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 px-3 border-r border-gray-100">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Show</span>
-                        <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }} className="text-xs font-bold text-emerald-600 bg-transparent outline-none cursor-pointer appearance-none">
-                            {[6, 9, 12, 15].map(size => <option key={size} value={size}>{size}</option>)}
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-2 px-3">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sort</span>
-                        <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(0); }} className="text-xs font-bold text-emerald-600 bg-transparent outline-none cursor-pointer appearance-none">
-                            <option value="dateLost">Newest</option>
-                            <option value="title">Title</option>
-                            <option value="species">Species</option>
-                        </select>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <ToolbarDropdown 
+                        label="Show" 
+                        value={pageSize} 
+                        options={[
+                            { label: "6", value: 6 },
+                            { label: "9", value: 9 },
+                            { label: "12", value: 12 },
+                            { label: "15", value: 15 }
+                        ]} 
+                        onChange={(val) => { setPageSize(val); setPage(0); }} 
+                    />
+
+                    <ToolbarDropdown 
+                        label="Sort" 
+                        value={sortBy} 
+                        options={[
+                            { label: "Newest", value: "dateLost" },
+                            { label: "Title", value: "title" },
+                            { label: "Species", value: "species" }
+                        ]} 
+                        onChange={(val) => { setSortBy(val); setPage(0); }} 
+                    />
                 </div>
             </div>
 
@@ -147,8 +296,9 @@ const LostReports = () => {
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-50 animate-in slide-in-from-top-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
-                            <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => {setFilters({...filters, dateAfter: val}); setPage(0);}} />
-                            <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => {setFilters({...filters, dateBefore: val}); setPage(0);}} />
+                            <CustomDropdown label="Time Status" icon={Clock} value={filters.status} options={statusOptions} onChange={handleStatusChange} />
+                            <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => handleDateChange('dateAfter', val)} />
+                            <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => handleDateChange('dateBefore', val)} />
                         </div>
                     </div>
                 )}
@@ -157,9 +307,21 @@ const LostReports = () => {
             {loading ? <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-emerald-500 animate-spin" /></div> : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {reports.map((report) => {
-                        const currentStatus = getLostStatus(report.dateLost);
+                        const dateValue = report.dateLost || report.lostDate;
+                        const currentStatus = getLostStatus(dateValue);
+                        
                         return (
-                            <div key={report.id} onClick={() => setDetailReport({...report, status: currentStatus, statusColor: getStatusColor(currentStatus), statusSentence: currentStatus.replace(/_/g, ' ')})} className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1">
+                            <div 
+                                key={report.id} 
+                                onClick={() => setDetailReport({
+                                    ...report, 
+                                    dateLost: dateValue,
+                                    status: currentStatus, 
+                                    statusColor: getStatusColor(currentStatus), 
+                                    statusSentence: currentStatus.replace(/_/g, ' ')
+                                })} 
+                                className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1"
+                            >
                                 <div className="relative h-64 bg-emerald-100 overflow-hidden">
                                     {report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
                                     <div className="absolute top-3 right-3">
@@ -171,9 +333,10 @@ const LostReports = () => {
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-gray-900 line-clamp-1 group-hover:text-emerald-700 transition-colors">{report.title}</h3>
-                                        {report.dateLost && (
-                                            <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">
-                                                {new Date(report.dateLost).toLocaleDateString()}
+                                        
+                                        {dateValue && (
+                                            <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md whitespace-nowrap ml-2">
+                                                {parseDate(dateValue)?.toLocaleDateString() || "Unknown"}
                                             </span>
                                         )}
                                     </div>
@@ -192,53 +355,15 @@ const LostReports = () => {
             {totalPages > 1 && (
                 <div className="flex justify-center items-center mt-20">
                     <nav className="flex items-center gap-1 md:gap-2 p-2 bg-white border border-gray-100 rounded-[28px] shadow-2xl shadow-emerald-900/10 transition-all duration-500">
-                        <button 
-                            disabled={page === 0} 
-                            onClick={() => setPage(0)} 
-                            className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"
-                        >
-                            <ChevronsLeft className="w-5 h-5" />
-                        </button>
-
-                        <button 
-                            disabled={page === 0} 
-                            onClick={() => setPage(p => p - 1)} 
-                            className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        
+                        <button disabled={page === 0} onClick={() => setPage(0)} className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"><ChevronsLeft className="w-5 h-5" /></button>
+                        <button disabled={page === 0} onClick={() => setPage(p => p - 1)} className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"><ChevronLeft className="w-5 h-5" /></button>
                         <div className="flex items-center gap-1 mx-2">
                             {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setPage(i)}
-                                    className={`min-w-[46px] h-[46px] rounded-full text-sm font-black transition-all duration-300 relative overflow-hidden ${
-                                        page === i 
-                                            ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-200 scale-110' 
-                                            : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-700'
-                                    }`}
-                                >
-                                    {i + 1}
-                                </button>
+                                <button key={i} onClick={() => setPage(i)} className={`min-w-[46px] h-[46px] rounded-full text-sm font-black transition-all duration-300 relative overflow-hidden ${page === i ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-200 scale-110' : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-700'}`}>{i + 1}</button>
                             ))}
                         </div>
-
-                        <button 
-                            disabled={page + 1 >= totalPages} 
-                            onClick={() => setPage(p => p + 1)} 
-                            className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-
-                        <button 
-                            disabled={page + 1 >= totalPages} 
-                            onClick={() => setPage(totalPages - 1)} 
-                            className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"
-                        >
-                            <ChevronsRight className="w-5 h-5" />
-                        </button>
+                        <button disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)} className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"><ChevronRight className="w-5 h-5" /></button>
+                        <button disabled={page + 1 >= totalPages} onClick={() => setPage(totalPages - 1)} className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all disabled:opacity-20"><ChevronsRight className="w-5 h-5" /></button>
                     </nav>
                 </div>
             )}
