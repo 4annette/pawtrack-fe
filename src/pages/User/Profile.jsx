@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Trash2, User, LogOut, FileText } from "lucide-react";
-import { updateUserProfile, deleteUserAccount } from "../../services/api.js";
+import { ArrowLeft, Save, Trash2, User, LogOut, FileText, Edit3, X } from "lucide-react";
+import { updateUserProfile, deleteUserAccount, fetchCurrentUser } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // New state to toggle view/edit
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   
@@ -16,8 +17,32 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: ""
+    phone: "",
+    username: "" // Added to store for display
   });
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchCurrentUser();
+        setFormData({
+          editedUserId: data.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone || "",
+          username: data.username
+        });
+      } catch (error) {
+        toast.error("Failed to load profile details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    getUserData();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -45,7 +70,7 @@ const Profile = () => {
     try {
       await updateUserProfile(formData);
       toast.success("Profile updated successfully!");
-      navigate("/dashboard");
+      setIsEditing(false); // Switch back to view mode
     } catch (error) {
       toast.error("Failed to update profile.");
     } finally {
@@ -65,6 +90,14 @@ const Profile = () => {
       }
     }
   };
+
+  // Helper component for read-only rows
+  const InfoRow = ({ label, value }) => (
+    <div className="py-3 border-b border-gray-50 flex justify-between items-center">
+      <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">{label}</span>
+      <span className="font-bold text-gray-700">{value || "Not provided"}</span>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
@@ -87,8 +120,8 @@ const Profile = () => {
 
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                    <button onClick={() => { navigate('/profile'); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors">
-                      <User className="w-4 h-4 text-emerald-500" /> Edit Profile
+                    <button onClick={() => { setIsEditing(false); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors">
+                      <User className="w-4 h-4 text-emerald-500" /> Profile
                     </button>
                     <button onClick={() => { navigate('/my-reports'); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors">
                       <FileText className="w-4 h-4 text-orange-500" /> My Reports
@@ -105,39 +138,78 @@ const Profile = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-xl">
         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-          <h1 className="text-2xl font-black text-emerald-900 mb-6">Profile Settings</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-black text-emerald-900">
+              {isEditing ? "Edit Profile" : "Your Profile"}
+            </h1>
+            {!isEditing && (
+               <button 
+                onClick={() => setIsEditing(true)} 
+                className="flex items-center gap-2 text-xs font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-50 px-3 py-2 rounded-xl transition-colors"
+               >
+                 <Edit3 className="w-4 h-4" /> Edit
+               </button>
+            )}
+          </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">First Name</label>
-                <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+          {loading ? (
+             <div className="flex justify-center py-10">
+               <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
+             </div>
+          ) : !isEditing ? (
+            /* VIEW MODE */
+            <div className="space-y-2">
+              <div className="flex flex-col items-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-2xl font-black mb-2">
+                  {formData.firstName?.[0]}{formData.lastName?.[0]}
+                </div>
+                <h2 className="text-xl font-bold">@{formData.username}</h2>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Last Name</label>
-                <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+              
+              <InfoRow label="First Name" value={formData.firstName} />
+              <InfoRow label="Last Name" value={formData.lastName} />
+              <InfoRow label="Email" value={formData.email} />
+              <InfoRow label="Phone" value={formData.phone} />
+
+              <button type="button" onClick={handleDelete} className="w-full py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors mt-8 flex items-center justify-center gap-2 text-xs uppercase tracking-widest">
+                <Trash2 className="w-4 h-4" />
+                Delete Account
+              </button>
+            </div>
+          ) : (
+            /* EDIT MODE */
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">First Name</label>
+                  <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Last Name</label>
+                  <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Email Address</label>
-              <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
-            </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Email Address</label>
+                <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+              </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Phone Number</label>
-              <input name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" />
-            </div>
-            
-            <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 mt-8 shadow-lg shadow-emerald-100 uppercase text-xs tracking-widest">
-              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" /> Save Changes</>}
-            </button>
-
-            <button type="button" onClick={handleDelete} className="w-full py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors mt-2 flex items-center justify-center gap-2 text-xs uppercase tracking-widest">
-              <Trash2 className="w-4 h-4" />
-              Delete Account
-            </button>
-          </form>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Phone Number</label>
+                <input name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" />
+              </div>
+              
+              <div className="flex gap-3 mt-8">
+                <button type="button" onClick={() => setIsEditing(false)} className="flex-1 bg-gray-100 text-gray-600 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
+                  <X className="w-4 h-4" /> Cancel
+                </button>
+                <button type="submit" disabled={loading} className="flex-[2] bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 uppercase text-xs tracking-widest">
+                  {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" /> Save Changes</>}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </main>
     </div>

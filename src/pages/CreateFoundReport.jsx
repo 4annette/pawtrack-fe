@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { createFoundReport, uploadFoundReportImage } from "@/services/api";
 
-// --- REUSED COMPONENT: CUSTOM DATE TIME PICKER WITH STYLED TIME DROPDOWNS ---
 const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -150,7 +149,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
   );
 };
 
-// --- REUSED COMPONENT: CUSTOM DROPDOWN ---
 const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -191,7 +189,6 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
   );
 };
 
-// --- UPGRADED COMPONENT: CUSTOM IMAGE INPUT ---
 const CustomImageInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
@@ -231,7 +228,6 @@ const CustomImageInput = ({ label, onChange, selectedFile }) => {
     );
 };
 
-// --- PAGE: CREATE FOUND REPORT ---
 const CreateFoundReport = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -244,7 +240,7 @@ const CreateFoundReport = () => {
   });
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
-  const conditionOptions = [{ label: "Excellent", value: "EXCELLENT" }, { label: "Good", value: "GOOD" }, { label: "Injured", value: "INJURED" }];
+  const conditionOptions = [{ label: "Excellent", value: "EXCELLENT" }, { label: "Good", value: "GOOD" }, { label: "Bad", value: "BAD" }];
 
   const handleLogout = () => { localStorage.removeItem("token"); navigate("/auth"); };
 
@@ -285,7 +281,7 @@ const CreateFoundReport = () => {
                 <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform">U</button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
                     <button onClick={() => navigate('/my-reports')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
                     <div className="h-px bg-gray-100 my-1"></div>
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>

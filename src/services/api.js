@@ -109,8 +109,7 @@ export const createLostReport = async (reportData) => {
     description: reportData.description,
     dateLost: reportData.dateLost, 
     chipNumber: parseInt(reportData.chipNumber) || 0,
-    species: reportData.species,
-    status: reportData.status || "LESS_THAN_3_HOURS"
+    species: reportData.species
   };
   const response = await api.post('/lost-reports', payload);
   return response.data;
@@ -151,6 +150,10 @@ export const deleteLostReportImage = async (id) => {
 // ==========================================
 //          USER & PROFILE ACTIONS
 // ==========================================
+export const fetchCurrentUser = async () => {
+  const response = await api.get('/users');
+  return response.data;
+};
 
 export const updateUserProfile = async (userData) => {
   const response = await api.put('/users', userData);

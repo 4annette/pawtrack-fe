@@ -22,12 +22,10 @@ const LostReports = () => {
     const [filters, setFilters] = useState({
         search: "",
         species: "",
-        status: "",
         dateAfter: "",
         dateBefore: ""
     });
 
-    // Modals
     const [sightingReportId, setSightingReportId] = useState(null); 
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
@@ -51,7 +49,6 @@ const LostReports = () => {
                 const payload = {
                     search: filters.search || null,
                     species: filters.species ? [filters.species] : null,
-                    status: filters.status ? [filters.status] : null,
                     dateLostAfter: formatDateForBackend(filters.dateAfter),
                     dateLostBefore: formatDateForBackend(filters.dateBefore)
                 };
@@ -71,7 +68,6 @@ const LostReports = () => {
         return () => clearTimeout(timer);
     }, [page, filters]);
 
-    // Color logic for the Species Label based on Status
     const getStatusColor = (val) => {
         if (!val) return 'bg-gray-100 text-gray-800 border-gray-200';
         const normalized = String(val).toUpperCase().trim();
@@ -83,7 +79,6 @@ const LostReports = () => {
     return (
         <div className="space-y-8 animate-in fade-in">
             
-            {/* HERO SHORTCUT - FIXED: NOW ORANGE */}
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-orange-100 shadow-sm">
                 <div>
                     <h2 className="text-2xl font-bold text-orange-900 mb-2">Lost your pet?</h2>
@@ -117,11 +112,10 @@ const LostReports = () => {
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-emerald-50 rounded-xl shadow-xl border border-emerald-100 p-6 z-50">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
                             <h3 className="font-semibold text-emerald-900">Filter Options</h3>
-                            <button onClick={() => setFilters({search:"", species:"", status:"", dateAfter:"", dateBefore:""})} className="text-xs text-red-500 hover:underline">Clear all</button>
+                            <button onClick={() => setFilters({search:"", species:"", dateAfter:"", dateBefore:""})} className="text-xs text-red-500 hover:underline">Clear all</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => setFilters({...filters, species: val})} />
-                            <CustomDropdown label="Status" icon={AlertTriangle} value={filters.status} options={[{label:"Any",value:""},{label:"Lost < 3 Hours",value:"LESS_THAN_3_HOURS"},{label:"Active",value:"ACTIVE"}]} onChange={(val) => setFilters({...filters, status: val})} />
                             <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => setFilters({...filters, dateAfter: val})} />
                             <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => setFilters({...filters, dateBefore: val})} />
                         </div>

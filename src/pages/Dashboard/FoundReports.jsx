@@ -28,9 +28,8 @@ const FoundReports = () => {
         chipNumber: ""
     });
 
-    // Modals
-    const [selectedFoundId, setSelectedFoundId] = useState(null); // For Claiming
-    const [sightingReportId, setSightingReportId] = useState(null); // For Sightings
+    const [selectedFoundId, setSelectedFoundId] = useState(null);
+    const [sightingReportId, setSightingReportId] = useState(null);
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
 
@@ -79,7 +78,7 @@ const FoundReports = () => {
         const normalized = String(val).toUpperCase().trim();
         if (normalized === 'EXCELLENT') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
         if (normalized === 'GOOD') return 'bg-amber-100 text-amber-800 border-amber-200';
-        if (normalized === 'BAD' || normalized === 'INJURED') return 'bg-red-100 text-red-800 border-red-200';
+        if (normalized === 'BAD') return 'bg-red-100 text-red-800 border-red-200';
         return 'bg-gray-100 text-gray-800 border-gray-200';
     };
 
@@ -120,7 +119,7 @@ const FoundReports = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => setFilters({...filters, species: val})} />
-                            <CustomDropdown label="Condition" icon={CheckCircle} value={filters.condition} options={[{label:"Any",value:""},{label:"Excellent",value:"EXCELLENT"},{label:"Good",value:"GOOD"},{label:"Injured",value:"INJURED"}]} onChange={(val) => setFilters({...filters, condition: val})} />
+                            <CustomDropdown label="Condition" icon={CheckCircle} value={filters.condition} options={[{label:"Any",value:""},{label:"Excellent",value:"EXCELLENT"},{label:"Good",value:"GOOD"},{label:"Bad",value:"BAD"}]} onChange={(val) => setFilters({...filters, condition: val})} />
                             <CustomDatePicker label="Found After" value={filters.dateAfter} onChange={(val) => setFilters({...filters, dateAfter: val})} />
                             <CustomDatePicker label="Found Before" value={filters.dateBefore} onChange={(val) => setFilters({...filters, dateBefore: val})} />
                             <div className="space-y-1.5 md:col-span-2"><label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Hash className="w-3 h-3" /> Chip Number</label><input type="number" placeholder="e.g. 123456789" className="w-full p-2.5 rounded-lg border border-emerald-100 text-sm focus:ring-2 focus:ring-emerald-500" value={filters.chipNumber} onChange={(e) => setFilters({...filters, chipNumber: e.target.value})} /></div>

@@ -14,7 +14,6 @@ import {
     uploadFoundReportImage 
 } from "@/services/api";
 
-// --- HELPER: CUSTOM DATE TIME PICKER (WITH STYLED TIME DROPDOWNS) ---
 export const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -147,7 +146,6 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
   );
 };
 
-// --- HELPER: CUSTOM DATE PICKER (For Filters) ---
 export const CustomDatePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date()); 
@@ -217,7 +215,6 @@ export const CustomDatePicker = ({ label, value, onChange }) => {
   );
 };
 
-// --- HELPER: CUSTOM DROPDOWN ---
 export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -258,7 +255,6 @@ export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) 
   );
 };
 
-// --- HELPER: IMAGE INPUT (With Camera) ---
 export const CustomImageInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
@@ -301,7 +297,6 @@ export const CustomImageInput = ({ label, onChange, selectedFile }) => {
     );
 };
 
-// --- HELPER: FILE INPUT (Simple) ---
 export const CustomFileInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
     const handleFileChange = (e) => {
@@ -323,7 +318,6 @@ export const CustomFileInput = ({ label, onChange, selectedFile }) => {
     );
 };
 
-// --- MODAL: REPORT DETAILS ---
 export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
   if (!isOpen || !report) return null;
   const isLostReport = !!report.lostDate;
@@ -335,7 +329,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
     const n = String(c).toUpperCase().trim();
     if (n === 'EXCELLENT') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
     if (n === 'GOOD') return 'bg-amber-100 text-amber-800 border-amber-200';
-    if (n === 'BAD' || n === 'INJURED') return 'bg-red-100 text-red-800 border-red-200';
+    if (n === 'BAD') return 'bg-red-100 text-red-800 border-red-200';
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
   return (
@@ -373,7 +367,6 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
   );
 };
 
-// --- MODAL: CLAIM ---
 export const ClaimModal = ({ isOpen, onClose, foundReportId }) => {
   const [myLostReports, setMyLostReports] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -454,8 +447,8 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
                     <input type="text" required placeholder="Title" className="w-full p-2 border rounded-lg text-sm" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                     <textarea required placeholder="Description" className="w-full p-2 border rounded-lg text-sm h-20" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                     <div className="grid grid-cols-2 gap-4">
-                        <CustomDropdown label="Species" value={formData.species} options={[{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"}]} onChange={v => setFormData({...formData, species: v})} />
-                        <CustomDropdown label="Condition" value={formData.condition} options={[{label:"Good",value:"GOOD"},{label:"Injured",value:"INJURED"}]} onChange={v => setFormData({...formData, condition: v})} />
+                        <CustomDropdown label="Species" value={formData.species} options={[{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={v => setFormData({...formData, species: v})} />
+                        <CustomDropdown label="Condition" value={formData.condition} options={[{label:"Excellent",value:"EXCELLENT"},{label:"Good",value:"GOOD"},{label:"Bad",value:"BAD"}]} onChange={v => setFormData({...formData, condition: v})} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <CustomDateTimePicker label="Date & Time Found" value={formData.dateFound} onChange={v => setFormData({...formData, dateFound: v})} />

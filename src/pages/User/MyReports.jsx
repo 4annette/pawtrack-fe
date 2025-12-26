@@ -152,11 +152,9 @@ const MyReports = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
-      {/* HEADER - Updated to group elements on the left */}
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           
-          {/* LEFT SIDE: BACK + LOGO + NAV */}
           <div className="flex items-center gap-4 md:gap-6" ref={logoMenuRef}>
             <button 
               onClick={() => navigate("/dashboard")} 
@@ -179,7 +177,6 @@ const MyReports = () => {
                   </div>
                </button>
 
-               {/* MOBILE MENU DROPDOWN */}
                {isMobileMenuOpen && (
                  <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
                    <div className="flex flex-col p-2 gap-1">
@@ -200,7 +197,6 @@ const MyReports = () => {
                )}
             </div>
 
-            {/* DESKTOP TABS (Beside Logo) */}
             <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-xl">
               <button 
                 onClick={() => handleTabChange("lost")} 
@@ -217,7 +213,6 @@ const MyReports = () => {
             </nav>
           </div>
 
-          {/* RIGHT SIDE: USER MENU */}
           <div className="flex items-center gap-4" ref={userMenuRef}>
              <div className="relative">
                 <button 
@@ -228,7 +223,7 @@ const MyReports = () => {
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
                     <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
                     <div className="h-px bg-gray-50 my-1"></div>
                     <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
@@ -240,7 +235,6 @@ const MyReports = () => {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-        {/* Statistics Header */}
         <div className={`rounded-2xl border p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm ${activeTab === 'lost' ? 'from-orange-50 via-white to-orange-50 bg-gradient-to-br border-orange-100' : 'from-emerald-50 via-white to-emerald-50 bg-gradient-to-br border-emerald-100'}`}>
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${activeTab === 'lost' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -284,7 +278,6 @@ const MyReports = () => {
                         <span className="flex items-center gap-1.5 truncate"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
                       </div>
 
-                      {/* Mobile Actions */}
                       <div className="flex md:hidden items-center gap-3 mt-4">
                         <button 
                           onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
@@ -301,8 +294,7 @@ const MyReports = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Desktop Actions */}
+
                   <div className="hidden md:flex items-center gap-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}

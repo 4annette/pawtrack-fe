@@ -133,7 +133,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/profile')} 
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"
                 >
-                  <User className="w-4 h-4 text-emerald-500" /> Edit Profile
+                  <User className="w-4 h-4 text-emerald-500" /> Profile
                 </button>
                 
                 <button 

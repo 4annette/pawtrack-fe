@@ -15,7 +15,6 @@ import {
 } from "@/services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
 
-// --- CUSTOM DATE TIME PICKER (Read-only) ---
 const CustomDateTimePicker = ({ label, value }) => (
   <div className="space-y-1.5">
     <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
@@ -28,7 +27,6 @@ const CustomDateTimePicker = ({ label, value }) => (
   </div>
 );
 
-// --- CUSTOM DROPDOWN ---
 const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -78,7 +76,6 @@ const LostReportDetails = () => {
   const userMenuRef = useRef(null);
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
-  const statusOptions = [{ label: "Active", value: "ACTIVE" }, { label: "Resolved", value: "RESOLVED" }, { label: "Less than 3 hours", value: "LESS_THAN_3_HOURS" }];
 
   useEffect(() => {
     const getReport = async () => {
@@ -105,7 +102,6 @@ const LostReportDetails = () => {
       toast.success("Saved Successfully");
       setIsEditing(false);
       setNewImage(null);
-      // Refresh data
       const updated = await fetchLostReportById(id);
       setReport(updated);
       setOriginalReport(updated);
@@ -153,7 +149,7 @@ const LostReportDetails = () => {
             <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform">U</button>
             {isUserMenuOpen && (
               <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Edit Profile</button>
+                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
                 <button onClick={() => navigate('/my-reports')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
                 <div className="h-px bg-gray-100 my-1"></div>
                 <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
@@ -247,7 +243,6 @@ const LostReportDetails = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <CustomDropdown label="Status" icon={Clock} value={report.status || ""} options={statusOptions} onChange={val => setReport({...report, status: val})} disabled={!isEditing} />
                 <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({...report, species: val})} disabled={!isEditing} />
               </div>
               
