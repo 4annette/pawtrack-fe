@@ -5,6 +5,11 @@ import {
   Loader2, Link as LinkIcon, Camera, AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { 
     fetchMyLostReports, 
     fetchMyFoundReports, 
@@ -14,16 +19,87 @@ import {
     uploadFoundReportImage 
 } from "@/services/api";
 
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const RecenterMap = ({ lat, lng }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (lat && lng) {
+            setTimeout(() => {
+                map.invalidateSize();
+                map.setView([lat, lng], 15);
+            }, 200);
+        }
+    }, [lat, lng, map]);
+    return null;
+};
+
+const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
+    const map = useMapEvents({
+        click(e) {
+            const { lat, lng } = e.latlng;
+            setPosition([lat, lng]);
+            onLocationSelect(lat, lng);
+            map.flyTo(e.latlng, map.getZoom());
+        },
+    });
+    return position === null ? null : (
+        <Marker position={position}>
+            <Popup>Selected Location</Popup>
+        </Marker>
+    );
+};
+
+const FormMapPicker = ({ onLocationSelect }) => {
+    const [position, setPosition] = useState(null);
+    const [center, setCenter] = useState([37.9838, 23.7275]); 
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    setCenter([latitude, longitude]);
+                    setPosition([latitude, longitude]);
+                    onLocationSelect(latitude, longitude);
+                },
+                (err) => console.warn(err)
+            );
+        }
+    }, []);
+
+    return (
+        <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                <MapPin className="w-3 h-3" /> Pin Location
+            </label>
+            <div className="h-48 w-full rounded-xl overflow-hidden border border-emerald-100 shadow-sm z-0 relative">
+                <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
+                    <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <RecenterMap lat={center[0]} lng={center[1]} />
+                    <LocationMarker position={position} setPosition={setPosition} onLocationSelect={onLocationSelect} />
+                </MapContainer>
+            </div>
+            <div className="text-[10px] text-gray-400 text-center">{position ? `Selected: ${position[0].toFixed(5)}, ${position[1].toFixed(5)}` : "Tap map to select location"}</div>
+        </div>
+    );
+};
+
 export const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date()); 
   const [selectedDateStr, setSelectedDateStr] = useState("");
   const [selectedHour, setSelectedHour] = useState("12");
   const [selectedMinute, setSelectedMinute] = useState("00");
-  
   const [isHourOpen, setIsHourOpen] = useState(false);
   const [isMinOpen, setIsMinOpen] = useState(false);
-  
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -45,9 +121,7 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
-          setIsOpen(false);
-          setIsHourOpen(false);
-          setIsMinOpen(false);
+          setIsOpen(false); setIsHourOpen(false); setIsMinOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -55,39 +129,33 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
   }, []);
 
   const changeMonth = (inc) => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1));
-
   const updateValue = (dateStr, hh, mm) => {
       if (!dateStr) return;
-      const finalValue = `${dateStr} ${hh}:${mm}:00`;
-      onChange(finalValue);
+      onChange(`${dateStr} ${hh}:${mm}:00`);
   };
-
   const handleDateClick = (day) => {
-    const year = viewDate.getFullYear();
-    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    const newDateStr = `${year}-${month}-${dayStr}`;
+    const y = viewDate.getFullYear();
+    const m = String(viewDate.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    const newDateStr = `${y}-${m}-${d}`;
     setSelectedDateStr(newDateStr);
     updateValue(newDateStr, selectedHour, selectedMinute);
   };
-
+  
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
-
+  
   const renderCalendarDays = () => {
     const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
     const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
     const days = [];
     for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
     for (let d = 1; d <= totalDays; d++) {
-        const currentYear = viewDate.getFullYear();
-        const currentMonth = String(viewDate.getMonth() + 1).padStart(2, '0');
-        const currentDay = String(d).padStart(2, '0');
-        const thisDateStr = `${currentYear}-${currentMonth}-${currentDay}`;
-        const isSelected = selectedDateStr === thisDateStr;
-        days.push(
-            <button key={d} onClick={() => handleDateClick(d)} type="button" className={`h-8 w-8 rounded-full text-xs font-medium flex items-center justify-center transition-colors ${isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}>{d}</button>
-        );
+        const cY = viewDate.getFullYear();
+        const cM = String(viewDate.getMonth() + 1).padStart(2, '0');
+        const cD = String(d).padStart(2, '0');
+        const isSelected = selectedDateStr === `${cY}-${cM}-${cD}`;
+        days.push(<button key={d} onClick={() => handleDateClick(d)} type="button" className={`h-8 w-8 rounded-full text-xs font-medium flex items-center justify-center transition-colors ${isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}>{d}</button>);
     }
     return days;
   };
@@ -108,34 +176,17 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
                 </div>
                 <div className="grid grid-cols-7 mb-2 text-center">{['S','M','T','W','T','F','S'].map((d,i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}</div>
                 <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">{renderCalendarDays()}</div>
-                
                 <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div className="flex-1 flex gap-1 relative">
                         <div className="relative flex-1">
-                            <button type="button" onClick={() => {setIsHourOpen(!isHourOpen); setIsMinOpen(false);}} className="w-full p-2 text-xs font-bold bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
-                                {selectedHour} <ChevronDown className="w-3 h-3 text-emerald-400"/>
-                            </button>
-                            {isHourOpen && (
-                                <div className="absolute bottom-full mb-1 left-0 w-full max-h-32 overflow-y-auto bg-white border border-emerald-100 rounded-lg shadow-xl z-50">
-                                    {hours.map(h => (
-                                        <div key={h} onClick={() => {setSelectedHour(h); updateValue(selectedDateStr, h, selectedMinute); setIsHourOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedHour === h ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{h}</div>
-                                    ))}
-                                </div>
-                            )}
+                            <button type="button" onClick={() => {setIsHourOpen(!isHourOpen); setIsMinOpen(false);}} className="w-full p-2 text-xs font-bold bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">{selectedHour} <ChevronDown className="w-3 h-3 text-emerald-400"/></button>
+                            {isHourOpen && (<div className="absolute bottom-full mb-1 left-0 w-full max-h-32 overflow-y-auto bg-white border border-emerald-100 rounded-lg shadow-xl z-50">{hours.map(h => (<div key={h} onClick={() => {setSelectedHour(h); updateValue(selectedDateStr, h, selectedMinute); setIsHourOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedHour === h ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{h}</div>))}</div>)}
                         </div>
                         <span className="text-gray-400 font-bold">:</span>
                         <div className="relative flex-1">
-                            <button type="button" onClick={() => {setIsMinOpen(!isMinOpen); setIsHourOpen(false);}} className="w-full p-2 text-xs font-bold bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
-                                {selectedMinute} <ChevronDown className="w-3 h-3 text-emerald-400"/>
-                            </button>
-                            {isMinOpen && (
-                                <div className="absolute bottom-full mb-1 left-0 w-full max-h-32 overflow-y-auto bg-white border border-emerald-100 rounded-lg shadow-xl z-50">
-                                    {minutes.map(m => (
-                                        <div key={m} onClick={() => {setSelectedMinute(m); updateValue(selectedDateStr, selectedHour, m); setIsMinOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedMinute === m ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{m}</div>
-                                    ))}
-                                </div>
-                            )}
+                            <button type="button" onClick={() => {setIsMinOpen(!isMinOpen); setIsHourOpen(false);}} className="w-full p-2 text-xs font-bold bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">{selectedMinute} <ChevronDown className="w-3 h-3 text-emerald-400"/></button>
+                            {isMinOpen && (<div className="absolute bottom-full mb-1 left-0 w-full max-h-32 overflow-y-auto bg-white border border-emerald-100 rounded-lg shadow-xl z-50">{minutes.map(m => (<div key={m} onClick={() => {setSelectedMinute(m); updateValue(selectedDateStr, selectedHour, m); setIsMinOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedMinute === m ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{m}</div>))}</div>)}
                         </div>
                     </div>
                     <button type="button" onClick={() => setIsOpen(false)} className="bg-emerald-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-emerald-700 uppercase">OK</button>
@@ -150,49 +201,25 @@ export const CustomDatePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date()); 
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (value) {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) setViewDate(date);
-    }
-  }, [value]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+  useEffect(() => { if (value) { const d = new Date(value); if (!isNaN(d.getTime())) setViewDate(d); } }, [value]);
+  useEffect(() => { const h = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   const changeMonth = (inc) => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1));
-
   const handleDateClick = (day) => {
-    const year = viewDate.getFullYear();
-    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    onChange(`${year}-${month}-${dayStr}`);
-    setIsOpen(false);
+    const y = viewDate.getFullYear(); const m = String(viewDate.getMonth() + 1).padStart(2, '0'); const d = String(day).padStart(2, '0');
+    onChange(`${y}-${m}-${d}`); setIsOpen(false);
   };
-
   const renderCalendarDays = () => {
     const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
     const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
     const days = [];
     for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
     for (let d = 1; d <= totalDays; d++) {
-        const currentYear = viewDate.getFullYear();
-        const currentMonth = String(viewDate.getMonth() + 1).padStart(2, '0');
-        const currentDay = String(d).padStart(2, '0');
-        const isSelected = value === `${currentYear}-${currentMonth}-${currentDay}`;
-        days.push(
-            <button key={d} onClick={() => handleDateClick(d)} type="button" className={`h-8 w-8 rounded-full text-xs font-medium flex items-center justify-center transition-colors ${isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}>{d}</button>
-        );
+        const cY = viewDate.getFullYear(); const cM = String(viewDate.getMonth() + 1).padStart(2, '0'); const cD = String(d).padStart(2, '0');
+        const isSelected = value === `${cY}-${cM}-${cD}`;
+        days.push(<button key={d} onClick={() => handleDateClick(d)} type="button" className={`h-8 w-8 rounded-full text-xs font-medium flex items-center justify-center transition-colors ${isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}>{d}</button>);
     }
     return days;
   };
-
   return (
     <div className="relative space-y-1.5" ref={containerRef}>
         <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
@@ -218,17 +245,8 @@ export const CustomDatePicker = ({ label, value, onChange }) => {
 export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+  useEffect(() => { const h = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   const selectedOption = options.find(opt => opt.value === value) || options[0];
-
   return (
     <div className="relative space-y-1.5" ref={containerRef}>
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">{Icon && <Icon className="w-3 h-3" />} {label}</label>
@@ -241,12 +259,7 @@ export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) 
           <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
             {options.map((option) => {
               const isSelected = option.value === value;
-              return (
-                <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'}`}>
-                  <span className="font-medium">{option.label}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5" />}
-                </div>
-              );
+              return (<div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'}`}><span className="font-medium">{option.label}</span>{isSelected && <Check className="w-3.5 h-3.5" />}</div>);
             })}
           </div>
         </div>
@@ -258,25 +271,16 @@ export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) 
 export const CustomImageInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
-
-    const handleFileChange = (e) => {
-      const file = e.target.files[0];
-      if (file) onChange(file);
-    };
-
+    const handleFileChange = (e) => { const file = e.target.files[0]; if (file) onChange(file); };
     return (
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> {label}</label>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
         <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
-
         <div className={`w-full p-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 bg-white'}`}>
           {selectedFile ? (
             <div className="w-full flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-700 overflow-hidden">
-                    <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm font-medium truncate">{selectedFile.name}</span>
-                </div>
+                <div className="flex items-center gap-2 text-emerald-700 overflow-hidden"><CheckCircle className="w-5 h-5 flex-shrink-0" /><span className="text-sm font-medium truncate">{selectedFile.name}</span></div>
                 <button type="button" onClick={() => onChange(null)} className="text-xs text-red-500 hover:underline ml-2">Remove</button>
             </div>
           ) : (
@@ -299,20 +303,13 @@ export const CustomImageInput = ({ label, onChange, selectedFile }) => {
 
 export const CustomFileInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
-    const handleFileChange = (e) => {
-      const file = e.target.files[0];
-      if (file) onChange(file);
-    };
+    const handleFileChange = (e) => { const file = e.target.files[0]; if (file) onChange(file); };
     return (
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> {label}</label>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
         <div onClick={() => fileInputRef.current.click()} className={`w-full p-4 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 hover:border-emerald-300 hover:bg-gray-50'}`}>
-          {selectedFile ? (
-            <div className="flex items-center gap-2 text-emerald-700"><CheckCircle className="w-5 h-5" /><span className="text-sm font-medium truncate max-w-[200px]">{selectedFile.name}</span></div>
-          ) : (
-            <div className="flex flex-col items-center text-gray-400"><Upload className="w-6 h-6 mb-2" /><span className="text-sm font-medium">Click to upload a photo</span><span className="text-xs opacity-70">JPG, PNG supported</span></div>
-          )}
+          {selectedFile ? (<div className="flex items-center gap-2 text-emerald-700"><CheckCircle className="w-5 h-5" /><span className="text-sm font-medium truncate max-w-[200px]">{selectedFile.name}</span></div>) : (<div className="flex flex-col items-center text-gray-400"><Upload className="w-6 h-6 mb-2" /><span className="text-sm font-medium">Click to upload a photo</span><span className="text-xs opacity-70">JPG, PNG supported</span></div>)}
         </div>
       </div>
     );
@@ -352,22 +349,16 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
             </div>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Description Section */}
             <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                 <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Description</h4>
                 <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{report.description || "No description."}</p>
             </div>
-            
-            {/* Status Section - MATCHES Description Aesthetic */}
             {isLostReport && report.statusSentence && (
               <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                  <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> Status</h4>
-                 <div className="flex items-center gap-2 font-bold text-sm uppercase text-gray-700">
-                   {report.statusSentence.replace(/_/g, ' ')}
-                 </div>
+                 <div className="flex items-center gap-2 font-bold text-sm uppercase text-gray-700">{report.statusSentence.replace(/_/g, ' ')}</div>
               </div>
             )}
-
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
                     <span className="text-xs font-medium text-gray-500 block mb-1">{dateLabel}</span>
@@ -378,6 +369,19 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
                     <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Hash className="w-4 h-4 text-emerald-500" /> {report.chipNumber || "Not Scanned"}</div>
                 </div>
             </div>
+            
+            {report.latitude && report.longitude && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Exact Location</h4>
+                    <div className="h-48 w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm z-0 relative">
+                        <MapContainer center={[report.latitude, report.longitude]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                            <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                            <Marker position={[report.latitude, report.longitude]}><Popup>Report Location</Popup></Marker>
+                            <RecenterMap lat={report.latitude} lng={report.longitude} />
+                        </MapContainer>
+                    </div>
+                </div>
+            )}
         </div>
       </div>
     </div>
@@ -420,7 +424,16 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
   const [myReports, setMyReports] = useState([]);
   const [selectedExistingId, setSelectedExistingId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [formData, setFormData] = useState({ title: "", description: "", species: "DOG", condition: "GOOD", dateFound: "", chipNumber: "" });
+  const [formData, setFormData] = useState({ 
+      title: "", 
+      description: "", 
+      species: "DOG", 
+      condition: "GOOD", 
+      dateFound: "", 
+      chipNumber: "",
+      latitude: null,
+      longitude: null 
+  });
 
   useEffect(() => {
     if (isOpen && mode === "EXISTING") {
@@ -470,8 +483,19 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
                         <CustomDateTimePicker label="Date & Time Found" value={formData.dateFound} onChange={v => setFormData({...formData, dateFound: v})} />
                         <input type="number" placeholder="Chip Number" className="w-full p-2.5 border rounded-lg text-sm" value={formData.chipNumber} onChange={e => setFormData({...formData, chipNumber: e.target.value})} />
                     </div>
+                    <FormMapPicker onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))} />
                     <CustomImageInput label="Photo" selectedFile={imageFile} onChange={setImageFile} />
                 </>
+            )}
+            {mode === "EXISTING" && (
+                <div className="space-y-3">
+                    {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">No reports found.</p> : myReports.map(r => (
+                        <div key={r.id} onClick={() => setSelectedExistingId(r.id)} className={`p-3 border rounded-lg cursor-pointer ${selectedExistingId === r.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'}`}>
+                            <p className="font-bold text-sm">{r.title}</p>
+                            <p className="text-xs text-gray-500">{new Date(r.foundDate).toLocaleDateString()}</p>
+                        </div>
+                    ))}
+                </div>
             )}
             <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg mt-4">{loading ? "Processing..." : "Connect"}</button>
         </form>
@@ -481,16 +505,32 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
 };
 
 export const MapModal = ({ isOpen, onClose, location }) => {
-  if (!isOpen || !location) return null;
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-xl w-full max-w-3xl h-[500px] flex flex-col overflow-hidden shadow-2xl">
-        <div className="p-4 border-b flex justify-between bg-gray-50"><h3 className="font-bold">Map</h3><button onClick={onClose}><X className="w-6 h-6"/></button></div>
-        <div className="flex-1 flex flex-col items-center justify-center">
-            <MapPin className="w-12 h-12 text-red-500 mb-2 animate-bounce" />
-            <p className="text-gray-500 text-xs">Coordinates: {location.y}, {location.x}</p>
+    if (!isOpen) return null;
+    const lat = location?.lat || location?.latitude;
+    const lng = location?.lng || location?.longitude;
+    const hasCoords = lat && lng;
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative flex flex-col h-[500px]">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+                    <h3 className="font-bold text-gray-800">Pet Location</h3>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
+                </div>
+                <div className="flex-1 relative bg-gray-50">
+                    {hasCoords ? (
+                        <MapContainer center={[lat, lng]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                            <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                            <Marker position={[lat, lng]}><Popup>Location of the pet</Popup></Marker>
+                            <RecenterMap lat={lat} lng={lng} />
+                        </MapContainer>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2"><MapPin className="w-12 h-12 text-gray-300" /><p>No valid coordinates available.</p></div>
+                    )}
+                </div>
+                <div className="p-3 bg-gray-50 text-xs text-center text-gray-500 border-t border-gray-100 font-mono">
+                     {hasCoords ? `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Location unavailable"}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };

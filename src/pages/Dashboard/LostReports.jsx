@@ -12,6 +12,57 @@ import {
     AddSightingModal, MapModal 
 } from "@/components/DashboardComponents";
 
+const AddressDisplay = ({ lat, lng, onClick }) => {
+    const [address, setAddress] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!lat || !lng) {
+            setAddress("No location provided");
+            return;
+        }
+
+        let isMounted = true;
+        const fetchAddress = async () => {
+            setLoading(true);
+            try {
+                await new Promise(r => setTimeout(r, Math.random() * 1500));
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                );
+                const data = await response.json();
+
+                if (isMounted && data.address) {
+                    const city = data.address.city || data.address.town || data.address.village || "";
+                    const country = data.address.country || "";
+                    const locString = [city, country].filter(Boolean).join(", ");
+                    setAddress(locString || "Location details available");
+                }
+            } catch (error) {
+                if (isMounted) setAddress("View Map Location");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        fetchAddress();
+        return () => { isMounted = false; };
+    }, [lat, lng]);
+
+    return (
+        <button 
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+            className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
+        >
+            <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" /> 
+            <span className="truncate font-medium">
+                {loading ? "Loading address..." : address}
+            </span>
+        </button>
+    );
+};
+
 const ToolbarDropdown = ({ label, value, options, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
@@ -88,22 +139,15 @@ const LostReports = () => {
 
     const parseDate = (dateInput) => {
         if (!dateInput) return null;
-
         if (Array.isArray(dateInput)) {
             return new Date(
-                dateInput[0], 
-                dateInput[1] - 1, 
-                dateInput[2], 
-                dateInput[3] || 0, 
-                dateInput[4] || 0, 
-                dateInput[5] || 0
+                dateInput[0], dateInput[1] - 1, dateInput[2], 
+                dateInput[3] || 0, dateInput[4] || 0, dateInput[5] || 0
             );
         }
-
         if (typeof dateInput === 'string') {
             return new Date(dateInput.replace(" ", "T"));
         }
-
         return new Date(dateInput);
     };
 
@@ -118,16 +162,12 @@ const LostReports = () => {
 
     function getLostStatus(dateInput) {
         if (!dateInput) return "MORE_THAN_1_MONTH";
-
         const lostDate = parseDate(dateInput);
         const now = new Date();
-
         if (isNaN(lostDate.getTime())) return "MORE_THAN_1_MONTH";
-
         const diffInMilliseconds = now - lostDate;
         const hours = diffInMilliseconds / (1000 * 60 * 60);
         const days = hours / 24;
-
         if (hours < 3) return "LESS_THAN_3_HOURS";
         if (hours < 10) return "LESS_THAN_10_HOURS";
         if (days < 1) return "LESS_THAN_1_DAY";
@@ -168,24 +208,12 @@ const LostReports = () => {
 
                 if (filters.status) {
                     switch (filters.status) {
-                        case "LESS_THAN_3_HOURS":
-                            calculatedDateAfter = new Date(now.getTime() - (3 * 60 * 60 * 1000));
-                            break;
-                        case "LESS_THAN_10_HOURS":
-                            calculatedDateAfter = new Date(now.getTime() - (10 * 60 * 60 * 1000));
-                            break;
-                        case "LESS_THAN_1_DAY":
-                            calculatedDateAfter = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-                            break;
-                        case "LESS_THAN_1_WEEK":
-                            calculatedDateAfter = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-                            break;
-                        case "LESS_THAN_1_MONTH":
-                            calculatedDateAfter = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
-                            break;
-                        case "MORE_THAN_1_MONTH":
-                            calculatedDateBefore = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
-                            break;
+                        case "LESS_THAN_3_HOURS": calculatedDateAfter = new Date(now.getTime() - (3 * 60 * 60 * 1000)); break;
+                        case "LESS_THAN_10_HOURS": calculatedDateAfter = new Date(now.getTime() - (10 * 60 * 60 * 1000)); break;
+                        case "LESS_THAN_1_DAY": calculatedDateAfter = new Date(now.getTime() - (24 * 60 * 60 * 1000)); break;
+                        case "LESS_THAN_1_WEEK": calculatedDateAfter = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); break;
+                        case "LESS_THAN_1_MONTH": calculatedDateAfter = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)); break;
+                        case "MORE_THAN_1_MONTH": calculatedDateBefore = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)); break;
                     }
                     calculatedDateAfter = formatDateTime(calculatedDateAfter);
                     calculatedDateBefore = formatDateTime(calculatedDateBefore);
@@ -218,18 +246,12 @@ const LostReports = () => {
                 setLoading(false);
             }
         };
-
         const timer = setTimeout(() => { fetchReports(); }, 300);
         return () => clearTimeout(timer);
     }, [page, filters, pageSize, sortBy]);
 
     const handleStatusChange = (val) => {
-        setFilters(prev => ({ 
-            ...prev, 
-            status: val, 
-            dateAfter: "", 
-            dateBefore: "" 
-        }));
+        setFilters(prev => ({ ...prev, status: val, dateAfter: "", dateBefore: "" }));
         setPage(0);
     };
 
@@ -260,23 +282,13 @@ const LostReports = () => {
                     <ToolbarDropdown 
                         label="Show" 
                         value={pageSize} 
-                        options={[
-                            { label: "6", value: 6 },
-                            { label: "9", value: 9 },
-                            { label: "12", value: 12 },
-                            { label: "15", value: 15 }
-                        ]} 
+                        options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} 
                         onChange={(val) => { setPageSize(val); setPage(0); }} 
                     />
-
                     <ToolbarDropdown 
                         label="Sort" 
                         value={sortBy} 
-                        options={[
-                            { label: "Newest", value: "dateLost" },
-                            { label: "Title", value: "title" },
-                            { label: "Species", value: "species" }
-                        ]} 
+                        options={[{label:"Newest",value:"dateLost"},{label:"Title",value:"title"},{label:"Species",value:"species"}]} 
                         onChange={(val) => { setSortBy(val); setPage(0); }} 
                     />
                 </div>
@@ -309,7 +321,6 @@ const LostReports = () => {
                     {reports.map((report) => {
                         const dateValue = report.dateLost || report.lostDate;
                         const currentStatus = getLostStatus(dateValue);
-                        
                         return (
                             <div 
                                 key={report.id} 
@@ -333,7 +344,6 @@ const LostReports = () => {
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-gray-900 line-clamp-1 group-hover:text-emerald-700 transition-colors">{report.title}</h3>
-                                        
                                         {dateValue && (
                                             <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md whitespace-nowrap ml-2">
                                                 {parseDate(dateValue)?.toLocaleDateString() || "Unknown"}
@@ -342,7 +352,19 @@ const LostReports = () => {
                                     </div>
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || "No description provided."}</p>
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-                                        <button onClick={(e) => { e.stopPropagation(); setMapLocation(report.location); }} className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700"><MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> View Location</button>
+                                        
+                                        <AddressDisplay 
+                                            lat={report.latitude} 
+                                            lng={report.longitude} 
+                                            onClick={() => {
+                                                if (report.latitude && report.longitude) {
+                                                    setMapLocation({ lat: report.latitude, lng: report.longitude });
+                                                } else {
+                                                    toast.error("No map coordinates available");
+                                                }
+                                            }}
+                                        />
+
                                         <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><Eye className="w-4 h-4" /> I Found This Pet</button>
                                     </div>
                                 </div>

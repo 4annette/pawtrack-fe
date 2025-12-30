@@ -11,6 +11,57 @@ import {
     ClaimModal, AddSightingModal, MapModal 
 } from "@/components/DashboardComponents";
 
+const AddressDisplay = ({ lat, lng, onClick }) => {
+    const [address, setAddress] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!lat || !lng) {
+            setAddress("No location provided");
+            return;
+        }
+
+        let isMounted = true;
+        const fetchAddress = async () => {
+            setLoading(true);
+            try {
+                await new Promise(r => setTimeout(r, Math.random() * 1500));
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                );
+                const data = await response.json();
+
+                if (isMounted && data.address) {
+                    const city = data.address.city || data.address.town || data.address.village || "";
+                    const country = data.address.country || "";
+                    const locString = [city, country].filter(Boolean).join(", ");
+                    setAddress(locString || "Location details available");
+                }
+            } catch (error) {
+                if (isMounted) setAddress("View Map Location");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        fetchAddress();
+        return () => { isMounted = false; };
+    }, [lat, lng]);
+
+    return (
+        <button 
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+            className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
+        >
+            <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" /> 
+            <span className="truncate font-medium">
+                {loading ? "Loading address..." : address}
+            </span>
+        </button>
+    );
+};
+
 const ToolbarDropdown = ({ label, value, options, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
@@ -74,12 +125,7 @@ const FoundReports = () => {
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
     const [filters, setFilters] = useState({
-        search: "",
-        species: "",
-        condition: "",
-        dateAfter: "",
-        dateBefore: "",
-        chipNumber: ""
+        search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: ""
     });
 
     const [selectedFoundId, setSelectedFoundId] = useState(null);
@@ -114,7 +160,7 @@ const FoundReports = () => {
                 const data = await fetchFoundReports(page, pageSize, payload, sortBy);
                 
                 setReports(data.content || []);
-                
+
                 if (data.page) {
                     setTotalPages(data.page.totalPages || 0);
                     setTotalElements(data.page.totalElements || 0);
@@ -159,30 +205,9 @@ const FoundReports = () => {
                     <h1 className="text-3xl font-bold text-gray-900">Found Reports</h1>
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
                 </div>
-
                 <div className="flex items-center gap-3">
-                    <ToolbarDropdown 
-                        label="Show" 
-                        value={pageSize} 
-                        options={[
-                            { label: "6", value: 6 },
-                            { label: "9", value: 9 },
-                            { label: "12", value: 12 },
-                            { label: "15", value: 15 }
-                        ]} 
-                        onChange={(val) => { setPageSize(val); setPage(0); }} 
-                    />
-
-                    <ToolbarDropdown 
-                        label="Sort" 
-                        value={sortBy} 
-                        options={[
-                            { label: "Newest", value: "dateFound" },
-                            { label: "Title", value: "title" },
-                            { label: "Species", value: "species" }
-                        ]} 
-                        onChange={(val) => { setSortBy(val); setPage(0); }} 
-                    />
+                    <ToolbarDropdown label="Show" value={pageSize} options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} onChange={(val)=>{setPageSize(val);setPage(0);}} />
+                    <ToolbarDropdown label="Sort" value={sortBy} options={[{label:"Newest",value:"dateFound"},{label:"Title",value:"title"},{label:"Species",value:"species"}]} onChange={(val)=>{setSortBy(val);setPage(0);}} />
                 </div>
             </div>
 
@@ -227,8 +252,21 @@ const FoundReports = () => {
                             <div className="p-5 flex-1 flex flex-col">
                                 <div className="flex justify-between items-start mb-2"><h3 className="font-bold text-gray-900 line-clamp-1">{report.title}</h3><span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">{new Date(report.foundDate).toLocaleDateString()}</span></div>
                                 <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || "No description provided."}</p>
+                                
                                 <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-                                    <button onClick={(e) => { e.stopPropagation(); setMapLocation(report.location); }} className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700"><MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> View Location</button>
+                                    
+                                    <AddressDisplay 
+                                        lat={report.latitude} 
+                                        lng={report.longitude} 
+                                        onClick={() => {
+                                            if (report.latitude && report.longitude) {
+                                                setMapLocation({ lat: report.latitude, lng: report.longitude });
+                                            } else {
+                                                toast.error("No map coordinates available");
+                                            }
+                                        }}
+                                    />
+
                                     <div className="flex gap-2">
                                         <button onClick={(e) => { e.stopPropagation(); setSelectedFoundId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><CheckCircle className="w-4 h-4" /> This is my pet</button>
                                         <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 font-semibold text-xs hover:bg-emerald-50 shadow-sm"><Eye className="w-4 h-4" /> I saw this pet</button>
@@ -243,53 +281,15 @@ const FoundReports = () => {
             {totalPages > 1 && (
                 <div className="flex justify-center items-center mt-16">
                     <nav className="flex items-center gap-1 p-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-emerald-900/5">
-                        <button 
-                            disabled={page === 0} 
-                            onClick={() => setPage(0)} 
-                            className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"
-                        >
-                            <ChevronsLeft className="w-5 h-5" />
-                        </button>
-
-                        <button 
-                            disabled={page === 0} 
-                            onClick={() => setPage(p => p - 1)} 
-                            className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        
+                        <button disabled={page === 0} onClick={() => setPage(0)} className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"><ChevronsLeft className="w-5 h-5" /></button>
+                        <button disabled={page === 0} onClick={() => setPage(p => p - 1)} className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"><ChevronLeft className="w-5 h-5" /></button>
                         <div className="flex items-center gap-1">
                             {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setPage(i)}
-                                    className={`min-w-[44px] h-11 rounded-xl text-sm font-bold transition-all duration-200 ${
-                                        page === i 
-                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
-                                            : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-600'
-                                    }`}
-                                >
-                                    {i + 1}
-                                </button>
+                                <button key={i} onClick={() => setPage(i)} className={`min-w-[44px] h-11 rounded-xl text-sm font-bold transition-all duration-200 ${page === i ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-600'}`}>{i + 1}</button>
                             ))}
                         </div>
-
-                        <button 
-                            disabled={page + 1 >= totalPages} 
-                            onClick={() => setPage(p => p + 1)} 
-                            className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-
-                        <button 
-                            disabled={page + 1 >= totalPages} 
-                            onClick={() => setPage(totalPages - 1)} 
-                            className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"
-                        >
-                            <ChevronsRight className="w-5 h-5" />
-                        </button>
+                        <button disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)} className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"><ChevronRight className="w-5 h-5" /></button>
+                        <button disabled={page + 1 >= totalPages} onClick={() => setPage(totalPages - 1)} className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-20"><ChevronsRight className="w-5 h-5" /></button>
                     </nav>
                 </div>
             )}
@@ -297,6 +297,7 @@ const FoundReports = () => {
             <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} />
             <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} />
             <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="FOUND" />
+            
             <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
         </div>
     );

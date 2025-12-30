@@ -7,10 +7,12 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// --- INTERCEPTOR (Token Cleaner) ---
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    const cleanToken = token.replace(/"/g, ''); 
+    config.headers.Authorization = `Bearer ${cleanToken}`;
   }
   return config;
 }, (error) => Promise.reject(error));
@@ -27,17 +29,12 @@ export const registerUser = async (userData) => {
 };
 
 // ==========================================
-//                FOUND REPORTS
+//                 FOUND REPORTS
 // ==========================================
 
 export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound') => {
   const response = await api.post(`/found-reports/filter`, filters || {}, {
-    params: {
-      page: page,
-      size: size,
-      sortBy: sortBy,
-      sortDirection: 'DESC'
-    }
+    params: { page, size, sortBy, sortDirection: 'DESC' }
   });
   return response.data;
 };
@@ -54,7 +51,9 @@ export const createFoundReport = async (reportData) => {
     dateFound: reportData.dateFound, 
     chipNumber: parseInt(reportData.chipNumber) || 0,
     species: reportData.species,
-    condition: reportData.condition
+    condition: reportData.condition,
+    latitude: reportData.latitude,
+    longitude: reportData.longitude
   };
   const response = await api.post('/found-reports', payload);
   return response.data;
@@ -73,7 +72,10 @@ export const deleteFoundReport = async (id) => {
 export const uploadFoundReportImage = async (reportId, file) => {
   const formData = new FormData();
   formData.append("file", file);
-  const token = localStorage.getItem("token");
+  
+  let token = localStorage.getItem("token");
+  if (token) token = token.replace(/"/g, ''); 
+
   const response = await fetch(`${BASE_URL}/found-reports/${reportId}/add-image`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -90,17 +92,12 @@ export const deleteFoundReportImage = async (id) => {
 };
 
 // ==========================================
-//                LOST REPORTS
+//                 LOST REPORTS
 // ==========================================
 
 export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost') => {
   const response = await api.post(`/lost-reports/filter`, filters || {}, {
-    params: {
-      page: page,
-      size: size,
-      sortBy: sortBy,
-      sortDirection: 'DESC'
-    }
+    params: { page, size, sortBy, sortDirection: 'DESC' }
   });
   return response.data;
 };
@@ -116,7 +113,9 @@ export const createLostReport = async (reportData) => {
     description: reportData.description,
     species: reportData.species,
     chipNumber: parseInt(reportData.chipNumber) || 0,
-    date: reportData.date
+    date: reportData.date,
+    latitude: reportData.latitude,
+    longitude: reportData.longitude
   };
   const response = await api.post('/lost-reports', payload);
   return response.data;
@@ -135,7 +134,10 @@ export const deleteLostReport = async (id) => {
 export const uploadLostReportImage = async (reportId, file) => {
   const formData = new FormData();
   formData.append("file", file);
-  const token = localStorage.getItem("token");
+
+  let token = localStorage.getItem("token");
+  if (token) token = token.replace(/"/g, ''); 
+
   const response = await fetch(`${BASE_URL}/lost-reports/${reportId}/add-image`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -170,9 +172,8 @@ export const deleteUserAccount = async (userId) => {
 };
 
 // ==========================================
-//      MY REPORTS (LIST VIEW SPECIFIC)
+//       MY REPORTS
 // ==========================================
-
 export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate') => {
   const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},desc&all=false`);
   return response.data;
@@ -187,9 +188,8 @@ export const fetchMyLostReports = fetchMyLostReportsList;
 export const fetchMyFoundReports = fetchMyFoundReportsList;
 
 // ==========================================
-//                LINKING
+//                 LINKING
 // ==========================================
-
 export const linkFoundToLostReport = async (foundReportId, lostReportId) => {
   const response = await api.patch(`/lost-reports/${lostReportId}/add-found-report/${foundReportId}`);
   return response.data;

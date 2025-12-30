@@ -1,13 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Dog, Hash, AlertTriangle, 
   Loader2, LogOut, CheckCircle, Upload, ImageIcon, X,
-  User, FileText, Calendar, Clock, ChevronLeft, ChevronRight, ChevronDown, Check
+  User, FileText, Calendar, Clock, ChevronLeft, ChevronRight, ChevronDown, Check, MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { createLostReport, uploadLostReportImage } from "@/services/api";
+import LocationPicker from "@/components/LocationPicker";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +19,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
   
   const [isHourOpen, setIsHourOpen] = useState(false);
   const [isMinOpen, setIsMinOpen] = useState(false);
-
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -50,13 +50,10 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
   }, []);
 
   const changeMonth = (inc) => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1));
-
   const updateValue = (dateStr, hh, mm) => {
       if (!dateStr) return;
-      const finalValue = `${dateStr} ${hh}:${mm}:00`;
-      onChange(finalValue);
+      onChange(`${dateStr} ${hh}:${mm}:00`);
   };
-
   const handleDateClick = (day) => {
     const year = viewDate.getFullYear();
     const month = String(viewDate.getMonth() + 1).padStart(2, '0');
@@ -65,7 +62,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     setSelectedDateStr(newDateStr);
     updateValue(newDateStr, selectedHour, selectedMinute);
   };
-
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
@@ -76,7 +72,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
             <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date & time'}</span>
             <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
         </div>
-
         {isOpen && (
             <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-72 animate-in fade-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
@@ -84,11 +79,9 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                     <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
                     <button type="button" onClick={() => changeMonth(1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronRight className="w-4 h-4"/></button>
                 </div>
-
                 <div className="grid grid-cols-7 mb-2 text-center">
                     {['S','M','T','W','T','F','S'].map((d,i) => (<span key={i} className="text-[10px] font-bold text-emerald-300">{d}</span>))}
                 </div>
-
                 <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">
                     {(() => {
                         const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
@@ -105,7 +98,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                         return days;
                     })()}
                 </div>
-
                 <div className="flex items-center gap-2 relative">
                     <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div className="flex-1 flex gap-1 items-center">
@@ -219,7 +211,13 @@ const CreateLostReport = () => {
   const userMenuRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    title: "", description: "", species: "DOG", dateLost: "", chipNumber: "",
+    title: "", 
+    description: "", 
+    species: "DOG", 
+    dateLost: "", 
+    chipNumber: "",
+    latitude: null,
+    longitude: null
   });
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
@@ -232,8 +230,22 @@ const CreateLostReport = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleLocationSelect = useCallback((lat, lng) => {
+    setFormData(prev => ({...prev, latitude: lat, longitude: lng}));
+  }, []);
+
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.latitude || !formData.longitude) {
+        toast.error("Please search or click on the map to select a location.");
+        return;
+    }
+
     setLoading(true);
     try {
       let finalDateTime = formData.dateLost;
@@ -248,13 +260,14 @@ const CreateLostReport = () => {
            finalDateTime = `${localYear}-${localMonth}-${localDay} ${localHours}:${localMinutes}:00`;
       }
       
-      // Changed payload key from 'dateLost' to 'date' to match backend requirements
       const payload = {
         title: formData.title,
         description: formData.description,
         species: formData.species,
         chipNumber: formData.chipNumber,
-        date: finalDateTime 
+        date: finalDateTime,
+        latitude: formData.latitude,
+        longitude: formData.longitude
       };
 
       const newReport = await createLostReport(payload);
@@ -300,23 +313,44 @@ const CreateLostReport = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Report Title</label>
-                  <input type="text" required placeholder="e.g. Lost Golden Retriever near Downtown" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                  <input type="text" required placeholder="e.g. Lost Golden Retriever near Downtown" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.title} onChange={e => updateField('title', e.target.value)} />
               </div>
 
               <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Description</label>
-                  <textarea required placeholder="Describe markings, collar, etc." className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                  <textarea required placeholder="Describe markings, collar, etc." className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.description} onChange={e => updateField('description', e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-end">
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3"/> Location Lost
+                    </label>
+                    {formData.latitude && (
+                        <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                            {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
+                        </span>
+                    )}
+                </div>
+                <LocationPicker 
+                    latitude={formData.latitude}
+                    longitude={formData.longitude}
+                    onLocationSelect={handleLocationSelect} 
+                />
+                {!formData.latitude && (
+                    <p className="text-xs text-orange-500 font-medium ml-1">* Please allow location access or click on the map.</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StyledDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => setFormData({...formData, species: val})} />
+                <StyledDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => updateField('species', val)} />
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3"/> Chip Number</label>
-                    <input type="number" placeholder="Optional" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.chipNumber} onChange={e => setFormData({...formData, chipNumber: e.target.value})} />
+                    <input type="number" placeholder="Optional" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.chipNumber} onChange={e => updateField('chipNumber', e.target.value)} />
                 </div>
               </div>
 
-              <CustomDateTimePicker label="Date & Time Lost" value={formData.dateLost} onChange={val => setFormData({...formData, dateLost: val})} />
+              <CustomDateTimePicker label="Date & Time Lost" value={formData.dateLost} onChange={val => updateField('dateLost', val)} />
 
               <SimpleFileInput label="Pet Photo" selectedFile={imageFile} onChange={setImageFile} />
 

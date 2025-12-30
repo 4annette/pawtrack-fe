@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Dog, Cat, CheckCircle, Calendar, Hash, 
   ChevronDown, Check, ChevronLeft, ChevronRight, Clock, 
-  Upload, Camera, Image as ImageIcon, Loader2, LogOut, User, FileText
+  Upload, Camera, Image as ImageIcon, Loader2, LogOut, User, FileText, MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { createFoundReport, uploadFoundReportImage } from "@/services/api";
+import LocationPicker from "@/components/LocationPicker";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -236,7 +237,14 @@ const CreateFoundReport = () => {
   const userMenuRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    title: "", description: "", species: "DOG", condition: "GOOD", dateFound: "", chipNumber: "",
+    title: "", 
+    description: "", 
+    species: "DOG", 
+    condition: "GOOD", 
+    dateFound: "", 
+    chipNumber: "",
+    latitude: null,
+    longitude: null
   });
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
@@ -252,6 +260,10 @@ const CreateFoundReport = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.latitude || !formData.longitude) {
+        toast.error("Please search or click on the map to select a location.");
+        return;
+    }
     setLoading(true);
     try {
         let formattedDate = formData.dateFound;
@@ -304,6 +316,26 @@ const CreateFoundReport = () => {
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Description</label>
                     <textarea required className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                 </div>
+                
+                <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                        <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3"/> Location Found
+                        </label>
+                        {formData.latitude && (
+                            <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                                {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
+                            </span>
+                        )}
+                    </div>
+                    <LocationPicker 
+                        onLocationSelect={(lat, lng) => setFormData({...formData, latitude: lat, longitude: lng})} 
+                    />
+                    {!formData.latitude && (
+                        <p className="text-xs text-orange-500 font-medium ml-1">* Please search or click on the map to pin the location.</p>
+                    )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <CustomDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => setFormData({...formData, species: val})} />
                     <CustomDropdown label="Condition" icon={CheckCircle} value={formData.condition} options={conditionOptions} onChange={val => setFormData({...formData, condition: val})} />

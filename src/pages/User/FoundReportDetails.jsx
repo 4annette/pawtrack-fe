@@ -4,17 +4,44 @@ import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, User, FileText, LogOut, Calendar, Hash, Dog, 
   CheckCircle, MapPin, Link as LinkIcon, AlertCircle, Clock, 
-  ChevronLeft, ChevronRight, Check, ChevronDown, Info
+  ChevronDown, Info, Save
 } from "lucide-react";
 import { toast } from "sonner";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { 
   fetchFoundReportById, 
   updateFoundReport, 
   deleteFoundReport, 
   uploadFoundReportImage, 
   deleteFoundReportImage 
-} from "@/services/api";
+} from "../../services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const RecenterMap = ({ lat, lng }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (lat && lng) {
+            setTimeout(() => {
+                map.invalidateSize();
+                map.setView([lat, lng], 15);
+            }, 200);
+        }
+    }, [lat, lng, map]);
+    return null;
+};
 
 const CustomDateTimePicker = ({ label, value }) => (
   <div className="space-y-1.5">
@@ -73,6 +100,7 @@ const FoundReportDetails = () => {
   const [report, setReport] = useState(null);
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [addressText, setAddressText] = useState("Loading location...");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const hasFetched = useRef(false);
@@ -95,6 +123,36 @@ const FoundReportDetails = () => {
     };
     getReport();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!report || !report.latitude || !report.longitude) {
+        if (report && (!report.latitude || !report.longitude)) {
+            setAddressText("No location coordinates set");
+        }
+        return;
+    }
+
+    const timerId = setTimeout(() => {
+        setAddressText("Fetching address...");
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${report.latitude}&lon=${report.longitude}`, {
+            headers: { 'Accept-Language': 'en' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("OSM Blocked");
+            return res.json();
+        })
+        .then(json => {
+            const addr = json.address;
+            const city = addr?.city || addr?.town || addr?.village || "";
+            const country = addr?.country || "";
+            setAddressText([city, country].filter(Boolean).join(", "));
+        })
+        .catch(() => setAddressText("Location available on map below"));
+    }, 1000); 
+
+    return () => clearTimeout(timerId);
+
+  }, [report?.latitude, report?.longitude]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -229,9 +287,10 @@ const FoundReportDetails = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3"/> Location</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3"/> Location Text</label>
                 <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
-                   <Info className="w-3.5 h-3.5 text-emerald-300" /> {report.location?.envelope || "No location data"}
+                   <Info className="w-3.5 h-3.5 text-emerald-300" /> 
+                   {addressText}
                 </div>
               </div>
 
@@ -262,6 +321,31 @@ const FoundReportDetails = () => {
               )}
             </div>
           </form>
+
+          {report.latitude && report.longitude && (
+            <div className="mt-10 border-t border-emerald-100 pt-8">
+                <h3 className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <MapPin className="w-4 h-4"/> Found Location Map
+                </h3>
+                <div className="h-64 w-full rounded-2xl overflow-hidden border border-emerald-200 shadow-sm relative z-0">
+                    <MapContainer 
+                        center={[report.latitude, report.longitude]} 
+                        zoom={15} 
+                        style={{ height: "100%", width: "100%", zIndex: 0 }}
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker position={[report.latitude, report.longitude]}>
+                            <Popup>Found here</Popup>
+                        </Marker>
+                        <RecenterMap lat={report.latitude} lng={report.longitude} />
+                    </MapContainer>
+                </div>
+            </div>
+          )}
+
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

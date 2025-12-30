@@ -15,6 +15,66 @@ import {
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "Date not set";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    return date.toLocaleDateString();
+  } catch (e) {
+    return "Date Error";
+  }
+};
+
+const AddressDisplay = ({ lat, lng }) => {
+  const [address, setAddress] = useState("Loading...");
+
+  useEffect(() => {
+    if (lat === null || lat === undefined || lng === null || lng === undefined) {
+      setAddress("Location not set");
+      return;
+    }
+
+    let isMounted = true;
+    
+    // Delay request to prevent 403 Rate Limiting
+    const timer = setTimeout(() => {
+        const fetchAddress = async () => {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+                    { headers: { 'Accept-Language': 'en' } } 
+                );
+
+                if (!response.ok) throw new Error("Blocked");
+
+                const data = await response.json();
+                if (isMounted && data.address) {
+                    const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+                    const country = data.address.country || "";
+                    const locString = [city, country].filter(Boolean).join(", ");
+                    setAddress(locString || "View on map");
+                }
+            } catch (error) {
+                if (isMounted) setAddress("View on map");
+            }
+        };
+        fetchAddress();
+    }, 1200);
+
+    return () => { 
+        isMounted = false; 
+        clearTimeout(timer);
+    };
+  }, [lat, lng]);
+
+  return (
+    <span className="flex items-center gap-1.5 truncate text-emerald-600 font-medium">
+      <MapPin className="w-4 h-4" /> {address}
+    </span>
+  );
+};
+
 const AestheticDropdown = ({ label, value, options, onChange, type }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -101,17 +161,21 @@ const MyReports = () => {
         ? await fetchMyLostReportsList(page, pageSize, sortBy) 
         : await fetchMyFoundReportsList(page, pageSize, sortBy);
       
-      setReports(res.content || []);
+      setReports(res?.content || []);
       
-      if (res.page) {
+      if (res?.page) {
         setTotalElements(res.page.totalElements || 0);
         setTotalPages(res.page.totalPages || 0);
       } else {
-        setTotalElements(res.totalElements || 0);
-        setTotalPages(res.totalPages || 0);
+        setTotalElements(res?.totalElements || 0);
+        setTotalPages(res?.totalPages || 0);
       }
     } catch (error) {
       console.error("Failed to load list", error);
+      setReports([]); 
+      if (error?.response?.status === 403) {
+          toast.error("Session expired. Please log in again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -215,22 +279,22 @@ const MyReports = () => {
           </div>
 
           <div className="flex items-center gap-4" ref={userMenuRef}>
-             <div className="relative">
-                <button 
-                  onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
-                >
-                  U
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
-                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
-                    <div className="h-px bg-gray-50 my-1"></div>
-                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
-                  </div>
-                )}
-             </div>
+              <div className="relative">
+                 <button 
+                   onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
+                   className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
+                 >
+                   U
+                 </button>
+                 {isUserMenuOpen && (
+                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                     <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
+                     <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
+                     <div className="h-px bg-gray-50 my-1"></div>
+                     <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
+                   </div>
+                 )}
+              </div>
           </div>
         </div>
       </header>
@@ -255,8 +319,8 @@ const MyReports = () => {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-300">
-             <Loader2 className="w-10 h-10 animate-spin" />
-             <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
+              <Loader2 className="w-10 h-10 animate-spin" />
+              <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -275,9 +339,9 @@ const MyReports = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{report.title}</h3>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
-                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {new Date(report.foundDate || report.lostDate || report.dateLost || report.dateFound).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.foundDate || report.lostDate || report.dateLost || report.dateFound)}</span>
                           <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
-                          <span className="flex items-center gap-1.5 truncate"><MapPin className="w-4 h-4" /> {report.location?.envelope || "Location not set"}</span>
+                          <AddressDisplay lat={report.latitude} lng={report.longitude} />
                         </div>
 
                         <div className="flex md:hidden items-center gap-3 mt-4">
@@ -317,7 +381,7 @@ const MyReports = () => {
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center mt-12 mb-6">
                     <nav className={`flex items-center gap-1 p-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl transition-all duration-500 ${activeTab === 'lost' ? 'shadow-orange-900/5' : 'shadow-emerald-900/5'}`}>
-                     <button 
+                      <button 
                         disabled={page === 0} 
                         onClick={() => setPage(0)} 
                         className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}

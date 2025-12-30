@@ -6,14 +6,42 @@ import {
   CheckCircle, MapPin, Clock, ChevronDown, Info, Save
 } from "lucide-react";
 import { toast } from "sonner";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
 import { 
   fetchLostReportById, 
   updateLostReport, 
   deleteLostReport, 
   uploadLostReportImage, 
   deleteLostReportImage 
-} from "@/services/api";
+} from "../../services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const RecenterMap = ({ lat, lng }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (lat && lng) {
+            setTimeout(() => {
+                map.invalidateSize();
+                map.setView([lat, lng], 15);
+            }, 200);
+        }
+    }, [lat, lng, map]);
+    return null;
+};
 
 const CustomDateTimePicker = ({ label, value }) => (
   <div className="space-y-1.5">
@@ -30,7 +58,9 @@ const CustomDateTimePicker = ({ label, value }) => (
 const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-  const selectedOption = options.find(opt => opt.value === value) || { label: "Not set", value: "" };
+  
+  const safeOptions = options || [];
+  const selectedOption = safeOptions.find(opt => opt.value === value) || { label: "Not set", value: "" };
 
   useEffect(() => {
     const handleClickOutside = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); };
@@ -54,7 +84,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled 
       </button>
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-50 p-1 space-y-1">
-          {options.map((option) => (
+          {safeOptions.map((option) => (
             <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`px-3 py-2 rounded-lg text-sm cursor-pointer font-bold ${option.value === value ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-50'}`}>{option.label}</div>
           ))}
         </div>
@@ -72,10 +102,19 @@ const LostReportDetails = () => {
   const [report, setReport] = useState(null);
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [addressText, setAddressText] = useState("Loading location...");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
+  
+  const conditionOptions = [
+    { label: "Good", value: "GOOD" },
+    { label: "Injured", value: "INJURED" },
+    { label: "Scared", value: "SCARED" },
+    { label: "Sick", value: "SICK" },
+    { label: "Unknown", value: "UNKNOWN" }
+  ];
 
   useEffect(() => {
     const getReport = async () => {
@@ -84,12 +123,45 @@ const LostReportDetails = () => {
         setReport(data);
         setOriginalReport(data);
       } catch (err) {
+        console.error("Backend Error:", err);
         toast.error("Report not found");
         navigate("/my-reports");
       } finally { setLoading(false); }
     };
     getReport();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!report || !report.latitude || !report.longitude) {
+        if (report && (!report.latitude || !report.longitude)) {
+            setAddressText("No location coordinates set");
+        }
+        return;
+    }
+
+    const timerId = setTimeout(() => {
+        setAddressText("Fetching address...");
+        
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${report.latitude}&lon=${report.longitude}`, {
+            headers: { 'Accept-Language': 'en' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("OSM Blocked");
+            return res.json();
+        })
+        .then(json => {
+            const addr = json.address;
+            const city = addr?.city || addr?.town || addr?.village || "";
+            const country = addr?.country || "";
+            const formatted = [city, country].filter(Boolean).join(", ");
+            setAddressText(formatted || "Location available on map below");
+        })
+        .catch(() => setAddressText("Location available on map below"));
+    }, 1000); 
+
+    return () => clearTimeout(timerId);
+
+  }, [report?.latitude, report?.longitude]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -186,7 +258,7 @@ const LostReportDetails = () => {
                 ) : report.imageUrl ? (
                    <img src={report.imageUrl} className="w-full h-full object-cover" alt="Report Photo" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                  <div className="w-full h-full flex items-center justify-center text-gray-300">
                     <ImageIcon className="w-12 h-12" />
                     <span className="text-[10px] font-black uppercase mt-2">No Image</span>
                   </div>
@@ -204,7 +276,7 @@ const LostReportDetails = () => {
                   )}
                 </div>
               )}
-
+              
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found status</span>
                 <div className="flex items-center gap-2">
@@ -235,24 +307,27 @@ const LostReportDetails = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3"/> Last Seen Location</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3"/> Last Seen Location Text</label>
                 <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
                    <Info className="w-3.5 h-3.5 text-emerald-300" /> 
-                   {report.location?.envelope || "No location data provided"}
+                   {addressText}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({...report, species: val})} disabled={!isEditing} />
+                <CustomDropdown label="Condition" icon={CheckCircle} value={report.condition || ""} options={conditionOptions} onChange={val => setReport({...report, condition: val})} disabled={!isEditing} />
               </div>
               
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3"/> Chip Number</label>
-                {isEditing ? (
-                  <input type="number" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={report.chipNumber || ""} onChange={e => setReport({...report, chipNumber: e.target.value})} />
-                ) : (
-                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.chipNumber || "Not provided"}</div>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({...report, species: val})} disabled={!isEditing} />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3"/> Chip Number</label>
+                  {isEditing ? (
+                    <input type="number" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={report.chipNumber || ""} onChange={e => setReport({...report, chipNumber: e.target.value})} />
+                  ) : (
+                    <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.chipNumber || "Not provided"}</div>
+                  )}
+                </div>
               </div>
 
               <CustomDateTimePicker label="Date Lost" value={report.lostDate || report.createdAt} />
@@ -267,6 +342,31 @@ const LostReportDetails = () => {
               )}
             </div>
           </form>
+
+          {report.latitude && report.longitude && (
+            <div className="mt-10 border-t border-emerald-100 pt-8">
+                <h3 className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <MapPin className="w-4 h-4"/> Last Seen Map
+                </h3>
+                <div className="h-64 w-full rounded-2xl overflow-hidden border border-emerald-200 shadow-sm relative z-0">
+                    <MapContainer 
+                        center={[report.latitude, report.longitude]} 
+                        zoom={15} 
+                        style={{ height: "100%", width: "100%", zIndex: 0 }}
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker position={[report.latitude, report.longitude]}>
+                            <Popup>Last seen here</Popup>
+                        </Marker>
+                        <RecenterMap lat={report.latitude} lng={report.longitude} />
+                    </MapContainer>
+                </div>
+            </div>
+          )}
+
         </div>
       </main>
     </div>
