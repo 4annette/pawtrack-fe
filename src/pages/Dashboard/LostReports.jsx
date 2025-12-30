@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { 
     Plus, Search, Filter, Dog, Eye, MapPin, 
     Loader2, Clock, ChevronLeft, ChevronRight,
-    ChevronsLeft, ChevronsRight, ChevronDown, Check 
+    ChevronsLeft, ChevronsRight, ChevronDown, Check,
+    Navigation
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReports } from "@/services/api";
@@ -125,12 +126,16 @@ const LostReports = () => {
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
 
+    const [userLocation, setUserLocation] = useState(null);
+    const [locationStatus, setLocationStatus] = useState("idle");
+
     const [filters, setFilters] = useState({
         search: "",
         species: "",
         status: "", 
         dateAfter: "",
-        dateBefore: ""
+        dateBefore: "",
+        radius: 10      //radious 10 km
     });
 
     const [sightingReportId, setSightingReportId] = useState(null); 
@@ -199,7 +204,28 @@ const LostReports = () => {
     ];
 
     useEffect(() => {
+        if ("geolocation" in navigator) {
+            setLocationStatus("loading");
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                    setLocationStatus("success");
+                },
+                (error) => {
+                    console.error("Location error:", error);
+                    setLocationStatus("error");
+                }
+            );
+        }
+    }, []);
+
+    useEffect(() => {
         const fetchReports = async () => {
+            if (locationStatus === "loading") return;
+
             setLoading(true);
             try {
                 let calculatedDateAfter = null;
@@ -226,7 +252,10 @@ const LostReports = () => {
                     search: filters.search || null,
                     species: filters.species ? [filters.species] : null,
                     dateLostAfter: calculatedDateAfter,
-                    dateLostBefore: calculatedDateBefore
+                    dateLostBefore: calculatedDateBefore,
+                    latitude: userLocation?.lat || null,
+                    longitude: userLocation?.lng || null,
+                    radius: userLocation ? filters.radius : null
                 };
                 
                 const data = await fetchLostReports(page, pageSize, payload, sortBy);
@@ -248,7 +277,7 @@ const LostReports = () => {
         };
         const timer = setTimeout(() => { fetchReports(); }, 300);
         return () => clearTimeout(timer);
-    }, [page, filters, pageSize, sortBy]);
+    }, [page, filters, pageSize, sortBy, userLocation, locationStatus]);
 
     const handleStatusChange = (val) => {
         setFilters(prev => ({ ...prev, status: val, dateAfter: "", dateBefore: "" }));
@@ -274,7 +303,14 @@ const LostReports = () => {
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Lost Reports</h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-3xl font-bold text-gray-900">Lost Reports</h1>
+                        {locationStatus === "success" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
+                                <Navigation className="w-3 h-3" /> Near you ({filters.radius}km)
+                            </span>
+                        )}
+                    </div>
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
                 </div>
 
@@ -288,7 +324,7 @@ const LostReports = () => {
                     <ToolbarDropdown 
                         label="Sort" 
                         value={sortBy} 
-                        options={[{label:"Newest",value:"dateLost"},{label:"Title",value:"title"},{label:"Species",value:"species"}]} 
+                        options={[{label:"Newest",value:"dateLost"},{label:"Distance",value:"distance"},{label:"Title",value:"title"},{label:"Species",value:"species"}]} 
                         onChange={(val) => { setSortBy(val); setPage(0); }} 
                     />
                 </div>
@@ -308,6 +344,21 @@ const LostReports = () => {
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-50 animate-in slide-in-from-top-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
+                            
+                            <CustomDropdown 
+                                label="Distance Radius" 
+                                icon={Navigation} 
+                                value={filters.radius} 
+                                options={[
+                                    {label:"5 km",value:5},
+                                    {label:"10 km",value:10},
+                                    {label:"25 km",value:25},
+                                    {label:"50 km",value:50},
+                                    {label:"Anywhere",value:10000}
+                                ]} 
+                                onChange={(val) => {setFilters({...filters, radius: val}); setPage(0);}} 
+                            />
+
                             <CustomDropdown label="Time Status" icon={Clock} value={filters.status} options={statusOptions} onChange={handleStatusChange} />
                             <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => handleDateChange('dateAfter', val)} />
                             <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => handleDateChange('dateBefore', val)} />
