@@ -135,7 +135,7 @@ const LostReports = () => {
         status: "", 
         dateAfter: "",
         dateBefore: "",
-        radius: 10      //radious 10 km
+        radius: 25      //radious 25 km
     });
 
     const [sightingReportId, setSightingReportId] = useState(null); 

@@ -401,7 +401,7 @@ const FoundReports = () => {
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-emerald-50 rounded-xl shadow-xl border border-emerald-100 p-6 z-50 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
                             <h3 className="font-semibold text-emerald-900">Filter Options</h3>
-                            <button onClick={() => setFilters({search:"", species:"", condition:"", dateAfter:"", dateBefore:"", chipNumber:"", radius: 10})} className="text-xs text-red-500 hover:underline">Clear all</button>
+                            <button onClick={() => setFilters({search:"", species:"", condition:"", dateAfter:"", dateBefore:"", chipNumber:"", radius: 25})} className="text-xs text-red-500 hover:underline">Clear all</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
