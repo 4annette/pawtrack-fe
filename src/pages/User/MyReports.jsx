@@ -136,7 +136,7 @@ const MyReports = () => {
   
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
-  const [sortBy, setSortBy] = useState("lostDate"); 
+  const [sortBy, setSortBy] = useState("date_desc"); 
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -156,11 +156,36 @@ const MyReports = () => {
   const loadReports = async () => {
     setLoading(true);
     try {
+      let field = activeTab === 'lost' ? 'dateLost' : 'dateFound';
+      let dir = 'desc';
+
+      if (sortBy === 'title_asc') {
+        field = 'title';
+        dir = 'asc';
+      } else if (sortBy === 'date_asc') {
+        dir = 'asc';
+      }
+
       const res = activeTab === "lost" 
-        ? await fetchMyLostReportsList(page, pageSize, sortBy) 
-        : await fetchMyFoundReportsList(page, pageSize, sortBy);
+        ? await fetchMyLostReportsList(page, pageSize, field, dir) 
+        : await fetchMyFoundReportsList(page, pageSize, field, dir);
       
-      setReports(res?.content || []);
+      let fetchedReports = res?.content || [];
+
+      fetchedReports.sort((a, b) => {
+        const dateA = new Date(a.dateFound || a.foundDate || a.dateLost || a.lostDate || 0);
+        const dateB = new Date(b.dateFound || b.foundDate || b.dateLost || b.lostDate || 0);
+        
+        if (sortBy === 'title_asc') {
+            return (a.title || "").localeCompare(b.title || "");
+        }
+        if (sortBy === 'date_asc') {
+            return dateA - dateB; 
+        }
+        return dateB - dateA; 
+      });
+
+      setReports(fetchedReports);
       
       if (res?.page) {
         setTotalElements(res.page.totalElements || 0);
@@ -187,7 +212,7 @@ const MyReports = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setPage(0);
-    setSortBy(tab === "lost" ? "lostDate" : "foundDate");
+    setSortBy("date_desc");
   };
 
   const handleDelete = async (e, id) => {
@@ -204,8 +229,9 @@ const MyReports = () => {
   };
 
   const sortOptions = [
-    { label: "Newest First", value: activeTab === "lost" ? "lostDate" : "foundDate" },
-    { label: "Alphabetical", value: "title" }
+    { label: "Newest First", value: "date_desc" },
+    { label: "Oldest First", value: "date_asc" },
+    { label: "Alphabetical", value: "title_asc" }
   ];
 
   const sizeOptions = [
@@ -335,7 +361,7 @@ const MyReports = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{report.title}</h3>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
-                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.foundDate || report.lostDate || report.dateLost || report.dateFound)}</span>
+                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate)}</span>
                           <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
                           <AddressDisplay lat={report.latitude} lng={report.longitude} />
                         </div>

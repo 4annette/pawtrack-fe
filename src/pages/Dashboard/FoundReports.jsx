@@ -204,7 +204,7 @@ const FoundReports = () => {
     
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(9);
-    const [sortBy, setSortBy] = useState("dateFound");
+    const [sortBy, setSortBy] = useState("dateFound_desc");
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     
@@ -280,9 +280,29 @@ const FoundReports = () => {
                     radius: searchCenter ? filters.radius : null
                 };
                 
-                const data = await fetchFoundReports(page, pageSize, payload, sortBy);
+                const [field, dir] = sortBy.includes('_') ? sortBy.split('_') : [sortBy, 'desc'];
+
+                const data = await fetchFoundReports(page, pageSize, payload, field, dir);
                 
-                setReports(data.content || []);
+                let fetchedReports = data.content || [];
+
+                fetchedReports.sort((a, b) => {
+                    if (field === 'title') {
+                        return (a.title || "").localeCompare(b.title || "");
+                    }
+                    if (field === 'distance') {
+                        return (a.distance || 0) - (b.distance || 0);
+                    }
+
+                    const dateA = new Date(a.dateFound || a.foundDate || 0);
+                    const dateB = new Date(b.dateFound || b.foundDate || 0);
+                    
+                    if (dir === 'asc') return dateA - dateB;
+                    return dateB - dateA;
+                });
+
+                setReports(fetchedReports);
+
                 if (data.page) {
                     setTotalPages(data.page.totalPages || 0);
                     setTotalElements(data.page.totalElements || 0);
@@ -347,8 +367,23 @@ const FoundReports = () => {
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <ToolbarDropdown label="Show" value={pageSize} options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} onChange={(val)=>{setPageSize(val);setPage(0);}} />
-                    <ToolbarDropdown label="Sort" value={sortBy} options={[{label:"Newest",value:"dateFound"},{label:"Distance",value:"distance"},{label:"Title",value:"title"}]} onChange={(val)=>{setSortBy(val);setPage(0);}} />
+                    <ToolbarDropdown 
+                        label="Show" 
+                        value={pageSize} 
+                        options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} 
+                        onChange={(val)=>{setPageSize(val);setPage(0);}} 
+                    />
+                    <ToolbarDropdown 
+                        label="Sort" 
+                        value={sortBy} 
+                        options={[
+                            {label:"Newest First", value:"dateFound_desc"},
+                            {label:"Oldest First", value:"dateFound_asc"},
+                            {label:"Distance", value:"distance_asc"},
+                            {label:"Title", value:"title_asc"}
+                        ]} 
+                        onChange={(val)=>{setSortBy(val);setPage(0);}} 
+                    />
                 </div>
             </div>
 

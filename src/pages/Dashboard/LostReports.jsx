@@ -119,7 +119,7 @@ const LostReports = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(9);
-    const [sortBy, setSortBy] = useState("dateLost");
+    const [sortBy, setSortBy] = useState("dateLost_desc");
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     
@@ -135,7 +135,7 @@ const LostReports = () => {
         status: "", 
         dateAfter: "",
         dateBefore: "",
-        radius: 25      //radious 25 km
+        radius: 25 
     });
 
     const [sightingReportId, setSightingReportId] = useState(null); 
@@ -258,8 +258,31 @@ const LostReports = () => {
                     radius: userLocation ? filters.radius : null
                 };
                 
-                const data = await fetchLostReports(page, pageSize, payload, sortBy);
-                setReports(data.content || []);
+                const [field, dir] = sortBy.includes('_') ? sortBy.split('_') : [sortBy, 'desc'];
+
+                const data = await fetchLostReports(page, pageSize, payload, field, dir);
+                
+                let fetchedReports = data.content || [];
+
+                fetchedReports.sort((a, b) => {
+                    if (field === 'title') {
+                        return (a.title || "").localeCompare(b.title || "");
+                    }
+                    if (field === 'species') {
+                        return (a.species || "").localeCompare(b.species || "");
+                    }
+                    if (field === 'distance') {
+                        return (a.distance || 0) - (b.distance || 0);
+                    }
+
+                    const dateA = new Date(a.dateLost || a.lostDate || 0);
+                    const dateB = new Date(b.dateLost || b.lostDate || 0);
+                    
+                    if (dir === 'asc') return dateA - dateB;
+                    return dateB - dateA;
+                });
+
+                setReports(fetchedReports);
                 
                 if (data.page) {
                     setTotalPages(data.page.totalPages || 0);
@@ -324,7 +347,13 @@ const LostReports = () => {
                     <ToolbarDropdown 
                         label="Sort" 
                         value={sortBy} 
-                        options={[{label:"Newest",value:"dateLost"},{label:"Distance",value:"distance"},{label:"Title",value:"title"},{label:"Species",value:"species"}]} 
+                        options={[
+                            {label:"Newest First", value:"dateLost_desc"},
+                            {label:"Oldest First", value:"dateLost_asc"},
+                            {label:"Distance", value:"distance_asc"},
+                            {label:"Title", value:"title_asc"},
+                            {label:"Species", value:"species_asc"}
+                        ]} 
                         onChange={(val) => { setSortBy(val); setPage(0); }} 
                     />
                 </div>

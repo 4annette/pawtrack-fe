@@ -32,9 +32,9 @@ export const registerUser = async (userData) => {
 //                 FOUND REPORTS
 // ==========================================
 
-export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound') => {
+export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound', sortDirection = 'DESC') => {
   const response = await api.post(`/found-reports/filter`, filters || {}, {
-    params: { page, size, sortBy, sortDirection: 'DESC' }
+    params: { page, size, sortBy, sortDirection }
   });
   return response.data;
 };
@@ -95,9 +95,9 @@ export const deleteFoundReportImage = async (id) => {
 //                 LOST REPORTS
 // ==========================================
 
-export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost') => {
+export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost', sortDirection = 'DESC') => {
   const response = await api.post(`/lost-reports/filter`, filters || {}, {
-    params: { page, size, sortBy, sortDirection: 'DESC' }
+    params: { page, size, sortBy, sortDirection }
   });
   return response.data;
 };
@@ -174,13 +174,13 @@ export const deleteUserAccount = async (userId) => {
 // ==========================================
 //       MY REPORTS
 // ==========================================
-export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate') => {
-  const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},desc&all=false`);
+export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate', direction = 'desc') => {
+  const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},${direction}&all=false`);
   return response.data;
 };
 
-export const fetchMyFoundReportsList = async (page = 0, size = 5, sortBy = 'foundDate') => {
-  const response = await api.get(`/found-reports?page=${page}&size=${size}&sort=${sortBy},desc&all=false`);
+export const fetchMyFoundReportsList = async (page = 0, size = 5, sortBy = 'foundDate', direction = 'desc') => {
+  const response = await api.get(`/found-reports?page=${page}&size=${size}&sort=${sortBy},${direction}&all=false`);
   return response.data;
 };
 
