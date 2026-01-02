@@ -20,6 +20,23 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
   const [isHourOpen, setIsHourOpen] = useState(false);
   const [isMinOpen, setIsMinOpen] = useState(false);
   const containerRef = useRef(null);
+  const hourRef = useRef(null);
+  const minRef = useRef(null);
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDay = now.getDate();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  const isTodaySelected = () => {
+      if (!selectedDateStr) return false;
+      const parts = selectedDateStr.split('-');
+      return parseInt(parts[0]) === currentYear && 
+             (parseInt(parts[1]) - 1) === currentMonth && 
+             parseInt(parts[2]) === currentDay;
+  };
 
   useEffect(() => {
     if (value) {
@@ -49,19 +66,75 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const changeMonth = (inc) => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1));
+  const changeMonth = (inc) => {
+      const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1);
+      const today = new Date(); 
+      if (newDate > today && inc > 0) return;
+      setViewDate(newDate);
+  };
+
   const updateValue = (dateStr, hh, mm) => {
       if (!dateStr) return;
       onChange(`${dateStr} ${hh}:${mm}:00`);
   };
+
   const handleDateClick = (day) => {
     const year = viewDate.getFullYear();
     const month = String(viewDate.getMonth() + 1).padStart(2, '0');
     const dayStr = String(day).padStart(2, '0');
     const newDateStr = `${year}-${month}-${dayStr}`;
+    
+    const checkDate = new Date(year, viewDate.getMonth(), day);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (checkDate > today) return;
+
+    let newHour = selectedHour;
+    let newMin = selectedMinute;
+    
+    const isNewDateToday = (year === currentYear && viewDate.getMonth() === currentMonth && day === currentDay);
+
+    if (isNewDateToday) {
+        const hInt = parseInt(newHour, 10);
+        const mInt = parseInt(newMin, 10);
+
+        if (hInt > currentHour) {
+            newHour = String(currentHour).padStart(2, '0');
+            newMin = String(currentMinute).padStart(2, '0');
+        } 
+        else if (hInt === currentHour && mInt > currentMinute) {
+            newMin = String(currentMinute).padStart(2, '0');
+        }
+    }
+
     setSelectedDateStr(newDateStr);
-    updateValue(newDateStr, selectedHour, selectedMinute);
+    setSelectedHour(newHour);
+    setSelectedMinute(newMin);
+    updateValue(newDateStr, newHour, newMin);
   };
+
+  const handleHourSelect = (h) => {
+      let newMin = selectedMinute;
+      
+      if (isTodaySelected() && parseInt(h) === currentHour) {
+          if (parseInt(newMin) > currentMinute) {
+              newMin = String(currentMinute).padStart(2, '0');
+          }
+      }
+
+      setSelectedHour(h);
+      setSelectedMinute(newMin);
+      updateValue(selectedDateStr, h, newMin);
+      setIsHourOpen(false);
+  }
+
+  const isNextMonthDisabled = () => {
+      const nextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+      const today = new Date();
+      return nextMonth > today;
+  };
+
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
@@ -72,61 +145,122 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
             <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date & time'}</span>
             <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
         </div>
+
         {isOpen && (
             <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-72 animate-in fade-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4"/></button>
                     <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                    <button type="button" onClick={() => changeMonth(1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronRight className="w-4 h-4"/></button>
+                    <button 
+                        type="button" 
+                        onClick={() => changeMonth(1)} 
+                        disabled={isNextMonthDisabled()}
+                        className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-emerald-600'}`}
+                    >
+                        <ChevronRight className="w-4 h-4"/>
+                    </button>
                 </div>
+
                 <div className="grid grid-cols-7 mb-2 text-center">
                     {['S','M','T','W','T','F','S'].map((d,i) => (<span key={i} className="text-[10px] font-bold text-emerald-300">{d}</span>))}
                 </div>
+
                 <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">
                     {(() => {
                         const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
                         const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
                         const days = [];
+                        
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+
                         for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
                         for (let d = 1; d <= totalDays; d++) {
+                            const thisDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
                             const thisDateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                             const isSelected = selectedDateStr === thisDateStr;
+                            const isFuture = thisDate > today;
+
                             days.push(
-                                <button key={d} onClick={() => handleDateClick(d)} type="button" className={`h-8 w-8 rounded-full text-xs font-black flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}>{d}</button>
+                                <button 
+                                    key={d} 
+                                    onClick={() => !isFuture && handleDateClick(d)} 
+                                    type="button" 
+                                    disabled={isFuture}
+                                    className={`h-8 w-8 rounded-full text-xs font-black flex items-center justify-center transition-all 
+                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}
+                                >
+                                    {d}
+                                </button>
                             );
                         }
                         return days;
                     })()}
                 </div>
+
                 <div className="flex items-center gap-2 relative">
                     <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                    
                     <div className="flex-1 flex gap-1 items-center">
-                        <div className="relative flex-1">
+                        <div className="relative flex-1" ref={hourRef}>
                             <button type="button" onClick={() => {setIsHourOpen(!isHourOpen); setIsMinOpen(false);}} className="w-full p-2 text-sm font-black bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
                                 {selectedHour} <ChevronDown className="w-3 h-3 text-emerald-400"/>
                             </button>
                             {isHourOpen && (
                                 <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-emerald-100 rounded-xl shadow-xl z-[60]">
-                                    {hours.map(h => (
-                                        <div key={h} onClick={() => {setSelectedHour(h); updateValue(selectedDateStr, h, selectedMinute); setIsHourOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedHour === h ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{h}</div>
-                                    ))}
+                                    {hours.map(h => {
+                                        const isDisabled = isTodaySelected() && parseInt(h) > currentHour;
+                                        return (
+                                            <div 
+                                                key={h} 
+                                                onClick={() => !isDisabled && handleHourSelect(h)} 
+                                                className={`p-2 text-center text-xs font-bold cursor-pointer 
+                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-gray-700'}
+                                                    ${selectedHour === h && !isDisabled ? 'bg-emerald-600 text-white' : ''}`}
+                                            >
+                                                {h}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
+
                         <span className="text-emerald-300 font-bold">:</span>
-                        <div className="relative flex-1">
+
+                        <div className="relative flex-1" ref={minRef}>
                             <button type="button" onClick={() => {setIsMinOpen(!isMinOpen); setIsHourOpen(false);}} className="w-full p-2 text-sm font-black bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
                                 {selectedMinute} <ChevronDown className="w-3 h-3 text-emerald-400"/>
                             </button>
                             {isMinOpen && (
                                 <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-emerald-100 rounded-xl shadow-xl z-[60]">
-                                    {minutes.map(m => (
-                                        <div key={m} onClick={() => {setSelectedMinute(m); updateValue(selectedDateStr, selectedHour, m); setIsMinOpen(false);}} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedMinute === m ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{m}</div>
-                                    ))}
+                                    {minutes.map(m => {
+                                        const isDisabled = isTodaySelected() && 
+                                                           parseInt(selectedHour) === currentHour && 
+                                                           parseInt(m) > currentMinute;
+                                        return (
+                                            <div 
+                                                key={m} 
+                                                onClick={() => {
+                                                    if(!isDisabled) {
+                                                        setSelectedMinute(m); 
+                                                        updateValue(selectedDateStr, selectedHour, m); 
+                                                        setIsMinOpen(false);
+                                                    } 
+                                                }} 
+                                                className={`p-2 text-center text-xs font-bold cursor-pointer 
+                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-gray-700'}
+                                                    ${selectedMinute === m && !isDisabled ? 'bg-emerald-600 text-white' : ''}`}
+                                            >
+                                                {m}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
                     </div>
+
                     <button type="button" onClick={() => setIsOpen(false)} className="bg-emerald-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-emerald-700 uppercase tracking-tighter">OK</button>
                 </div>
             </div>

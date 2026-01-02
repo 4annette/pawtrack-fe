@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     Plus, Search, Filter, Dog, CheckCircle, Eye, MapPin, 
     Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Check,
-    Navigation, Map as MapIcon, X 
+    Navigation, Map as MapIcon, X, Calendar, Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
@@ -14,7 +14,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import { fetchFoundReports } from "@/services/api";
 import { 
-    CustomDropdown, CustomDatePicker, ReportDetailsModal, 
+    CustomDropdown, ReportDetailsModal, 
     ClaimModal, AddSightingModal, MapModal 
 } from "@/components/DashboardComponents";
 
@@ -25,6 +25,122 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+const CustomDatePicker = ({ label, value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date()); 
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (value) {
+        const dateObj = new Date(value);
+        if (!isNaN(dateObj.getTime())) setViewDate(dateObj);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+          setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const changeMonth = (inc) => {
+      const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1);
+      const today = new Date(); 
+      if (newDate > today && inc > 0) return;
+      setViewDate(newDate);
+  };
+
+  const handleDateClick = (day) => {
+    const year = viewDate.getFullYear();
+    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    const newDateStr = `${year}-${month}-${dayStr}`;
+    
+    const checkDate = new Date(year, viewDate.getMonth(), day);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (checkDate > today) return;
+
+    onChange(newDateStr);
+    setIsOpen(false);
+  };
+
+  const isNextMonthDisabled = () => {
+      const nextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+      const today = new Date();
+      return nextMonth > today;
+  };
+
+  return (
+    <div className="relative space-y-1.5" ref={containerRef}>
+        <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
+        <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
+            <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date'}</span>
+            <Calendar className="w-4 h-4 text-emerald-500" />
+        </div>
+
+        {isOpen && (
+            <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
+                <div className="flex justify-between items-center mb-4">
+                    <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4"/></button>
+                    <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                    <button 
+                        type="button" 
+                        onClick={() => changeMonth(1)} 
+                        disabled={isNextMonthDisabled()}
+                        className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-emerald-600'}`}
+                    >
+                        <ChevronRight className="w-4 h-4"/>
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-7 mb-2 text-center">
+                    {['S','M','T','W','T','F','S'].map((d,i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 place-items-center">
+                    {(() => {
+                        const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+                        const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+                        const days = [];
+                        
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+
+                        for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
+                        for (let d = 1; d <= totalDays; d++) {
+                            const thisDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+                            const thisDateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                            const isSelected = value === thisDateStr;
+                            const isFuture = thisDate > today;
+
+                            days.push(
+                                <button 
+                                    key={d} 
+                                    onClick={() => !isFuture && handleDateClick(d)} 
+                                    type="button" 
+                                    disabled={isFuture}
+                                    className={`h-7 w-7 rounded-full text-xs font-medium flex items-center justify-center transition-colors 
+                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}
+                                >
+                                    {d}
+                                </button>
+                            );
+                        }
+                        return days;
+                    })()}
+                </div>
+            </div>
+        )}
+    </div>
+  );
+};
 
 const LocationMarker = ({ position, setPosition }) => {
     useMapEvents({
@@ -217,7 +333,7 @@ const FoundReports = () => {
         dateAfter: "", 
         dateBefore: "", 
         chipNumber: "",
-        radius: 10
+        radius: 25
     });
 
     const [userLocation, setUserLocation] = useState(null);
@@ -394,7 +510,7 @@ const FoundReports = () => {
                         <span className="font-medium">Searching area:</span>
                         {searchCenter ? (
                             <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded text-xs font-semibold border border-emerald-100">
-                                {isCustomLocation ? "Custom Map Location" : "My Current Location"} ({filters.radius}km radius)
+                                {isCustomLocation ? "Custom Map Location" : "My Current Location"} (25km radius)
                             </span>
                         ) : (
                             <span className="text-gray-400 italic">Getting location...</span>
@@ -440,21 +556,6 @@ const FoundReports = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
-                            
-                            <CustomDropdown 
-                                label="Search Radius" 
-                                icon={Navigation} 
-                                value={filters.radius} 
-                                options={[
-                                    {label:"5 km",value:5},
-                                    {label:"10 km",value:10},
-                                    {label:"25 km",value:25},
-                                    {label:"50 km",value:50},
-                                    {label:"Anywhere",value:10000}
-                                ]} 
-                                onChange={(val) => {setFilters({...filters, radius: val}); setPage(0);}} 
-                            />
-
                             <CustomDropdown label="Condition" icon={CheckCircle} value={filters.condition} options={[{label:"Any",value:""},{label:"Excellent",value:"EXCELLENT"},{label:"Good",value:"GOOD"},{label:"Bad",value:"BAD"}]} onChange={(val) => {setFilters({...filters, condition: val}); setPage(0);}} />
                             <CustomDatePicker label="Found After" value={filters.dateAfter} onChange={(val) => {setFilters({...filters, dateAfter: val}); setPage(0);}} />
                             <CustomDatePicker label="Found Before" value={filters.dateBefore} onChange={(val) => {setFilters({...filters, dateBefore: val}); setPage(0);}} />
@@ -473,7 +574,6 @@ const FoundReports = () => {
                         <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                             <Dog className="w-12 h-12 mx-auto mb-3 opacity-20" />
                             <p>No found reports match your criteria.</p>
-                            <button onClick={() => setFilters({...filters, radius: 10000})} className="mt-2 text-emerald-600 hover:underline text-sm font-medium">Try expanding search radius</button>
                         </div>
                     ) : (
                         reports.map((report) => (
