@@ -114,7 +114,7 @@ const Dashboard = () => {
               }} 
               className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform"
             >
-              U
+              <User className="w-5 h-5" />
             </button>
 
             {isUserMenuOpen && (

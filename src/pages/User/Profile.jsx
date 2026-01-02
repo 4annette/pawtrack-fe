@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // New state to toggle view/edit
+  const [isEditing, setIsEditing] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   
@@ -18,10 +18,9 @@ const Profile = () => {
     lastName: "",
     email: "",
     phone: "",
-    username: "" // Added to store for display
+    username: ""
   });
 
-  // Fetch user data on mount
   useEffect(() => {
     const getUserData = async () => {
       try {
@@ -70,7 +69,7 @@ const Profile = () => {
     try {
       await updateUserProfile(formData);
       toast.success("Profile updated successfully!");
-      setIsEditing(false); // Switch back to view mode
+      setIsEditing(false);
     } catch (error) {
       toast.error("Failed to update profile.");
     } finally {
@@ -91,7 +90,6 @@ const Profile = () => {
     }
   };
 
-  // Helper component for read-only rows
   const InfoRow = ({ label, value }) => (
     <div className="py-3 border-b border-gray-50 flex justify-between items-center">
       <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">{label}</span>
@@ -111,11 +109,10 @@ const Profile = () => {
             </div>
 
             <div className="relative" ref={userMenuRef}>
-                <button 
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform outline-none"
                 >
-                  {formData.firstName ? formData.firstName[0].toUpperCase() : "U"}
+                  <User className="w-5 h-5" />
                 </button>
 
                 {isUserMenuOpen && (
@@ -157,6 +154,7 @@ const Profile = () => {
                <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
              </div>
           ) : !isEditing ? (
+
             /* VIEW MODE */
             <div className="space-y-2">
               <div className="flex flex-col items-center mb-8">
@@ -177,6 +175,7 @@ const Profile = () => {
               </button>
             </div>
           ) : (
+            
             /* EDIT MODE */
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

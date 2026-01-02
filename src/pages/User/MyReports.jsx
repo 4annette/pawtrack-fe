@@ -37,7 +37,6 @@ const AddressDisplay = ({ lat, lng }) => {
 
     let isMounted = true;
     
-    // Delay request to prevent 403 Rate Limiting
     const timer = setTimeout(() => {
         const fetchAddress = async () => {
             try {
@@ -229,37 +228,34 @@ const MyReports = () => {
             </button>
             
             <div className="relative flex items-center gap-1">
-               <button 
-                 onClick={() => {
-                   setIsUserMenuOpen(false);
-                   setIsMobileMenuOpen(!isMobileMenuOpen);
-                 }} 
-                 className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
-               >
+              <button onClick={() => {
+                  setIsUserMenuOpen(false);
+                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                }} 
+                className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
+              >
                   <PawTrackLogo size="sm" />
                   <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </div>
-               </button>
+              </button>
 
-               {isMobileMenuOpen && (
-                 <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
-                   <div className="flex flex-col p-2 gap-1">
-                     <button 
-                       onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }} 
-                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
-                     >
-                       My Lost Reports
-                     </button>
-                     <button 
-                       onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }} 
-                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
-                     >
-                       My Found Reports
-                     </button>
-                   </div>
-                 </div>
-               )}
+              {isMobileMenuOpen && (
+                <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
+                  <div className="flex flex-col p-2 gap-1">
+                    <button onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }} 
+                      className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
+                    >
+                      My Lost Reports
+                    </button>
+                    <button onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }} 
+                      className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
+                    >
+                      My Found Reports
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-xl">
@@ -280,20 +276,20 @@ const MyReports = () => {
 
           <div className="flex items-center gap-4" ref={userMenuRef}>
               <div className="relative">
-                 <button 
-                   onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
-                   className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
-                 >
-                   U
-                 </button>
-                 {isUserMenuOpen && (
-                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                     <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
-                     <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
-                     <div className="h-px bg-gray-50 my-1"></div>
-                     <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
-                   </div>
-                 )}
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
+                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
+                    <div className="h-px bg-gray-50 my-1"></div>
+                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
+                  </div>
+                )}
               </div>
           </div>
         </div>
