@@ -4,7 +4,7 @@ import {
   ArrowLeft, MapPin, Calendar, FileText, 
   User, LogOut, ChevronDown, Check, 
   Settings2, Loader2, Trash2, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Bell
+  ChevronsLeft, ChevronsRight, Bell, Search, AlertCircle
 } from "lucide-react";
 import { 
   fetchMyLostReportsList, 
@@ -16,6 +16,7 @@ import {
   markNotificationAsRead
 } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
+import MatchModal from "@/components/MatchModal";
 import { toast } from "sonner";
 
 const formatDate = (dateString) => {
@@ -146,6 +147,7 @@ const MyReports = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const userMenuRef = useRef(null);
   const logoMenuRef = useRef(null);
@@ -178,6 +180,11 @@ const MyReports = () => {
       } catch (e) {
         console.error(e);
       }
+    }
+
+    if (notification.notificationType === 'LOST_REPORT_NOTIFICATION') {
+      setSelectedNotification(notification);
+      setIsNotificationMenuOpen(false);
     }
   };
 
@@ -277,6 +284,14 @@ const MyReports = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
+      
+      {selectedNotification && (
+        <MatchModal 
+          notification={selectedNotification} 
+          onClose={() => setSelectedNotification(null)} 
+        />
+      )}
+
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           
@@ -337,60 +352,107 @@ const MyReports = () => {
           </div>
 
           <div className="flex items-center gap-4">
-              <div className="relative" ref={notificationMenuRef}>
-                  <button
-                      onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsMobileMenuOpen(false);
-                      setIsNotificationMenuOpen(!isNotificationMenuOpen);
-                      }}
-                      className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors relative"
-                  >
-                      <Bell className="w-5 h-5" />
-                      {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
-                          {unreadCount}
-                      </span>
-                      )}
-                  </button>
-
-                  {isNotificationMenuOpen && (
-                      <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                          <h3 className="font-bold text-gray-800 text-sm">Notifications</h3>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto">
-                          {notifications.length === 0 ? (
-                          <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
-                          ) : (
-                          notifications.map(n => (
-                              <div key={n.notificationId} onClick={() => handleNotificationClick(n)} className={`px-4 py-3 border-b border-gray-50 last:border-0 cursor-pointer ${n.read ? 'bg-white' : 'bg-emerald-50'}`}>
-                              <p className={`text-sm ${n.read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>{n.notificationType}</p>
-                              <p className="text-xs text-gray-500">From: {n.fromUserName}</p>
-                              </div>
-                          ))
-                          )}
-                      </div>
-                      </div>
-                  )}
-              </div>
-
-              <div className="relative" ref={userMenuRef}>
-                <button onClick={() => { setIsMobileMenuOpen(false); setIsNotificationMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
+            <div className="relative" ref={notificationMenuRef}>
+                <button
+                    onClick={() => {
+                    setIsUserMenuOpen(false);
+                    setIsMobileMenuOpen(false);
+                    setIsNotificationMenuOpen(!isNotificationMenuOpen);
+                    }}
+                    className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 relative active:scale-95 ${isNotificationMenuOpen ? 'bg-emerald-50 border-emerald-200 text-emerald-600 ring-4 ring-emerald-50' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200 shadow-sm'}`}
                 >
-                  <User className="w-5 h-5" />
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                        {unreadCount}
+                    </span>
+                    )}
                 </button>
 
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                    <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
-                    <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
-                    <div className="h-px bg-gray-50 my-1"></div>
-                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
-                  </div>
+                {isNotificationMenuOpen && (
+                    <div className="absolute right-0 mt-4 w-96 bg-white rounded-[32px] shadow-2xl shadow-emerald-900/10 border border-gray-100 py-3 z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right ring-4 ring-gray-50/50">
+                    <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+                        <h3 className="font-black text-gray-800 text-sm tracking-wide">Notifications</h3>
+                        {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} New</span>}
+                    </div>
+                    
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        {notifications.length === 0 ? (
+                        <div className="py-12 px-6 text-center flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                                <Bell className="w-8 h-8 opacity-50"/>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-400">All caught up!</p>
+                                <p className="text-xs text-gray-300 mt-1">No new notifications for now.</p>
+                            </div>
+                        </div>
+                        ) : (
+                        notifications.map(n => {
+                            const isMatch = n.notificationType === 'LOST_REPORT_NOTIFICATION';
+                            return (
+                                <div 
+                                key={n.notificationId} 
+                                onClick={() => handleNotificationClick(n)} 
+                                className={`group px-5 py-4 border-b border-gray-50 last:border-0 cursor-pointer transition-all hover:bg-gray-50 relative overflow-hidden ${n.read ? 'bg-white opacity-70' : 'bg-emerald-50/30'}`}
+                                >
+                                {!n.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
+                                
+                                <div className="flex gap-4 items-start">
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border ${isMatch ? 'bg-emerald-100 border-emerald-200 text-emerald-600' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
+                                        {isMatch ? <Search className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                        <p className={`text-sm leading-snug ${n.read ? 'text-gray-600' : 'text-gray-900 font-bold'}`}>
+                                            {isMatch ? (
+                                                <>
+                                                    <span className="text-emerald-700 font-black">{n.fromUserName}</span> might have found your pet!
+                                                </>
+                                            ) : (
+                                                n.notificationType
+                                            )}
+                                        </p>
+                                        
+                                        {!isMatch && (
+                                            <p className="text-xs text-gray-400 mt-1">System Notification</p>
+                                        )}
+                                    </div>
+
+                                    {!n.read && (
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0 shadow-sm shadow-emerald-200" />
+                                    )}
+                                </div>
+                                </div>
+                            );
+                        })
+                        )}
+                    </div>
+                    </div>
                 )}
-              </div>
+            </div>
+
+            <div className="relative" ref={userMenuRef}>
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsNotificationMenuOpen(false);
+                  setIsUserMenuOpen(!isUserMenuOpen);
+                }} 
+                className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform outline-none"
+              >
+                <User className="w-5 h-5" />
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
+                  <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
+                  <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
+                  <div className="h-px bg-gray-100 my-1"></div>
+                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
