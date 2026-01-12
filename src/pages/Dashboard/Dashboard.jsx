@@ -41,7 +41,17 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchNotifications().then(setNotifications).catch(console.error);
+    const loadNotifications = () => {
+      fetchNotifications()
+        .then(setNotifications)
+        .catch(console.error);
+    };
+
+    loadNotifications();
+
+    const intervalId = setInterval(loadNotifications, 60000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleNotificationClick = async (notification) => {

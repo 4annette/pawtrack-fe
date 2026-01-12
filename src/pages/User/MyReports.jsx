@@ -4,13 +4,16 @@ import {
   ArrowLeft, MapPin, Calendar, FileText, 
   User, LogOut, ChevronDown, Check, 
   Settings2, Loader2, Trash2, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight
+  ChevronsLeft, ChevronsRight, Bell
 } from "lucide-react";
 import { 
   fetchMyLostReportsList, 
   fetchMyFoundReportsList, 
   deleteLostReport, 
-  deleteFoundReport 
+  deleteFoundReport,
+  logoutUser,
+  fetchNotifications, 
+  markNotificationAsRead
 } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
@@ -141,17 +144,44 @@ const MyReports = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
   const userMenuRef = useRef(null);
   const logoMenuRef = useRef(null);
+  const notificationMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false);
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target)) setIsNotificationMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      fetchNotifications().then(setNotifications).catch(console.error);
+    };
+    loadNotifications();
+    const intervalId = setInterval(loadNotifications, 60000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.read) {
+      try {
+        await markNotificationAsRead(notification.notificationId);
+        setNotifications(prev => prev.map(n => n.notificationId === notification.notificationId ? { ...n, read: true } : n));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const loadReports = async () => {
     setLoading(true);
@@ -215,6 +245,11 @@ const MyReports = () => {
     setSortBy("date_desc");
   };
 
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate("/auth");
+  };
+
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     if(window.confirm("Delete this report permanently?")) {
@@ -256,6 +291,7 @@ const MyReports = () => {
             <div className="relative flex items-center gap-1">
               <button onClick={() => {
                   setIsUserMenuOpen(false);
+                  setIsNotificationMenuOpen(false);
                   setIsMobileMenuOpen(!isMobileMenuOpen);
                 }} 
                 className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
@@ -300,9 +336,47 @@ const MyReports = () => {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4" ref={userMenuRef}>
-              <div className="relative">
-                <button onClick={() => { setIsMobileMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
+          <div className="flex items-center gap-4">
+              <div className="relative" ref={notificationMenuRef}>
+                  <button
+                      onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsMobileMenuOpen(false);
+                      setIsNotificationMenuOpen(!isNotificationMenuOpen);
+                      }}
+                      className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors relative"
+                  >
+                      <Bell className="w-5 h-5" />
+                      {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                          {unreadCount}
+                      </span>
+                      )}
+                  </button>
+
+                  {isNotificationMenuOpen && (
+                      <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                          <h3 className="font-bold text-gray-800 text-sm">Notifications</h3>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+                          ) : (
+                          notifications.map(n => (
+                              <div key={n.notificationId} onClick={() => handleNotificationClick(n)} className={`px-4 py-3 border-b border-gray-50 last:border-0 cursor-pointer ${n.read ? 'bg-white' : 'bg-emerald-50'}`}>
+                              <p className={`text-sm ${n.read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>{n.notificationType}</p>
+                              <p className="text-xs text-gray-500">From: {n.fromUserName}</p>
+                              </div>
+                          ))
+                          )}
+                      </div>
+                      </div>
+                  )}
+              </div>
+
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsNotificationMenuOpen(false); setIsUserMenuOpen(!isUserMenuOpen); }} 
                   className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all active:scale-95 bg-emerald-100 text-emerald-700 border-emerald-200 hover:ring-2 ring-emerald-50 outline-none"
                 >
                   <User className="w-5 h-5" />
@@ -313,7 +387,7 @@ const MyReports = () => {
                     <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors font-bold"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
                     <button onClick={() => setIsUserMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors font-bold"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
                     <div className="h-px bg-gray-50 my-1"></div>
-                    <button onClick={() => { localStorage.removeItem("token"); navigate("/auth"); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
                   </div>
                 )}
               </div>
