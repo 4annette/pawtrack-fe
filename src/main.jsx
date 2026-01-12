@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import FCMHandler from "./FCMHandler";
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -18,6 +19,7 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+      <FCMHandler />
       <Toaster position="top-center" richColors />
       
       <Routes>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo"; 
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint } from "lucide-react"; 
 import { toast } from "sonner";
-import { loginUser, registerUser } from "@/services/api";
+import { loginUser, registerUser, syncFcmToken } from "@/services/api";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -42,6 +42,14 @@ const Auth = () => {
           password: formData.password
         });
         localStorage.setItem('token', data.token);
+
+        try {
+            await syncFcmToken();
+            console.log("FCM sync ffunction finished") 
+        } catch (fcmError) {
+            console.error("FCM Token sync failed, but login continued:", fcmError);
+        }
+
         toast.success("Welcome back!");
         navigate('/dashboard'); 
       } else {

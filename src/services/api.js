@@ -1,13 +1,16 @@
 import axios from 'axios';
+import { messaging, auth } from '../firebase/firebaseInitialization';
+import { getToken } from 'firebase/messaging';
+import { signOut } from 'firebase/auth';
 
 const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4"; 
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// --- INTERCEPTOR (Token Cleaner) ---
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,7 +20,10 @@ api.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// --- AUTH ---
+// ==========================================
+//                 AUTH & FCM
+// ==========================================
+
 export const loginUser = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
   return response.data;
@@ -25,6 +31,62 @@ export const loginUser = async (credentials) => {
 
 export const registerUser = async (userData) => {
   const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const syncFcmToken = async () => {
+  try {
+    const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+    if (currentToken) {
+      await api.post('/users/add-fcm-token', null, {
+        params: { fcmToken: currentToken }
+      });
+    }
+  } catch (error) {
+    console.error("FCM Sync Error:", error);
+  }
+};
+
+export const logoutUser = async () => {
+  try {
+    const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+    
+    if (currentToken) {
+        try {
+            await api.delete('/users/delete-fcm-token', {
+                params: { fcmToken: currentToken }
+            });
+        } catch (e) {
+            console.warn("Failed to delete FCM token", e);
+        }
+    }
+
+    try {
+        await api.post('/users/logout');
+    } catch (e) {
+        console.warn("Backend logout failed", e);
+    }
+
+    await signOut(auth);
+    localStorage.removeItem('token');
+    
+  } catch (error) {
+    console.error("Logout Error:", error);
+    localStorage.removeItem('token');
+  }
+};
+
+// ==========================================
+//                 NOTIFICATIONS
+// ==========================================
+
+export const fetchNotifications = async () => {
+  const response = await api.get('/users/notifications');
+  return response.data;
+};
+
+export const markNotificationAsRead = async (notificationId) => {
+  const response = await api.patch(`/users/notifications/${notificationId}/read`);
   return response.data;
 };
 
@@ -154,7 +216,7 @@ export const deleteLostReportImage = async (id) => {
 };
 
 // ==========================================
-//          USER & PROFILE ACTIONS
+//           USER & PROFILE ACTIONS
 // ==========================================
 export const fetchCurrentUser = async () => {
   const response = await api.get('/users');
@@ -172,7 +234,7 @@ export const deleteUserAccount = async (userId) => {
 };
 
 // ==========================================
-//       MY REPORTS
+//             MY REPORTS
 // ==========================================
 export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate', direction = 'desc') => {
   const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},${direction}&all=false`);
