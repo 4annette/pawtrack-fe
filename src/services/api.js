@@ -262,4 +262,9 @@ export const connectFoundReports = async (foundReportId, connectedFoundReportId)
   return response.data;
 };
 
+export const removeFoundReportFromLostReport = async (lostReportId, foundReportId) => {
+  const response = await api.patch(`/lost-reports/${lostReportId}/remove-found-report/${foundReportId}`);
+  return response.data;
+};
+
 export default api;
