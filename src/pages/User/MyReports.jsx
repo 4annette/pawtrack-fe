@@ -1,23 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, MapPin, Calendar, FileText, 
-  User, LogOut, ChevronDown, Check, 
+import {
+  ArrowLeft, MapPin, Calendar, FileText,
+  User, LogOut, ChevronDown, Check,
   Settings2, Loader2, Trash2, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Bell, Search, AlertCircle
+  ChevronsLeft, ChevronsRight
 } from "lucide-react";
-import { 
-  fetchMyLostReportsList, 
-  fetchMyFoundReportsList, 
-  deleteLostReport, 
+import {
+  fetchMyLostReportsList,
+  fetchMyFoundReportsList,
+  deleteLostReport,
   deleteFoundReport,
-  logoutUser,
-  fetchNotifications, 
-  markNotificationAsRead
+  logoutUser
 } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import MatchModal from "@/components/MatchModal";
 import { toast } from "sonner";
+import Notifications from "@/components/Notifications";
 
 const formatDate = (dateString) => {
   if (!dateString) return "Date not set";
@@ -40,34 +38,34 @@ const AddressDisplay = ({ lat, lng }) => {
     }
 
     let isMounted = true;
-    
+
     const timer = setTimeout(() => {
-        const fetchAddress = async () => {
-            try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-                    { headers: { 'Accept-Language': 'en' } } 
-                );
+      const fetchAddress = async () => {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
 
-                if (!response.ok) throw new Error("Blocked");
+          if (!response.ok) throw new Error("Blocked");
 
-                const data = await response.json();
-                if (isMounted && data.address) {
-                    const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
-                    const country = data.address.country || "";
-                    const locString = [city, country].filter(Boolean).join(", ");
-                    setAddress(locString || "View on map");
-                }
-            } catch (error) {
-                if (isMounted) setAddress("View on map");
-            }
-        };
-        fetchAddress();
+          const data = await response.json();
+          if (isMounted && data.address) {
+            const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+            const country = data.address.country || "";
+            const locString = [city, country].filter(Boolean).join(", ");
+            setAddress(locString || "View on map");
+          }
+        } catch (error) {
+          if (isMounted) setAddress("View on map");
+        }
+      };
+      fetchAddress();
     }, 1200);
 
-    return () => { 
-        isMounted = false; 
-        clearTimeout(timer);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
     };
   }, [lat, lng]);
 
@@ -95,14 +93,13 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
 
   return (
     <div className="relative min-w-[140px]" ref={containerRef}>
-      <button 
-        type="button" 
-        onClick={() => setIsOpen(!isOpen)} 
-        className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all duration-200 bg-white shadow-sm text-xs font-bold ${
-          isOpen 
-            ? (isLost ? 'border-orange-500 ring-2 ring-orange-100' : 'border-emerald-500 ring-2 ring-emerald-100') 
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all duration-200 bg-white shadow-sm text-xs font-bold ${isOpen
+            ? (isLost ? 'border-orange-500 ring-2 ring-orange-100' : 'border-emerald-500 ring-2 ring-emerald-100')
             : 'border-gray-100 hover:border-gray-300'
-        } text-gray-700`}
+          } text-gray-700`}
       >
         <span className="truncate">{selectedOption.label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${isLost ? 'text-orange-500' : 'text-emerald-500'}`} />
@@ -111,14 +108,13 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
         <div className="absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
           <div className="p-1.5 space-y-1">
             {options.map((option) => (
-              <div 
-                key={option.value} 
-                onClick={() => { onChange(option.value); setIsOpen(false); }} 
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
-                  option.value === value 
-                    ? (isLost ? 'bg-orange-600 text-white' : 'bg-emerald-600 text-white') 
+              <div
+                key={option.value}
+                onClick={() => { onChange(option.value); setIsOpen(false); }}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${option.value === value
+                    ? (isLost ? 'bg-orange-600 text-white' : 'bg-emerald-600 text-white')
                     : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
-                }`}
+                  }`}
               >
                 <span className="font-bold">{option.label}</span>
                 {option.value === value && <Check className="w-3.5 h-3.5" />}
@@ -137,58 +133,26 @@ const MyReports = () => {
   const [activeTab, setActiveTab] = useState("lost");
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
-  const [sortBy, setSortBy] = useState("date_desc"); 
+  const [sortBy, setSortBy] = useState("date_desc");
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const userMenuRef = useRef(null);
   const logoMenuRef = useRef(null);
-  const notificationMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false);
-      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target)) setIsNotificationMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    const loadNotifications = () => {
-      fetchNotifications().then(setNotifications).catch(console.error);
-    };
-    loadNotifications();
-    const intervalId = setInterval(loadNotifications, 60000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const handleNotificationClick = async (notification) => {
-    if (!notification.read) {
-      try {
-        await markNotificationAsRead(notification.notificationId);
-        setNotifications(prev => prev.map(n => n.notificationId === notification.notificationId ? { ...n, read: true } : n));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    if (notification.notificationType === 'LOST_REPORT_NOTIFICATION') {
-      setSelectedNotification(notification);
-      setIsNotificationMenuOpen(false);
-    }
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const loadReports = async () => {
     setLoading(true);
@@ -203,27 +167,27 @@ const MyReports = () => {
         dir = 'asc';
       }
 
-      const res = activeTab === "lost" 
-        ? await fetchMyLostReportsList(page, pageSize, field, dir) 
+      const res = activeTab === "lost"
+        ? await fetchMyLostReportsList(page, pageSize, field, dir)
         : await fetchMyFoundReportsList(page, pageSize, field, dir);
-      
+
       let fetchedReports = res?.content || [];
 
       fetchedReports.sort((a, b) => {
         const dateA = new Date(a.dateFound || a.foundDate || a.dateLost || a.lostDate || 0);
         const dateB = new Date(b.dateFound || b.foundDate || b.dateLost || b.lostDate || 0);
-        
+
         if (sortBy === 'title_asc') {
-            return (a.title || "").localeCompare(b.title || "");
+          return (a.title || "").localeCompare(b.title || "");
         }
         if (sortBy === 'date_asc') {
-            return dateA - dateB; 
+          return dateA - dateB;
         }
-        return dateB - dateA; 
+        return dateB - dateA;
       });
 
       setReports(fetchedReports);
-      
+
       if (res?.page) {
         setTotalElements(res.page.totalElements || 0);
         setTotalPages(res.page.totalPages || 0);
@@ -233,9 +197,9 @@ const MyReports = () => {
       }
     } catch (error) {
       console.error("Failed to load list", error);
-      setReports([]); 
+      setReports([]);
       if (error?.response?.status === 403) {
-          toast.error("Session expired. Please log in again.");
+        toast.error("Session expired. Please log in again.");
       }
     } finally {
       setLoading(false);
@@ -259,7 +223,7 @@ const MyReports = () => {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    if(window.confirm("Delete this report permanently?")) {
+    if (window.confirm("Delete this report permanently?")) {
       try {
         activeTab === 'lost' ? await deleteLostReport(id) : await deleteFoundReport(id);
         toast.success("Report deleted");
@@ -284,48 +248,40 @@ const MyReports = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
-      
-      {selectedNotification && (
-        <MatchModal 
-          notification={selectedNotification} 
-          onClose={() => setSelectedNotification(null)} 
-        />
-      )}
 
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          
+
           <div className="flex items-center gap-4 md:gap-6" ref={logoMenuRef}>
-            <button 
-              onClick={() => navigate("/dashboard")} 
+            <button
+              onClick={() => navigate("/dashboard")}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            
+
             <div className="relative flex items-center gap-1">
               <button onClick={() => {
-                  setIsUserMenuOpen(false);
-                  setIsNotificationMenuOpen(false);
-                  setIsMobileMenuOpen(!isMobileMenuOpen);
-                }} 
+                setIsUserMenuOpen(false);
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
                 className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
               >
-                  <PawTrackLogo size="sm" />
-                  <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </div>
+                <PawTrackLogo size="sm" />
+                <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </div>
               </button>
 
               {isMobileMenuOpen && (
                 <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
                   <div className="flex flex-col p-2 gap-1">
-                    <button onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }} 
+                    <button onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }}
                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
                     >
                       My Lost Reports
                     </button>
-                    <button onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }} 
+                    <button onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }}
                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
                     >
                       My Found Reports
@@ -336,14 +292,14 @@ const MyReports = () => {
             </div>
 
             <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-xl">
-              <button 
-                onClick={() => handleTabChange("lost")} 
+              <button
+                onClick={() => handleTabChange("lost")}
                 className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
               >
                 Lost
               </button>
-              <button 
-                onClick={() => handleTabChange("found")} 
+              <button
+                onClick={() => handleTabChange("found")}
                 className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
               >
                 Found
@@ -352,93 +308,15 @@ const MyReports = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative" ref={notificationMenuRef}>
-                <button
-                    onClick={() => {
-                    setIsUserMenuOpen(false);
-                    setIsMobileMenuOpen(false);
-                    setIsNotificationMenuOpen(!isNotificationMenuOpen);
-                    }}
-                    className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 relative active:scale-95 ${isNotificationMenuOpen ? 'bg-emerald-50 border-emerald-200 text-emerald-600 ring-4 ring-emerald-50' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200 shadow-sm'}`}
-                >
-                    <Bell className="w-5 h-5" />
-                    {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                        {unreadCount}
-                    </span>
-                    )}
-                </button>
 
-                {isNotificationMenuOpen && (
-                    <div className="absolute right-0 mt-4 w-96 bg-white rounded-[32px] shadow-2xl shadow-emerald-900/10 border border-gray-100 py-3 z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right ring-4 ring-gray-50/50">
-                    <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-                        <h3 className="font-black text-gray-800 text-sm tracking-wide">Notifications</h3>
-                        {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} New</span>}
-                    </div>
-                    
-                    <div className="max-h-[60vh] overflow-y-auto">
-                        {notifications.length === 0 ? (
-                        <div className="py-12 px-6 text-center flex flex-col items-center gap-4">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                                <Bell className="w-8 h-8 opacity-50"/>
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-gray-400">All caught up!</p>
-                                <p className="text-xs text-gray-300 mt-1">No new notifications for now.</p>
-                            </div>
-                        </div>
-                        ) : (
-                        notifications.map(n => {
-                            const isMatch = n.notificationType === 'LOST_REPORT_NOTIFICATION';
-                            return (
-                                <div 
-                                key={n.notificationId} 
-                                onClick={() => handleNotificationClick(n)} 
-                                className={`group px-5 py-4 border-b border-gray-50 last:border-0 cursor-pointer transition-all hover:bg-gray-50 relative overflow-hidden ${n.read ? 'bg-white opacity-70' : 'bg-emerald-50/30'}`}
-                                >
-                                {!n.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
-                                
-                                <div className="flex gap-4 items-start">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border ${isMatch ? 'bg-emerald-100 border-emerald-200 text-emerald-600' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
-                                        {isMatch ? <Search className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                                    </div>
-                                    
-                                    <div className="flex-1 min-w-0 pt-0.5">
-                                        <p className={`text-sm leading-snug ${n.read ? 'text-gray-600' : 'text-gray-900 font-bold'}`}>
-                                            {isMatch ? (
-                                                <>
-                                                    <span className="text-emerald-700 font-black">{n.fromUserName}</span> might have found your pet!
-                                                </>
-                                            ) : (
-                                                n.notificationType
-                                            )}
-                                        </p>
-                                        
-                                        {!isMatch && (
-                                            <p className="text-xs text-gray-400 mt-1">System Notification</p>
-                                        )}
-                                    </div>
-
-                                    {!n.read && (
-                                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0 shadow-sm shadow-emerald-200" />
-                                    )}
-                                </div>
-                                </div>
-                            );
-                        })
-                        )}
-                    </div>
-                    </div>
-                )}
-            </div>
+            <Notifications />
 
             <div className="relative" ref={userMenuRef}>
-              <button 
+              <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
-                  setIsNotificationMenuOpen(false);
                   setIsUserMenuOpen(!isUserMenuOpen);
-                }} 
+                }}
                 className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform outline-none"
               >
                 <User className="w-5 h-5" />
@@ -470,23 +348,23 @@ const MyReports = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <AestheticDropdown value={sortBy} options={sortOptions} onChange={(val) => {setSortBy(val); setPage(0);}} type={activeTab} />
-            <AestheticDropdown value={pageSize} options={sizeOptions} onChange={(val) => {setPageSize(val); setPage(0);}} type={activeTab} />
+            <AestheticDropdown value={sortBy} options={sortOptions} onChange={(val) => { setSortBy(val); setPage(0); }} type={activeTab} />
+            <AestheticDropdown value={pageSize} options={sizeOptions} onChange={(val) => { setPageSize(val); setPage(0); }} type={activeTab} />
           </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-300">
-              <Loader2 className="w-10 h-10 animate-spin" />
-              <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
+            <Loader2 className="w-10 h-10 animate-spin" />
+            <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {reports.length > 0 ? (
               <>
                 {reports.map(report => (
-                  <div 
-                    key={report.id} 
+                  <div
+                    key={report.id}
                     onClick={() => navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`)}
                     className={`bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between group transition-all duration-300 cursor-pointer ${activeTab === 'lost' ? 'hover:border-orange-300' : 'hover:border-emerald-300'} hover:shadow-md`}
                   >
@@ -503,13 +381,13 @@ const MyReports = () => {
                         </div>
 
                         <div className="flex md:hidden items-center gap-3 mt-4">
-                          <button 
+                          <button
                             onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
                           >
                             <Settings2 className="w-3.5 h-3.5" /> Edit
                           </button>
-                          <button 
+                          <button
                             onClick={(e) => handleDelete(e, report.id)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
                           >
@@ -520,13 +398,13 @@ const MyReports = () => {
                     </div>
 
                     <div className="hidden md:flex items-center gap-2">
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
                         className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
                       >
                         <Settings2 className="w-5 h-5" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => handleDelete(e, report.id)}
                         className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
                       >
@@ -539,49 +417,48 @@ const MyReports = () => {
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center mt-12 mb-6">
                     <nav className={`flex items-center gap-1 p-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl transition-all duration-500 ${activeTab === 'lost' ? 'shadow-orange-900/5' : 'shadow-emerald-900/5'}`}>
-                      <button 
-                        disabled={page === 0} 
-                        onClick={() => setPage(0)} 
+                      <button
+                        disabled={page === 0}
+                        onClick={() => setPage(0)}
                         className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                       >
                         <ChevronsLeft className="w-5 h-5" />
                       </button>
 
-                      <button 
-                        disabled={page === 0} 
-                        onClick={() => setPage(p => p - 1)} 
+                      <button
+                        disabled={page === 0}
+                        onClick={() => setPage(p => p - 1)}
                         className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      
+
                       <div className="flex items-center gap-1">
                         {[...Array(totalPages)].map((_, i) => (
                           <button
                             key={i}
                             onClick={() => setPage(i)}
-                            className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all duration-200 ${
-                              page === i 
-                                ? (activeTab === 'lost' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-200') 
+                            className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all duration-200 ${page === i
+                                ? (activeTab === 'lost' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-200')
                                 : `text-gray-400 ${activeTab === 'lost' ? 'hover:bg-orange-50 hover:text-orange-600' : 'hover:bg-emerald-50 hover:text-emerald-600'}`
-                            }`}
+                              }`}
                           >
                             {i + 1}
                           </button>
                         ))}
                       </div>
 
-                      <button 
-                        disabled={page + 1 >= totalPages} 
-                        onClick={() => setPage(p => p + 1)} 
+                      <button
+                        disabled={page + 1 >= totalPages}
+                        onClick={() => setPage(p => p + 1)}
                         className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
 
-                      <button 
-                        disabled={page + 1 >= totalPages} 
-                        onClick={() => setPage(totalPages - 1)} 
+                      <button
+                        disabled={page + 1 >= totalPages}
+                        onClick={() => setPage(totalPages - 1)}
                         className={`p-2.5 rounded-xl transition-all disabled:opacity-20 ${activeTab === 'lost' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                       >
                         <ChevronsRight className="w-5 h-5" />

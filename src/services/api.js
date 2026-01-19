@@ -4,7 +4,7 @@ import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
 const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
-const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4"; 
+const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -14,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    const cleanToken = token.replace(/"/g, ''); 
+    const cleanToken = token.replace(/"/g, '');
     config.headers.Authorization = `Bearer ${cleanToken}`;
   }
   return config;
@@ -50,26 +50,26 @@ export const syncFcmToken = async () => {
 export const logoutUser = async () => {
   try {
     const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
-    
+
     if (currentToken) {
-        try {
-            await api.delete('/users/delete-fcm-token', {
-                params: { fcmToken: currentToken }
-            });
-        } catch (e) {
-            console.warn("Failed to delete FCM token", e);
-        }
+      try {
+        await api.delete('/users/delete-fcm-token', {
+          params: { fcmToken: currentToken }
+        });
+      } catch (e) {
+        console.warn("Failed to delete FCM token", e);
+      }
     }
 
     try {
-        await api.post('/users/logout');
+      await api.post('/users/logout');
     } catch (e) {
-        console.warn("Backend logout failed", e);
+      console.warn("Backend logout failed", e);
     }
 
     await signOut(auth);
     localStorage.removeItem('token');
-    
+
   } catch (error) {
     console.error("Logout Error:", error);
     localStorage.removeItem('token');
@@ -110,7 +110,7 @@ export const createFoundReport = async (reportData) => {
   const payload = {
     title: reportData.title,
     description: reportData.description,
-    dateFound: reportData.dateFound, 
+    dateFound: reportData.dateFound,
     chipNumber: parseInt(reportData.chipNumber) || 0,
     species: reportData.species,
     condition: reportData.condition,
@@ -134,9 +134,9 @@ export const deleteFoundReport = async (id) => {
 export const uploadFoundReportImage = async (reportId, file) => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   let token = localStorage.getItem("token");
-  if (token) token = token.replace(/"/g, ''); 
+  if (token) token = token.replace(/"/g, '');
 
   const response = await fetch(`${BASE_URL}/found-reports/${reportId}/add-image`, {
     method: "POST",
@@ -198,7 +198,7 @@ export const uploadLostReportImage = async (reportId, file) => {
   formData.append("file", file);
 
   let token = localStorage.getItem("token");
-  if (token) token = token.replace(/"/g, ''); 
+  if (token) token = token.replace(/"/g, '');
 
   const response = await fetch(`${BASE_URL}/lost-reports/${reportId}/add-image`, {
     method: "POST",
@@ -234,7 +234,7 @@ export const deleteUserAccount = async (userId) => {
 };
 
 // ==========================================
-//             MY REPORTS
+//                MY REPORTS
 // ==========================================
 export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate', direction = 'desc') => {
   const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},${direction}&all=false`);
@@ -250,7 +250,7 @@ export const fetchMyLostReports = fetchMyLostReportsList;
 export const fetchMyFoundReports = fetchMyFoundReportsList;
 
 // ==========================================
-//                 LINKING
+//                LINKING
 // ==========================================
 export const linkFoundToLostReport = async (foundReportId, lostReportId) => {
   const response = await api.patch(`/lost-reports/${lostReportId}/add-found-report/${foundReportId}`);
@@ -264,6 +264,16 @@ export const connectFoundReports = async (foundReportId, connectedFoundReportId)
 
 export const removeFoundReportFromLostReport = async (lostReportId, foundReportId) => {
   const response = await api.patch(`/lost-reports/${lostReportId}/remove-found-report/${foundReportId}`);
+  return response.data;
+};
+
+export const confirmLostReportMatch = async (lostReportId) => {
+  const response = await api.patch(`/lost-reports/${lostReportId}/there-are-connected-found-reports`);
+  return response.data;
+};
+
+export const markLostReportAsFound = async (lostReportId) => {
+  const response = await api.patch(`/lost-reports/${lostReportId}/found`);
   return response.data;
 };
 
