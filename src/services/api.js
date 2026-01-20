@@ -21,7 +21,7 @@ api.interceptors.request.use((config) => {
 }, (error) => Promise.reject(error));
 
 // ==========================================
-//                 AUTH & FCM
+//                AUTH & FCM
 // ==========================================
 
 export const loginUser = async (credentials) => {
@@ -77,7 +77,7 @@ export const logoutUser = async () => {
 };
 
 // ==========================================
-//                 NOTIFICATIONS
+//                NOTIFICATIONS
 // ==========================================
 
 export const fetchNotifications = async () => {
@@ -91,7 +91,7 @@ export const markNotificationAsRead = async (notificationId) => {
 };
 
 // ==========================================
-//                 FOUND REPORTS
+//                FOUND REPORTS
 // ==========================================
 
 export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound', sortDirection = 'DESC') => {
@@ -154,7 +154,7 @@ export const deleteFoundReportImage = async (id) => {
 };
 
 // ==========================================
-//                 LOST REPORTS
+//                LOST REPORTS
 // ==========================================
 
 export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost', sortDirection = 'DESC') => {
@@ -185,6 +185,13 @@ export const createLostReport = async (reportData) => {
 
 export const updateLostReport = async (id, data) => {
   const response = await api.put(`/lost-reports/${id}`, data);
+  return response.data;
+};
+
+export const toggleLostReportFoundStatus = async (id, status) => {
+  const response = await api.patch(`/lost-reports/${id}/toggle-found`, null, {
+    params: { found: status }
+  });
   return response.data;
 };
 

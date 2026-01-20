@@ -18,6 +18,7 @@ import {
   deleteLostReport,
   uploadLostReportImage,
   deleteLostReportImage,
+  toggleLostReportFoundStatus,
   logoutUser
 } from "../../services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
@@ -180,6 +181,11 @@ const LostReportDetails = () => {
     setSaving(true);
     try {
       await updateLostReport(id, report);
+
+      if (report.found !== originalReport.found) {
+        await toggleLostReportFoundStatus(id, report.found);
+      }
+
       if (newImage) {
         await uploadLostReportImage(id, newImage);
       }
@@ -310,9 +316,22 @@ const LostReportDetails = () => {
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found status</span>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${report.found ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {report.found ? 'FOUND' : 'STILL LOST'}
-                  </span>
+                  {isEditing ? (
+                    <button
+                      type="button"
+                      onClick={() => setReport({ ...report, found: !report.found })}
+                      className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all uppercase ${report.found
+                        ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
+                        : 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200'
+                        }`}
+                    >
+                      {report.found ? 'SWITCH TO LOST' : 'SWITCH TO FOUND'}
+                    </button>
+                  ) : (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${report.found ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {report.found ? 'FOUND' : 'STILL LOST'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
