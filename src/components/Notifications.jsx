@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom"; // Import createPortal
+import { createPortal } from "react-dom";
 import { Bell, Search, AlertCircle } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead } from "@/services/api";
 import MatchModal from "@/components/MatchModal";
 import ReminderModal from "@/components/ReminderModal";
+import FoundClaimModal from "@/components/FoundClaimModal";
+import FoundMatchModal from "@/components/FoundMatchModal";
 
 const Notifications = () => {
     const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
@@ -48,7 +50,9 @@ const Notifications = () => {
 
         if (
             notification.notificationType === 'LOST_REPORT_NOTIFICATION' ||
-            notification.notificationType === 'LOST_REPORT_NOTIFICATION_REMINDER'
+            notification.notificationType === 'FOUND_REPORT_NOTIFICATION' ||
+            notification.notificationType === 'LOST_REPORT_NOTIFICATION_REMINDER' ||
+            notification.notificationType === 'FOUND_REPORT_NOTIFICATION_CONNECTED_FOUND'
         ) {
             setSelectedNotification(notification);
             setIsNotificationMenuOpen(false);
@@ -66,7 +70,17 @@ const Notifications = () => {
                             notification={selectedNotification}
                             onClose={() => setSelectedNotification(null)}
                         />
-                    ) : (
+                    ) : selectedNotification.notificationType === 'FOUND_REPORT_NOTIFICATION' ? (
+                         <FoundClaimModal
+                            notification={selectedNotification}
+                            onClose={() => setSelectedNotification(null)}
+                         />
+                    ) : selectedNotification.notificationType === 'FOUND_REPORT_NOTIFICATION_CONNECTED_FOUND' ? (
+                        <FoundMatchModal
+                           notification={selectedNotification}
+                           onClose={() => setSelectedNotification(null)}
+                        />
+                   ) : (
                         <MatchModal
                             notification={selectedNotification}
                             onClose={() => setSelectedNotification(null)}
@@ -110,8 +124,12 @@ const Notifications = () => {
                                 </div>
                             ) : (
                                 notifications.map(n => {
-                                    const isMatch = n.notificationType === 'LOST_REPORT_NOTIFICATION';
+                                    const isLostMatch = n.notificationType === 'LOST_REPORT_NOTIFICATION';
+                                    const isFoundMatch = n.notificationType === 'FOUND_REPORT_NOTIFICATION';
+                                    const isConnectedFound = n.notificationType === 'FOUND_REPORT_NOTIFICATION_CONNECTED_FOUND';
                                     const isReminder = n.notificationType === 'LOST_REPORT_NOTIFICATION_REMINDER';
+                                    const isMatch = isLostMatch || isFoundMatch || isConnectedFound;
+                                    
                                     return (
                                         <div
                                             key={n.notificationId}
@@ -127,9 +145,17 @@ const Notifications = () => {
 
                                                 <div className="flex-1 min-w-0 pt-0.5">
                                                     <p className={`text-sm leading-snug ${n.read ? 'text-gray-600' : 'text-gray-900 font-bold'}`}>
-                                                        {isMatch ? (
+                                                        {isLostMatch ? (
                                                             <>
                                                                 <span className="text-emerald-700 font-black">{n.fromUserName}</span> might have found your pet!
+                                                            </>
+                                                        ) : isFoundMatch ? (
+                                                            <>
+                                                                Might you found <span className="text-emerald-700 font-black">{n.fromUserName}'s</span> pet!
+                                                            </>
+                                                        ) : isConnectedFound ? (
+                                                            <>
+                                                                Might you and <span className="text-emerald-700 font-black">{n.fromUserName}</span> found the same pet!
                                                             </>
                                                         ) : isReminder ? (
                                                             "Did you find your pet?"

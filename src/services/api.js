@@ -264,13 +264,23 @@ export const linkFoundToLostReport = async (foundReportId, lostReportId) => {
   return response.data;
 };
 
+export const removeFoundReportFromLostReport = async (lostReportId, foundReportId) => {
+  const response = await api.patch(`/lost-reports/${lostReportId}/remove-found-report/${foundReportId}`);
+  return response.data;
+};
+
+export const addLostReportToFoundReport = async (foundReportId, lostReportId) => {
+  const response = await api.patch(`/found-reports/${foundReportId}/add-lost-report/${lostReportId}`);
+  return response.data;
+};
+
 export const connectFoundReports = async (foundReportId, connectedFoundReportId) => {
   const response = await api.patch(`/found-reports/${foundReportId}/add-found-report/${connectedFoundReportId}`);
   return response.data;
 };
 
-export const removeFoundReportFromLostReport = async (lostReportId, foundReportId) => {
-  const response = await api.patch(`/lost-reports/${lostReportId}/remove-found-report/${foundReportId}`);
+export const disconnectFoundReports = async (foundReportId, connectedFoundReportId) => {
+  const response = await api.patch(`/found-reports/${foundReportId}/remove-found-report/${connectedFoundReportId}`);
   return response.data;
 };
 

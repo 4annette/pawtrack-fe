@@ -341,9 +341,9 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
             <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black hover:bg-gray-800 rounded-full text-white shadow-lg"><X className="w-5 h-5" /></button>
             <div className="absolute bottom-0 left-0 p-6 text-white w-full">
                 <div className="flex items-center gap-2 mb-2">
-                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getSpeciesLabelColor()}`}>
-                       {report.species}
-                     </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getSpeciesLabelColor()}`}>
+                        {report.species}
+                      </span>
                 </div>
                 <h2 className="text-2xl font-bold leading-tight">{report.title}</h2>
             </div>
@@ -388,19 +388,43 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
   );
 };
 
-export const ClaimModal = ({ isOpen, onClose, foundReportId }) => {
+export const ClaimModal = ({ isOpen, onClose, foundReportId, addLostReportToFoundReport }) => {
   const [myLostReports, setMyLostReports] = useState([]);
   const [loading, setLoading] = useState(false);
+  
   useEffect(() => {
     if (isOpen) {
-      const load = async () => { try { const d = await fetchMyLostReports(); setMyLostReports(d.content || []); } catch { toast.error("Error loading reports"); } };
+      const load = async () => { 
+        try { 
+          const d = await fetchMyLostReports(); 
+          setMyLostReports(d.content || []); 
+        } catch { 
+          toast.error("Error loading reports"); 
+        } 
+      };
       load();
     }
   }, [isOpen]);
+
   const handleClaim = async (lid) => {
-    setLoading(true); try { await linkFoundToLostReport(foundReportId, lid); toast.success("Finder notified!"); onClose(); } catch { toast.error("Error linking."); } finally { setLoading(false); }
+    setLoading(true); 
+    try { 
+      if (addLostReportToFoundReport) {
+        await addLostReportToFoundReport(foundReportId, lid);
+      } else {
+        await linkFoundToLostReport(foundReportId, lid); 
+      }
+      toast.success("Finder notified!"); 
+      onClose(); 
+    } catch { 
+      toast.error("Error linking."); 
+    } finally { 
+      setLoading(false); 
+    }
   };
+
   if (!isOpen) return null;
+  
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
@@ -528,7 +552,7 @@ export const MapModal = ({ isOpen, onClose, location }) => {
                     )}
                 </div>
                 <div className="p-3 bg-gray-50 text-xs text-center text-gray-500 border-t border-gray-100 font-mono">
-                     {hasCoords ? `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Location unavailable"}
+                      {hasCoords ? `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Location unavailable"}
                 </div>
             </div>
         </div>

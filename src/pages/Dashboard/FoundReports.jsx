@@ -12,7 +12,7 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-import { fetchFoundReports } from "@/services/api";
+import { fetchFoundReports, addLostReportToFoundReport } from "@/services/api";
 import { 
     CustomDropdown, ReportDetailsModal, 
     ClaimModal, AddSightingModal, MapModal 
@@ -634,7 +634,7 @@ const FoundReports = () => {
             />
             
             <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} />
-            <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} />
+            <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} addLostReportToFoundReport={addLostReportToFoundReport} />
             <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="FOUND" />
             <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
         </div>
