@@ -1,11 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button"; 
 import PawTrackLogo from "@/components/PawTrackLogo"; 
 import { Search, MapPin, Heart } from "lucide-react";
+import { fetchStatistics } from "@/services/api";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [reunitedCount, setReunitedCount] = useState(2500);
+
+  useEffect(() => {
+    const getStats = async () => {
+      try {
+        const stats = await fetchStatistics();
+        if (stats && stats.foundedLostReports) {
+          setReunitedCount(stats.foundedLostReports);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    };
+    getStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-green-50">
@@ -38,8 +54,9 @@ const Home = () => {
 
       <main className="flex flex-col items-center justify-center text-center mt-20 px-4">
         
+        {/* later add the num of the pets that founded */}
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-8">
-          Helping reunite 2,500+ pets with their families
+          Helping reunite pets with their families
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-gray-900 tracking-tight mb-6 max-w-4xl">
@@ -60,7 +77,7 @@ const Home = () => {
             <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
                 <MapPin className="w-10 h-10 text-green-600 mb-4" />
                 <p className="text-xl font-bold text-gray-900">Alert</p>
-                <p className="text-gray-500 text-sm">Notify nearby neighbors</p>
+                <p className="text-gray-500 text-sm">Stay updated on every action</p>
             </div>
             <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
                 <Heart className="w-10 h-10 text-rose-500 mb-4" />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo"; 
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint } from "lucide-react"; 
 import { toast } from "sonner";
-import { loginUser, registerUser, syncFcmToken } from "@/services/api";
+import { loginUser, registerUser, syncFcmToken, fetchStatistics } from "@/services/api";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -18,6 +18,11 @@ const Auth = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    foundedLostReports: 2500,
+    activeUsers: 15000,
+    successRate: 98
+  });
 
   const [formData, setFormData] = useState({
     username: "",
@@ -26,6 +31,24 @@ const Auth = () => {
     firstName: "",
     lastName: "",
   });
+
+  useEffect(() => {
+    const getStats = async () => {
+      try {
+        const data = await fetchStatistics();
+        if (data) {
+          setStats({
+            foundedLostReports: data.foundedLostReports || 0,
+            activeUsers: data.activeUsers || 0,
+            successRate: data.successRate || 0
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load statistics", error);
+      }
+    };
+    getStats();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -87,15 +110,15 @@ const Auth = () => {
 
           <div className="flex gap-8 mt-12">
               <div>
-                <p className="text-2xl font-bold text-sage">2.5k+</p>
+                <p className="text-2xl font-bold text-sage">{stats.foundedLostReports >= 1000 ? (stats.foundedLostReports / 1000).toFixed(1) + 'k' : stats.foundedLostReports}</p>
                 <p className="text-sm text-gray-500">Pets Reunited</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-sky">15k+</p>
+                <p className="text-2xl font-bold text-sky">{stats.activeUsers >= 1000 ? (stats.activeUsers / 1000).toFixed(1) + 'k' : stats.activeUsers}</p>
                 <p className="text-sm text-gray-500">Active Users</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-sunny">98%</p>
+                <p className="text-2xl font-bold text-sunny">{stats.successRate}%</p>
                 <p className="text-sm text-gray-500">Success Rate</p>
               </div>
           </div>

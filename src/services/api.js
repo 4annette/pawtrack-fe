@@ -91,6 +91,15 @@ export const markNotificationAsRead = async (notificationId) => {
 };
 
 // ==========================================
+//                STATISTICS
+// ==========================================
+
+export const fetchStatistics = async () => {
+  const response = await api.get('/statistics');
+  return response.data;
+};
+
+// ==========================================
 //                FOUND REPORTS
 // ==========================================
 
