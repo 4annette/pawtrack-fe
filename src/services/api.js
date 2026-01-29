@@ -249,6 +249,18 @@ export const deleteUserAccount = async (userId) => {
   return response.data;
 };
 
+export const changePassword = async (passwordData) => {
+  const response = await api.patch('/users/change-password', passwordData);
+  return response.data;
+};
+
+export const changeUsername = async (username) => {
+  const response = await api.patch('/users/change-username', null, {
+    params: { username }
+  });
+  return response.data;
+};
+
 // ==========================================
 //                MY REPORTS
 // ==========================================

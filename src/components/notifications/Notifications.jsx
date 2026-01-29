@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Bell, Search, AlertCircle } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead } from "@/services/api";
-import MatchModal from "@/components/MatchModal";
-import ReminderModal from "@/components/ReminderModal";
-import FoundClaimModal from "@/components/FoundClaimModal";
-import FoundMatchModal from "@/components/FoundMatchModal";
+import MatchModal from "@/components/notifications/MatchModal";
+import ReminderModal from "@/components/notifications/ReminderModal";
+import FoundClaimModal from "@/components/notifications/FoundClaimModal";
+import FoundMatchModal from "@/components/notifications/FoundMatchModal";
 
 const Notifications = () => {
     const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);

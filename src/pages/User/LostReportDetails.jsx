@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
-  Camera, User, FileText, LogOut, Calendar, Hash, Dog,
+  Camera, FileText, LogOut, Calendar, Hash, Dog,
   CheckCircle, MapPin, Clock, ChevronDown, Info, Save
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,7 +22,8 @@ import {
   logoutUser
 } from "../../services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/Notifications";
+import Notifications from "@/components/notifications/Notifications";
+import ProfileButton from "@/components/topBar/ProfileButton";
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -107,10 +108,6 @@ const LostReportDetails = () => {
   const [newImage, setNewImage] = useState(null);
   const [addressText, setAddressText] = useState("Loading location...");
 
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
-  const userMenuRef = useRef(null);
-
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
 
   const conditionOptions = [
@@ -135,14 +132,6 @@ const LostReportDetails = () => {
     };
     getReport();
   }, [id, navigate]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setIsUserMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     if (!report || !report.latitude || !report.longitude) {
@@ -243,26 +232,8 @@ const LostReportDetails = () => {
           </div>
 
           <div className="flex items-center gap-4">
-
             <Notifications />
-
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform outline-none"
-              >
-                <User className="w-5 h-5" />
-              </button>
-
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                  <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"><User className="w-4 h-4 text-emerald-500" /> Profile</button>
-                  <button onClick={() => navigate('/my-reports')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors"><FileText className="w-4 h-4 text-orange-500" /> My Reports</button>
-                  <div className="h-px bg-gray-100 my-1"></div>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"><LogOut className="w-4 h-4" /> Logout</button>
-                </div>
-              )}
-            </div>
+            <ProfileButton />
           </div>
         </div>
       </header>

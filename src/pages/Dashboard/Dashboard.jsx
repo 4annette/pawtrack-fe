@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, FileText, ChevronDown, X, Loader2, Search } from "lucide-react";
+import { ChevronDown, X, Loader2, Search, User } from "lucide-react";
 import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import FoundReports from "./FoundReports";
 import LostReports from "./LostReports";
-import { logoutUser, fetchMyLostReports, addLostReportToFoundReport } from "@/services/api";
-import Notifications from "@/components/Notifications";
+import { fetchMyLostReports, addLostReportToFoundReport } from "@/services/api";
+import Notifications from "@/components/notifications/Notifications";
+import ProfileButton from "@/components/topBar/ProfileButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("found");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [myLostReports, setMyLostReports] = useState([]);
@@ -21,15 +21,11 @@ const Dashboard = () => {
   const [submittingClaim, setSubmittingClaim] = useState(false);
 
   const logoMenuRef = useRef(null);
-  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
         setIsMobileMenuOpen(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
       }
     };
 
@@ -41,11 +37,6 @@ const Dashboard = () => {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, []);
-
-  const handleLogout = async () => {
-    await logoutUser();
-    navigate("/auth");
-  };
 
   const openClaimModal = async (foundReportId) => {
     setSelectedFoundReportId(foundReportId);
@@ -86,7 +77,6 @@ const Dashboard = () => {
             <button
               type="button"
               onClick={() => {
-                setIsUserMenuOpen(false);
                 setIsMobileMenuOpen(!isMobileMenuOpen);
               }}
               className="flex items-center gap-2 focus:outline-none md:cursor-default"
@@ -143,47 +133,8 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-
             <Notifications />
-
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsUserMenuOpen(!isUserMenuOpen);
-                }}
-                className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-xs active:scale-90 transition-transform"
-              >
-                <User className="w-5 h-5" />
-              </button>
-
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-in fade-in zoom-in-95 font-bold">
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 text-left transition-colors"
-                  >
-                    <User className="w-4 h-4 text-emerald-500" /> Profile
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/my-reports')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 text-left transition-colors"
-                  >
-                    <FileText className="w-4 h-4 text-orange-500" /> My Reports
-                  </button>
-
-                  <div className="h-px bg-gray-100 my-1"></div>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 text-left transition-colors font-bold"
-                  >
-                    <LogOut className="w-4 h-4" /> Logout
-                  </button>
-                </div>
-              )}
-            </div>
+            <ProfileButton />
           </div>
         </div>
       </header>

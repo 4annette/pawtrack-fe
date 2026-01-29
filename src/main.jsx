@@ -15,6 +15,7 @@ import CreateFoundReport from './pages/CreateFoundReport';
 import CreateLostReport from './pages/CreateLostReport';
 
 import "./index.css";
+import AccountSettings from "./pages/User/AccountSettings";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/lost-report-details/:id" element={<LostReportDetails />} />
         <Route path="/create-found-report" element={<CreateFoundReport />} />
         <Route path="/create-lost-report" element={<CreateLostReport />} />
+        <Route path="/account-settings" element={<AccountSettings />} />
         
       </Routes>
     </BrowserRouter>
