@@ -3,8 +3,7 @@ import { messaging, auth } from '../firebase/firebaseInitialization';
 import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
-// const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
-const BASE_URL = "http://localhost:8080/api/v1"
+const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
 const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
 
 const api = axios.create({
