@@ -3,7 +3,8 @@ import { messaging, auth } from '../firebase/firebaseInitialization';
 import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
-const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+// const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+const BASE_URL = "http://localhost:8080/api/v1"
 const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
 
 const api = axios.create({
@@ -87,6 +88,26 @@ export const fetchNotifications = async () => {
 
 export const markNotificationAsRead = async (notificationId) => {
   const response = await api.patch(`/users/notifications/${notificationId}/read`);
+  return response.data;
+};
+
+export const toggleNotifyFoundReportLost = async (notify) => {
+  const response = await api.patch('/users/notify/toggle-found-report-lost', null, { params: { notify } });
+  return response.data;
+};
+
+export const toggleNotifyFoundReportFound = async (notify) => {
+  const response = await api.patch('/users/notify/toggle-found-report-found', null, { params: { notify } });
+  return response.data;
+};
+
+export const toggleNotifyLostReport = async (notify) => {
+  const response = await api.patch('/users/notify/toggle-lost-report', null, { params: { notify } });
+  return response.data;
+};
+
+export const toggleNotifyUserAccount = async (notify) => {
+  const response = await api.patch('/users/notify/toggle-user-account', null, { params: { notify } });
   return response.data;
 };
 
@@ -236,6 +257,11 @@ export const deleteLostReportImage = async (id) => {
 // ==========================================
 export const fetchCurrentUser = async () => {
   const response = await api.get('/users');
+  return response.data;
+};
+
+export const fetchUserDetails = async () => {
+  const response = await api.get('/users/details');
   return response.data;
 };
 
