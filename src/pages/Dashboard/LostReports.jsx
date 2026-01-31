@@ -73,7 +73,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
         </div>
 
         {isOpen && (
-            <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
+            <div className="absolute top-full left-0 mt-2 z-40 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4"/></button>
                     <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
@@ -144,7 +144,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
   const selectedOption = options.find(opt => opt.value === value) || options[0];
 
   return (
-    <div className="relative space-y-1.5" ref={containerRef}>
+    <div className="relative space-y-1.5" ref={containerRef} style={{ zIndex: isOpen ? 50 : 10 }}>
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">{Icon && <Icon className="w-3 h-3" />} {label}</label>
       <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm text-sm text-gray-700 font-bold`}>
         <span className="truncate">{selectedOption.label}</span>
@@ -184,12 +184,8 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
             setLoading(true);
             try {
                 await new Promise(r => setTimeout(r, Math.random() * 1500));
-                
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-                );
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await response.json();
-
                 if (isMounted && data.address) {
                     const city = data.address.city || data.address.town || data.address.village || "";
                     const country = data.address.country || "";
@@ -213,14 +209,12 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
             className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
         >
             <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" /> 
-            <span className="truncate font-medium">
-                {loading ? "Loading address..." : address}
-            </span>
+            <span className="truncate font-medium">{loading ? "Loading address..." : address}</span>
         </button>
     );
 };
 
-const ToolbarDropdown = ({ label, value, options, onChange }) => {
+const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
 
@@ -237,7 +231,7 @@ const ToolbarDropdown = ({ label, value, options, onChange }) => {
     const selectedLabel = options.find(opt => opt.value === value)?.label || value;
 
     return (
-        <div className="relative" ref={containerRef}>
+        <div className="relative" ref={containerRef} style={{ zIndex: isOpen ? 40 : 20 }}>
             <button 
                 onClick={() => setIsOpen(!isOpen)} 
                 className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
@@ -250,7 +244,7 @@ const ToolbarDropdown = ({ label, value, options, onChange }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-30 animate-in fade-in zoom-in-95">
+                <div className={`absolute top-full ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 z-50 animate-in fade-in zoom-in-95`}>
                     <div className="p-1.5">
                         {options.map((option) => (
                             <div 
@@ -480,7 +474,7 @@ const LostReports = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-30">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-3xl font-bold text-gray-900">Lost Reports</h1>
@@ -499,6 +493,7 @@ const LostReports = () => {
                         value={pageSize} 
                         options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} 
                         onChange={(val) => { setPageSize(val); setPage(0); }} 
+                        align="left"
                     />
                     <ToolbarDropdown 
                         label="Sort" 
@@ -515,7 +510,7 @@ const LostReports = () => {
                 </div>
             </div>
 
-            <div className="relative z-20">
+            <div className="relative z-20 space-y-3">
                 <div className="flex gap-3 items-center">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -526,7 +521,7 @@ const LostReports = () => {
                     </button>
                 </div>
                 {showFilterPanel && (
-                    <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-50 animate-in slide-in-from-top-2">
+                    <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-40 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
                             <h3 className="font-semibold text-emerald-900">Filter Options</h3>
                             <button onClick={() => setFilters({search:"", species:"", status:"", dateAfter:"", dateBefore:"", radius: 25})} className="text-xs text-red-500 hover:underline">Clear all</button>

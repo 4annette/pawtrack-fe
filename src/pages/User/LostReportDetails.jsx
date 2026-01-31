@@ -214,49 +214,46 @@ const LostReportDetails = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logoutUser();
-    navigate("/auth");
-  };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-emerald-500 w-10 h-10" /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
 
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-4">
+      <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
+        <div className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button onClick={() => navigate("/my-reports")} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-            <PawTrackLogo size="sm" />
+            <div className="hidden xs:block">
+              <PawTrackLogo size="sm" />
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Notifications />
             <ProfileButton />
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-[40px] shadow-xl border border-emerald-100 p-6 md:p-10 mb-8">
-          <div className="flex justify-between items-center mb-10 gap-4">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-[32px] sm:rounded-[40px] shadow-xl border border-emerald-100 p-5 sm:p-10 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-2xl font-black text-emerald-900 tracking-tight">{isEditing ? "Edit Lost Report" : "Lost Report Details"}</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-emerald-900 tracking-tight">{isEditing ? "Edit Lost Report" : "Lost Report Details"}</h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               {!isEditing ? (
                 <>
-                  <button onClick={() => setIsEditing(true)} className="bg-white border border-emerald-200 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95"><Edit3 className="w-4 h-4" /> Edit</button>
-                  <button onClick={handleDeleteReport} className="bg-red-50 text-red-50 text-red-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95"><Edit3 className="w-4 h-4" /> Edit</button>
+                  <button onClick={handleDeleteReport} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete</button>
                 </>
               ) : (
-                <button onClick={handleCancel} className="bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm"><X className="w-4 h-4" /> Cancel</button>
+                <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm"><X className="w-4 h-4" /> Cancel</button>
               )}
             </div>
           </div>
 
-          <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
             <div className="space-y-6">
               <label className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] block">Pet Photo</label>
               <div className="relative aspect-square rounded-[32px] overflow-hidden border-4 border-white shadow-2xl bg-gray-100">
@@ -265,7 +262,7 @@ const LostReportDetails = () => {
                 ) : report.imageUrl ? (
                   <img src={report.imageUrl} className="w-full h-full object-cover" alt="Report Photo" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
                     <ImageIcon className="w-12 h-12" />
                     <span className="text-[10px] font-black uppercase mt-2">No Image</span>
                   </div>
@@ -285,25 +282,15 @@ const LostReportDetails = () => {
               )}
 
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found status</span>
-                <div className="flex items-center gap-2">
-                  {isEditing ? (
-                    <button
-                      type="button"
-                      onClick={() => setReport({ ...report, found: !report.found })}
-                      className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all uppercase ${report.found
-                        ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
-                        : 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200'
-                        }`}
-                    >
-                      {report.found ? 'SWITCH TO LOST' : 'SWITCH TO FOUND'}
-                    </button>
-                  ) : (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${report.found ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {report.found ? 'FOUND' : 'STILL LOST'}
-                    </span>
-                  )}
-                </div>
+                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found?</span>
+                <button 
+                  type="button" 
+                  disabled={!isEditing} 
+                  onClick={() => setReport({ ...report, found: !report.found })} 
+                  className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
+                </button>
               </div>
             </div>
 
@@ -328,33 +315,32 @@ const LostReportDetails = () => {
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Last Seen Location Text</label>
-                <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
-                  <Info className="w-3.5 h-3.5 text-emerald-300" />
-                  {addressText}
+                <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed overflow-hidden">
+                  <Info className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  <span className="truncate">{addressText}</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <CustomDropdown label="Condition" icon={CheckCircle} value={report.condition || ""} options={conditionOptions} onChange={val => setReport({ ...report, condition: val })} disabled={!isEditing} />
+                <div className="sm:hidden h-1"></div>
+                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>
-                  {isEditing ? (
-                    <input type="number" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={report.chipNumber || ""} onChange={e => setReport({ ...report, chipNumber: e.target.value })} />
-                  ) : (
-                    <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.chipNumber || "Not provided"}</div>
-                  )}
-                </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>
+                {isEditing ? (
+                  <input type="number" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={report.chipNumber || ""} onChange={e => setReport({ ...report, chipNumber: e.target.value })} />
+                ) : (
+                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.chipNumber || "Not provided"}</div>
+                )}
               </div>
 
               <CustomDateTimePicker label="Date Lost" value={report.lostDate || report.createdAt} />
 
               {isEditing && (
                 <div className="flex justify-end pt-6">
-                  <button type="submit" disabled={saving} className="bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center gap-2">
+                  <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {saving ? "SAVING..." : "SAVE"}
                   </button>
@@ -368,7 +354,7 @@ const LostReportDetails = () => {
               <h3 className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> Last Seen Map
               </h3>
-              <div className="h-64 w-full rounded-2xl overflow-hidden border border-emerald-200 shadow-sm relative z-0">
+              <div className="h-64 sm:h-72 w-full rounded-2xl overflow-hidden border border-emerald-200 shadow-sm relative z-0">
                 <MapContainer
                   center={[report.latitude, report.longitude]}
                   zoom={15}
@@ -386,7 +372,6 @@ const LostReportDetails = () => {
               </div>
             </div>
           )}
-
         </div>
       </main>
     </div>

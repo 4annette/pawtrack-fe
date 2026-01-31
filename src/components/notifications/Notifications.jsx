@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Search, AlertCircle } from "lucide-react";
+import { Bell, Search, AlertCircle, X } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead } from "@/services/api";
 import MatchModal from "@/components/notifications/MatchModal";
 import ReminderModal from "@/components/notifications/ReminderModal";
@@ -105,13 +105,21 @@ const Notifications = () => {
                 </button>
 
                 {isNotificationMenuOpen && (
-                    <div className="absolute right-0 mt-4 w-96 bg-white rounded-[32px] shadow-2xl shadow-emerald-900/10 border border-gray-100 py-3 z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right ring-4 ring-gray-50/50">
+                    <div className="fixed sm:absolute right-0 sm:right-0 top-16 sm:top-auto left-4 sm:left-auto right-4 sm:mt-4 sm:w-96 bg-white rounded-3xl sm:rounded-[32px] shadow-2xl shadow-emerald-900/10 border border-gray-100 py-3 z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right ring-4 ring-gray-50/50">
                         <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-10">
                             <h3 className="font-black text-gray-800 text-sm tracking-wide">Notifications</h3>
-                            {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} New</span>}
+                            <div className="flex items-center gap-3">
+                                {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} New</span>}
+                                <button 
+                                    onClick={() => setIsNotificationMenuOpen(false)}
+                                    className="sm:hidden p-1 text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto">
+                        <div className="max-h-[70vh] sm:max-h-[60vh] overflow-y-auto">
                             {notifications.length === 0 ? (
                                 <div className="py-12 px-6 text-center flex flex-col items-center gap-4">
                                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">

@@ -86,7 +86,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
         </div>
 
         {isOpen && (
-            <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
+            <div className="absolute top-full left-0 mt-2 z-40 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4"/></button>
                     <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
@@ -178,7 +178,7 @@ const LocationPickerModal = ({ isOpen, onClose, onConfirm, initialPosition }) =>
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
             <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-emerald-50">
                     <div>
@@ -264,7 +264,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
     );
 };
 
-const ToolbarDropdown = ({ label, value, options, onChange }) => {
+const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
 
@@ -281,7 +281,7 @@ const ToolbarDropdown = ({ label, value, options, onChange }) => {
     const selectedLabel = options.find(opt => opt.value === value)?.label || value;
 
     return (
-        <div className="relative" ref={containerRef}>
+        <div className="relative" ref={containerRef} style={{ zIndex: isOpen ? 40 : 20 }}>
             <button 
                 onClick={() => setIsOpen(!isOpen)} 
                 className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
@@ -294,7 +294,7 @@ const ToolbarDropdown = ({ label, value, options, onChange }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-30 animate-in fade-in zoom-in-95">
+                <div className={`absolute top-full ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 z-50 animate-in fade-in zoom-in-95`}>
                     <div className="p-1.5">
                         {options.map((option) => (
                             <div 
@@ -477,7 +477,7 @@ const FoundReports = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-30">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Found Reports</h1>
                     <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
@@ -488,6 +488,7 @@ const FoundReports = () => {
                         value={pageSize} 
                         options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} 
                         onChange={(val)=>{setPageSize(val);setPage(0);}} 
+                        align="left"
                     />
                     <ToolbarDropdown 
                         label="Sort" 
@@ -549,7 +550,7 @@ const FoundReports = () => {
                 </div>
 
                 {showFilterPanel && (
-                    <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-emerald-50 rounded-xl shadow-xl border border-emerald-100 p-6 z-50 animate-in slide-in-from-top-2">
+                    <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-emerald-50 rounded-xl shadow-xl border border-emerald-100 p-6 z-40 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
                             <h3 className="font-semibold text-emerald-900">Filter Options</h3>
                             <button onClick={() => setFilters({search:"", species:"", condition:"", dateAfter:"", dateBefore:"", chipNumber:"", radius: 25})} className="text-xs text-red-500 hover:underline">Clear all</button>
