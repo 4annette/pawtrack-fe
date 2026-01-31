@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ArrowLeft, MapPin, Calendar, FileText,
+  MapPin, Calendar, FileText,
   ChevronDown, Check,
   Settings2, Loader2, Trash2, ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight
@@ -129,8 +129,9 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
 
 const MyReports = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [reports, setReports] = useState([]);
-  const [activeTab, setActiveTab] = useState("lost");
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "lost");
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -244,13 +245,6 @@ const MyReports = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
 
           <div className="flex items-center gap-4 md:gap-6" ref={logoMenuRef}>
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-
             <div className="relative flex items-center gap-1">
               <button onClick={() => {
                 setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -351,7 +345,7 @@ const MyReports = () => {
 
                         <div className="flex md:hidden items-center gap-3 mt-4">
                           <button
-                            onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                            onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}?edit=true` : `/found-report-details/${report.id}?edit=true`); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
                           >
                             <Settings2 className="w-3.5 h-3.5" /> Edit
@@ -368,7 +362,7 @@ const MyReports = () => {
 
                     <div className="hidden md:flex items-center gap-2">
                       <button
-                        onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}` : `/found-report-details/${report.id}`); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}?edit=true` : `/found-report-details/${report.id}?edit=true`); }}
                         className={`p-2 rounded-xl transition-colors ${activeTab === 'lost' ? 'hover:bg-orange-50 text-orange-500' : 'hover:bg-emerald-50 text-emerald-500'}`}
                       >
                         <Settings2 className="w-5 h-5" />

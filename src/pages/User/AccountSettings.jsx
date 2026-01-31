@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, User, Lock, Save, Loader2, Eye, EyeOff, BellRing, ShieldCheck, Search, PawPrint } from "lucide-react";
+import { ChevronRight, User, Lock, Save, Loader2, Eye, EyeOff, BellRing, ShieldCheck, Search, PawPrint, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { 
   changeUsername, 
@@ -178,22 +178,34 @@ const AccountSettings = () => {
     };
 
     return (
-      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8 animate-in slide-in-from-right-8 duration-500">
-        <div className="mb-8">
-          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
-            <User className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-black text-gray-900">Change Username</h2>
-          <p className="text-gray-500 font-medium mt-1">Enter your new username and confirm with your password.</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <CustomInput label="New Username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. PetLover99" />
-          <PasswordInput label="Current Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Required to confirm changes" />
-          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            Save Changes
+      <div className="animate-in slide-in-from-right-8 duration-500">
+        <div className="flex items-center gap-4 mb-8">
+          <button 
+            onClick={() => setCurrentView("menu")}
+            className="p-3 bg-white border border-gray-100 rounded-full hover:bg-gray-50 hover:shadow-md transition-all text-gray-600 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
-        </form>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Back</h1>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8">
+          <div className="mb-8">
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
+              <User className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900">Change Username</h2>
+            <p className="text-gray-500 font-medium mt-1">Enter your new username and confirm with your password.</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <CustomInput label="New Username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. PetLover99" />
+            <PasswordInput label="Current Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Required to confirm changes" />
+            <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              Save Changes
+            </button>
+          </form>
+        </div>
       </div>
     );
   };
@@ -221,23 +233,35 @@ const AccountSettings = () => {
     };
 
     return (
-      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8 animate-in slide-in-from-right-8 duration-500">
-        <div className="mb-8">
-          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
-            <Lock className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-black text-gray-900">Change Password</h2>
-          <p className="text-gray-500 font-medium mt-1">Ensure your account is secure with a strong password.</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <PasswordInput label="Current Password" value={formData.oldPassword} onChange={(e) => setFormData({...formData, oldPassword: e.target.value})} />
-          <PasswordInput label="New Password" value={formData.newPassword} onChange={(e) => setFormData({...formData, newPassword: e.target.value})} />
-          <PasswordInput label="Confirm New Password" value={formData.confirmationPassword} onChange={(e) => setFormData({...formData, confirmationPassword: e.target.value})} />
-          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            Update Password
+      <div className="animate-in slide-in-from-right-8 duration-500">
+        <div className="flex items-center gap-4 mb-8">
+          <button 
+            onClick={() => setCurrentView("menu")}
+            className="p-3 bg-white border border-gray-100 rounded-full hover:bg-gray-50 hover:shadow-md transition-all text-gray-600 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
-        </form>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Back</h1>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8">
+          <div className="mb-8">
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900">Change Password</h2>
+            <p className="text-gray-500 font-medium mt-1">Ensure your account is secure with a strong password.</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <PasswordInput label="Current Password" value={formData.oldPassword} onChange={(e) => setFormData({...formData, oldPassword: e.target.value})} />
+            <PasswordInput label="New Password" value={formData.newPassword} onChange={(e) => setFormData({...formData, newPassword: e.target.value})} />
+            <PasswordInput label="Confirm New Password" value={formData.confirmationPassword} onChange={(e) => setFormData({...formData, confirmationPassword: e.target.value})} />
+            <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              Update Password
+            </button>
+          </form>
+        </div>
       </div>
     );
   };
@@ -246,9 +270,7 @@ const AccountSettings = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="container mx-auto flex items-center justify-between">
-          <button onClick={() => navigate('/dashboard')} className="focus:outline-none">
-            <PawTrackLogo size="sm" />
-          </button>
+          <PawTrackLogo size="sm" />
           <div className="flex items-center gap-4">
             <Notifications />
             <ProfileButton />
@@ -258,20 +280,10 @@ const AccountSettings = () => {
 
       <div className="container mx-auto p-4 md:p-8">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <button 
-              onClick={() => currentView === "menu" ? navigate(-1) : setCurrentView("menu")}
-              className="p-3 bg-white border border-gray-100 rounded-full hover:bg-gray-50 hover:shadow-md transition-all text-gray-600 group"
-            >
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-            </button>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-              {currentView === "menu" ? "Account Settings" : "Back"}
-            </h1>
-          </div>
-
           {currentView === "menu" && (
             <div className="space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-8">Account Settings</h1>
+              
               <section className="space-y-3">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Profile Security</h2>
                 <MenuOption icon={User} title="Change Username" description="Update your display name" colorClass="bg-blue-50 text-blue-600" onClick={() => setCurrentView("username")} />

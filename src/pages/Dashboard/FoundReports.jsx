@@ -634,7 +634,14 @@ const FoundReports = () => {
                 initialPosition={searchCenter || userLocation} 
             />
             
-            <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} />
+            <ReportDetailsModal 
+                isOpen={!!detailReport} 
+                onClose={() => setDetailReport(null)} 
+                report={detailReport} 
+                onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }}
+                onClaim={(id) => { setDetailReport(null); setSelectedFoundId(id); }}
+                onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }}
+            />
             <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} addLostReportToFoundReport={addLostReportToFoundReport} />
             <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="FOUND" />
             <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />

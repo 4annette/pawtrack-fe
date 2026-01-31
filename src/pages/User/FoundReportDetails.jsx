@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, FileText, LogOut, Calendar, Hash, Dog,
@@ -98,9 +98,10 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled 
 const FoundReportDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(searchParams.get("edit") === "true");
   const [report, setReport] = useState(null);
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
@@ -201,7 +202,7 @@ const FoundReportDetails = () => {
       <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/my-reports")} className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-90">
+            <button onClick={() => navigate("/my-reports", { state: { activeTab: 'found' } })} className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-90">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div className="hidden xs:block">
@@ -226,7 +227,7 @@ const FoundReportDetails = () => {
               {!isEditing ? (
                 <>
                   <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95"><Edit3 className="w-4 h-4" /> Edit</button>
-                  <button onClick={async () => { if (window.confirm("Delete permanently?")) { await deleteFoundReport(id); navigate("/my-reports"); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={async () => { if (window.confirm("Delete permanently?")) { await deleteFoundReport(id); navigate("/my-reports", { state: { activeTab: 'found' } }); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete</button>
                 </>
               ) : (
                 <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm"><X className="w-4 h-4" /> Cancel</button>
@@ -315,7 +316,8 @@ const FoundReportDetails = () => {
 
               {isEditing && (
                 <div className="flex justify-end pt-6">
-                  <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em]">
+                  <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {saving ? "SAVING..." : "SAVE"}
                   </button>
                 </div>

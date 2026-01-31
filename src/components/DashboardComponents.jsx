@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  Calendar, ChevronLeft, ChevronRight, Clock, ChevronDown, Check, 
-  ImageIcon, Upload, CheckCircle, X, Dog, AlertCircle, Hash, MapPin, 
-  Loader2, Link as LinkIcon, Camera, AlertTriangle
+    Calendar, ChevronLeft, ChevronRight, Clock, ChevronDown, Check, 
+    ImageIcon, Upload, CheckCircle, X, Dog, AlertCircle, Hash, MapPin, 
+    Loader2, Link as LinkIcon, Camera, AlertTriangle, Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
@@ -315,7 +315,7 @@ export const CustomFileInput = ({ label, onChange, selectedFile }) => {
     );
 };
 
-export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
+export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSighting, onClaim }) => {
   if (!isOpen || !report) return null;
   const isLostReport = !!report.lostDate;
   const dateLabel = isLostReport ? "Date Lost" : "Date Found";
@@ -382,6 +382,31 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap }) => {
                     </div>
                 </div>
             )}
+            <div className="pt-4 border-t border-gray-100">
+                {isLostReport ? (
+                    <button 
+                        onClick={() => onAddSighting(report.id)} 
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-[0.98]"
+                    >
+                        <Eye className="w-5 h-5" /> I Found This Pet
+                    </button>
+                ) : (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <button 
+                            onClick={() => onClaim(report.id)} 
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-[0.98]"
+                        >
+                            <CheckCircle className="w-5 h-5" /> This is my pet
+                        </button>
+                        <button 
+                            onClick={() => onAddSighting(report.id)} 
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white border border-emerald-200 text-emerald-700 font-bold text-sm hover:bg-emerald-50 shadow-sm transition-all active:scale-[0.98]"
+                        >
+                            <Eye className="w-5 h-5" /> I saw this pet
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
       </div>
     </div>

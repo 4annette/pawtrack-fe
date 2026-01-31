@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Trash2, Edit3, X } from "lucide-react";
+import { Save, Trash2, Edit3, X } from "lucide-react";
 import { updateUserProfile, deleteUserAccount, fetchCurrentUser } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
@@ -88,9 +88,6 @@ const Profile = () => {
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors outline-none">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
             <PawTrackLogo size="sm" />
           </div>
 

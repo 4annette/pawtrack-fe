@@ -610,7 +610,7 @@ const LostReports = () => {
                 </div>
             )}
 
-            <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} />
+            <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }} />
             <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="LOST_REPORT_VIEW" />
             <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { PawPrint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,12 +29,16 @@ const PawTrackLogo = ({ className, size = "md" }) => {
   return (
     <div className={cn("flex items-center gap-3 font-bold text-gray-900", className)}>
       
-      {/*logo icon */}
-      <div className={cn("bg-green-600 text-white flex items-center justify-center", boxClasses[size])}>
+      <Link 
+        to="/dashboard" 
+        className={cn(
+          "bg-green-600 text-white flex items-center justify-center hover:bg-green-700 transition-colors", 
+          boxClasses[size]
+        )}
+      >
         <PawPrint className={cn(iconSizes[size])} />
-      </div>
+      </Link>
 
-      {/*logo text */}
       <span className={cn("font-display tracking-tight", textClasses[size])}>
         Paw<span className="text-emerald-600">Track</span>
       </span>

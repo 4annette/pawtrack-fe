@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, FileText, LogOut, Calendar, Hash, Dog,
@@ -100,9 +100,10 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled 
 const LostReportDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(searchParams.get("edit") === "true");
   const [report, setReport] = useState(null);
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
@@ -199,7 +200,7 @@ const LostReportDetails = () => {
       try {
         await deleteLostReport(id);
         toast.success("Report deleted");
-        navigate("/my-reports");
+        navigate("/my-reports", { state: { activeTab: 'lost' } });
       } catch (err) { toast.error("Failed to delete report"); }
     }
   };
@@ -222,7 +223,7 @@ const LostReportDetails = () => {
       <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/my-reports")} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
+            <button onClick={() => navigate("/my-reports", { state: { activeTab: 'lost' } })} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
             <div className="hidden xs:block">
               <PawTrackLogo size="sm" />
             </div>
