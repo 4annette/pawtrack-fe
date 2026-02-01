@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Phone, Calendar, FileText, Check, AlertCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -77,9 +78,9 @@ const FoundClaimModal = ({ notification, onClose }) => {
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/20 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -207,7 +208,8 @@ const FoundClaimModal = ({ notification, onClose }) => {
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

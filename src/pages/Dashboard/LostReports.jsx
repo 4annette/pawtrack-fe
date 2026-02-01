@@ -1,172 +1,173 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { 
-    Plus, Search, Filter, Dog, Eye, MapPin, 
+import {
+    Plus, Search, Filter, Dog, Eye, MapPin,
     Loader2, Clock, ChevronLeft, ChevronRight,
     ChevronsLeft, ChevronsRight, ChevronDown, Check,
     Navigation, Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReports } from "@/services/api";
-import { 
-    ReportDetailsModal, 
-    AddSightingModal, MapModal 
+import {
+    ReportDetailsModal,
+    AddSightingModal, MapModal
 } from "@/components/DashboardComponents";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [viewDate, setViewDate] = useState(new Date()); 
-  const containerRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [viewDate, setViewDate] = useState(new Date());
+    const containerRef = useRef(null);
 
-  useEffect(() => {
-    if (value) {
-        const dateObj = new Date(value);
-        if (!isNaN(dateObj.getTime())) setViewDate(dateObj);
-    }
-  }, [value]);
+    useEffect(() => {
+        if (value) {
+            const dateObj = new Date(value);
+            if (!isNaN(dateObj.getTime())) setViewDate(dateObj);
+        }
+    }, [value]);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-          setIsOpen(false);
-      }
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const changeMonth = (inc) => {
+        const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1);
+        const today = new Date();
+        if (newDate > today && inc > 0) return;
+        setViewDate(newDate);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  const changeMonth = (inc) => {
-      const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1);
-      const today = new Date(); 
-      if (newDate > today && inc > 0) return;
-      setViewDate(newDate);
-  };
+    const handleDateClick = (day) => {
+        const year = viewDate.getFullYear();
+        const month = String(viewDate.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const newDateStr = `${year}-${month}-${dayStr}`;
 
-  const handleDateClick = (day) => {
-    const year = viewDate.getFullYear();
-    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    const newDateStr = `${year}-${month}-${dayStr}`;
-    
-    const checkDate = new Date(year, viewDate.getMonth(), day);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    
-    if (checkDate > today) return;
+        const checkDate = new Date(year, viewDate.getMonth(), day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    onChange(newDateStr);
-    setIsOpen(false);
-  };
+        if (checkDate > today) return;
 
-  const isNextMonthDisabled = () => {
-      const nextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-      const today = new Date();
-      return nextMonth > today;
-  };
+        onChange(newDateStr);
+        setIsOpen(false);
+    };
 
-  return (
-    <div className="relative space-y-1.5" ref={containerRef}>
-        <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
-        <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-            <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date'}</span>
-            <Calendar className="w-4 h-4 text-emerald-500" />
-        </div>
+    const isNextMonthDisabled = () => {
+        const nextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+        const today = new Date();
+        return nextMonth > today;
+    };
 
-        {isOpen && (
-            <div className="absolute top-full left-0 mt-2 z-40 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
-                <div className="flex justify-between items-center mb-4">
-                    <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4"/></button>
-                    <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                    <button 
-                        type="button" 
-                        onClick={() => changeMonth(1)} 
-                        disabled={isNextMonthDisabled()}
-                        className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-emerald-600'}`}
-                    >
-                        <ChevronRight className="w-4 h-4"/>
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-7 mb-2 text-center">
-                    {['S','M','T','W','T','F','S'].map((d,i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-1 place-items-center">
-                    {(() => {
-                        const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-                        const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
-                        const days = [];
-                        
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-
-                        for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
-                        for (let d = 1; d <= totalDays; d++) {
-                            const thisDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
-                            const thisDateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                            const isSelected = value === thisDateStr;
-                            const isFuture = thisDate > today;
-
-                            days.push(
-                                <button 
-                                    key={d} 
-                                    onClick={() => !isFuture && handleDateClick(d)} 
-                                    type="button" 
-                                    disabled={isFuture}
-                                    className={`h-7 w-7 rounded-full text-xs font-medium flex items-center justify-center transition-colors 
-                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}
-                                >
-                                    {d}
-                                </button>
-                            );
-                        }
-                        return days;
-                    })()}
-                </div>
+    return (
+        <div className="relative space-y-1.5" ref={containerRef}>
+            <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
+            <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
+                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date'}</span>
+                <Calendar className="w-4 h-4 text-emerald-500" />
             </div>
-        )}
-    </div>
-  );
+
+            {isOpen && (
+                <div className="absolute top-full left-0 mt-2 z-[2500] bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
+                    <div className="flex justify-between items-center mb-4">
+                        <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
+                        <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                        <button
+                            type="button"
+                            onClick={() => changeMonth(1)}
+                            disabled={isNextMonthDisabled()}
+                            className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-emerald-600'}`}
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 mb-2 text-center">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 place-items-center">
+                        {(() => {
+                            const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+                            const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+                            const days = [];
+
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            for (let i = 0; i < startDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
+                            for (let d = 1; d <= totalDays; d++) {
+                                const thisDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+                                const thisDateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                const isSelected = value === thisDateStr;
+                                const isFuture = thisDate > today;
+
+                                days.push(
+                                    <button
+                                        key={d}
+                                        onClick={() => !isFuture && handleDateClick(d)}
+                                        type="button"
+                                        disabled={isFuture}
+                                        className={`h-7 w-7 rounded-full text-xs font-medium flex items-center justify-center transition-colors 
+                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}
+                                    >
+                                        {d}
+                                    </button>
+                                );
+                            }
+                            return days;
+                        })()}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) setIsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
-  const selectedOption = options.find(opt => opt.value === value) || options[0];
+    const selectedOption = options.find(opt => opt.value === value) || options[0];
 
-  return (
-    <div className="relative space-y-1.5" ref={containerRef} style={{ zIndex: isOpen ? 50 : 10 }}>
-      <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">{Icon && <Icon className="w-3 h-3" />} {label}</label>
-      <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm text-sm text-gray-700 font-bold`}>
-        <span className="truncate">{selectedOption.label}</span>
-        <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
-          <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
-            {options.map((option) => {
-              const isSelected = option.value === value;
-              return (
-                <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-bold'}`}>
-                  <span>{option.label}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5" />}
+    return (
+        <div className="relative space-y-1.5" ref={containerRef} style={{ zIndex: isOpen ? 2500 : 10 }}>
+            <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">{Icon && <Icon className="w-3 h-3" />} {label}</label>
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm text-sm text-gray-700 font-bold`}>
+                <span className="truncate">{selectedOption.label}</span>
+                <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isOpen && (
+                <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
+                    <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+                        {options.map((option) => {
+                            const isSelected = option.value === value;
+                            return (
+                                <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-bold'}`}>
+                                    <span>{option.label}</span>
+                                    {isSelected && <Check className="w-3.5 h-3.5" />}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-              );
-            })}
-          </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 const AddressDisplay = ({ lat, lng, onClick }) => {
@@ -204,11 +205,11 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
     }, [lat, lng]);
 
     return (
-        <button 
+        <button
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
         >
-            <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" /> 
+            <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" />
             <span className="truncate font-medium">{loading ? "Loading address..." : address}</span>
         </button>
     );
@@ -231,9 +232,9 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
     const selectedLabel = options.find(opt => opt.value === value)?.label || value;
 
     return (
-        <div className="relative" ref={containerRef} style={{ zIndex: isOpen ? 40 : 20 }}>
-            <button 
-                onClick={() => setIsOpen(!isOpen)} 
+        <div className="relative" ref={containerRef} style={{ zIndex: isOpen ? 2500 : 20 }}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
             >
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
@@ -247,9 +248,9 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
                 <div className={`absolute top-full ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 z-50 animate-in fade-in zoom-in-95`}>
                     <div className="p-1.5">
                         {options.map((option) => (
-                            <div 
-                                key={option.value} 
-                                onClick={() => { onChange(option.value); setIsOpen(false); }} 
+                            <div
+                                key={option.value}
+                                onClick={() => { onChange(option.value); setIsOpen(false); }}
                                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${option.value === value ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                             >
                                 {option.label}
@@ -272,7 +273,7 @@ const LostReports = () => {
     const [sortBy, setSortBy] = useState("dateLost_desc");
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-    
+
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
 
@@ -282,13 +283,13 @@ const LostReports = () => {
     const [filters, setFilters] = useState({
         search: "",
         species: "",
-        status: "", 
+        status: "",
         dateAfter: "",
         dateBefore: "",
-        radius: 25 
+        radius: 25
     });
 
-    const [sightingReportId, setSightingReportId] = useState(null); 
+    const [sightingReportId, setSightingReportId] = useState(null);
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
 
@@ -296,7 +297,7 @@ const LostReports = () => {
         if (!dateInput) return null;
         if (Array.isArray(dateInput)) {
             return new Date(
-                dateInput[0], dateInput[1] - 1, dateInput[2], 
+                dateInput[0], dateInput[1] - 1, dateInput[2],
                 dateInput[3] || 0, dateInput[4] || 0, dateInput[5] || 0
             );
         }
@@ -310,7 +311,7 @@ const LostReports = () => {
         if (!dateObj) return null;
         const pad = (num) => String(num).padStart(2, '0');
         return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ` +
-               `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+            `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
     };
 
     const formatDateForBackend = (dateString) => dateString ? `${dateString} 00:00:00` : null;
@@ -407,11 +408,11 @@ const LostReports = () => {
                     longitude: userLocation?.lng || null,
                     radius: userLocation ? filters.radius : null
                 };
-                
+
                 const [field, dir] = sortBy.includes('_') ? sortBy.split('_') : [sortBy, 'desc'];
 
                 const data = await fetchLostReports(page, pageSize, payload, field, dir);
-                
+
                 let fetchedReports = data.content || [];
 
                 fetchedReports.sort((a, b) => {
@@ -427,13 +428,13 @@ const LostReports = () => {
 
                     const dateA = new Date(a.dateLost || a.lostDate || 0);
                     const dateB = new Date(b.dateLost || b.lostDate || 0);
-                    
+
                     if (dir === 'asc') return dateA - dateB;
                     return dateB - dateA;
                 });
 
                 setReports(fetchedReports);
-                
+
                 if (data.page) {
                     setTotalPages(data.page.totalPages || 0);
                     setTotalElements(data.page.totalElements || 0);
@@ -488,24 +489,24 @@ const LostReports = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <ToolbarDropdown 
-                        label="Show" 
-                        value={pageSize} 
-                        options={[{label:"6",value:6},{label:"9",value:9},{label:"12",value:12},{label:"15",value:15}]} 
-                        onChange={(val) => { setPageSize(val); setPage(0); }} 
+                    <ToolbarDropdown
+                        label="Show"
+                        value={pageSize}
+                        options={[{ label: "6", value: 6 }, { label: "9", value: 9 }, { label: "12", value: 12 }, { label: "15", value: 15 }]}
+                        onChange={(val) => { setPageSize(val); setPage(0); }}
                         align="left"
                     />
-                    <ToolbarDropdown 
-                        label="Sort" 
-                        value={sortBy} 
+                    <ToolbarDropdown
+                        label="Sort"
+                        value={sortBy}
                         options={[
-                            {label:"Newest First", value:"dateLost_desc"},
-                            {label:"Oldest First", value:"dateLost_asc"},
-                            {label:"Distance", value:"distance_asc"},
-                            {label:"Title", value:"title_asc"},
-                            {label:"Species", value:"species_asc"}
-                        ]} 
-                        onChange={(val) => { setSortBy(val); setPage(0); }} 
+                            { label: "Newest First", value: "dateLost_desc" },
+                            { label: "Oldest First", value: "dateLost_asc" },
+                            { label: "Distance", value: "distance_asc" },
+                            { label: "Title", value: "title_asc" },
+                            { label: "Species", value: "species_asc" }
+                        ]}
+                        onChange={(val) => { setSortBy(val); setPage(0); }}
                     />
                 </div>
             </div>
@@ -514,7 +515,7 @@ const LostReports = () => {
                 <div className="flex gap-3 items-center">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => {setFilters({...filters, search: e.target.value}); setPage(0);}} />
+                        <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }} />
                     </div>
                     <button onClick={() => setShowFilterPanel(!showFilterPanel)} className={`p-3 rounded-xl border transition-all flex items-center gap-2 shadow-md ${showFilterPanel ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'}`}>
                         <Filter className="w-5 h-5 text-white" /> <span className="hidden sm:inline font-medium text-sm">Filters</span>
@@ -524,10 +525,10 @@ const LostReports = () => {
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-40 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
                             <h3 className="font-semibold text-emerald-900">Filter Options</h3>
-                            <button onClick={() => setFilters({search:"", species:"", status:"", dateAfter:"", dateBefore:"", radius: 25})} className="text-xs text-red-500 hover:underline">Clear all</button>
+                            <button onClick={() => setFilters({ search: "", species: "", status: "", dateAfter: "", dateBefore: "", radius: 25 })} className="text-xs text-red-500 hover:underline">Clear all</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
+                            <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{ label: "All", value: "" }, { label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }]} onChange={(val) => { setFilters({ ...filters, species: val }); setPage(0); }} />
                             <CustomDropdown label="Time Status" icon={Clock} value={filters.status} options={statusOptions} onChange={handleStatusChange} />
                             <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => handleDateChange('dateAfter', val)} />
                             <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => handleDateChange('dateBefore', val)} />
@@ -542,15 +543,15 @@ const LostReports = () => {
                         const dateValue = report.dateLost || report.lostDate;
                         const currentStatus = getLostStatus(dateValue);
                         return (
-                            <div 
-                                key={report.id} 
+                            <div
+                                key={report.id}
                                 onClick={() => setDetailReport({
-                                    ...report, 
+                                    ...report,
                                     dateLost: dateValue,
-                                    status: currentStatus, 
-                                    statusColor: getStatusColor(currentStatus), 
+                                    status: currentStatus,
+                                    statusColor: getStatusColor(currentStatus),
                                     statusSentence: currentStatus.replace(/_/g, ' ')
-                                })} 
+                                })}
                                 className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1"
                             >
                                 <div className="relative h-64 bg-emerald-100 overflow-hidden">
@@ -572,10 +573,10 @@ const LostReports = () => {
                                     </div>
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || "No description provided."}</p>
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-                                        
-                                        <AddressDisplay 
-                                            lat={report.latitude} 
-                                            lng={report.longitude} 
+
+                                        <AddressDisplay
+                                            lat={report.latitude}
+                                            lng={report.longitude}
                                             onClick={() => {
                                                 if (report.latitude && report.longitude) {
                                                     setMapLocation({ lat: report.latitude, lng: report.longitude });
@@ -593,7 +594,7 @@ const LostReports = () => {
                     })}
                 </div>
             )}
-            
+
             {totalPages > 1 && (
                 <div className="flex justify-center items-center mt-20">
                     <nav className="flex items-center gap-1 md:gap-2 p-2 bg-white border border-gray-100 rounded-[28px] shadow-2xl shadow-emerald-900/10 transition-all duration-500">
@@ -610,9 +611,16 @@ const LostReports = () => {
                 </div>
             )}
 
-            <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }} />
-            <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="LOST_REPORT_VIEW" />
-            <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
+            {createPortal(
+                <div className="fixed inset-0 pointer-events-none z-[9999]">
+                    <div className="pointer-events-auto">
+                        <ReportDetailsModal isOpen={!!detailReport} onClose={() => setDetailReport(null)} report={detailReport} onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }} onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }} />
+                        <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="LOST_REPORT_VIEW" />
+                        <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

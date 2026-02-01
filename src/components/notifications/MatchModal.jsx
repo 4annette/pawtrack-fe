@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Phone, Calendar, FileText, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -80,16 +81,15 @@ const MatchModal = ({ notification, onClose }) => {
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/20 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
         className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl shadow-emerald-900/20 overflow-hidden max-h-[90vh] flex flex-col border border-white/50 ring-4 ring-emerald-50/50"
         onClick={(e) => e.stopPropagation()}
       >
-
         <div className="bg-emerald-600 p-5 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-500/30 rounded-xl backdrop-blur-sm">
@@ -104,7 +104,6 @@ const MatchModal = ({ notification, onClose }) => {
         </div>
 
         <div className="overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-
           <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-3xl p-5 flex items-center gap-5 shadow-sm">
             <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-200">
               <Phone className="w-6 h-6" />
@@ -140,7 +139,6 @@ const MatchModal = ({ notification, onClose }) => {
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
                   <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title}</h3>
                   <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{foundReport?.description}</p>
-
                   <div className="flex flex-wrap gap-2">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
                       <Calendar className="w-3 h-3" />
@@ -176,7 +174,6 @@ const MatchModal = ({ notification, onClose }) => {
             </div>
 
             <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
-
               <div className="flex gap-4 mb-4">
                 <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
                   {lostReport?.imageUrl ? (
@@ -209,7 +206,6 @@ const MatchModal = ({ notification, onClose }) => {
               )}
             </div>
           </div>
-
         </div>
 
         <div className="p-5 border-t border-gray-100 bg-white flex gap-4 shrink-0">
@@ -220,9 +216,9 @@ const MatchModal = ({ notification, onClose }) => {
             <Check className="w-4 h-4" /> Yes, It's My Pet!
           </button>
         </div>
-
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

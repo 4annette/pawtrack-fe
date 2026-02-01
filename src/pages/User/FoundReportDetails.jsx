@@ -162,7 +162,18 @@ const FoundReportDetails = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await updateFoundReport(id, { ...report, chipNumber: parseInt(report.chipNumber) || 0 });
+      const rawDate = report.foundDate || originalReport.foundDate;
+      const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
+
+      const payload = {
+        ...report,
+        dateFound: formattedDate,
+        chipNumber: parseInt(report.chipNumber) || 0
+      };
+
+      delete payload.foundDate;
+
+      await updateFoundReport(id, payload);
       if (newImage) {
         const updatedData = await uploadFoundReportImage(id, newImage);
         setReport(prev => ({ ...prev, imageUrl: updatedData.imageUrl || updatedData }));
@@ -171,6 +182,9 @@ const FoundReportDetails = () => {
       toast.success("Saved");
       setIsEditing(false);
       setNewImage(null);
+      const updated = await fetchFoundReportById(id);
+      setReport(updated);
+      setOriginalReport(updated);
     } catch (err) { toast.error("Error saving"); }
     finally { setSaving(false); }
   };

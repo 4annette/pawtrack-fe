@@ -111,14 +111,6 @@ const LostReportDetails = () => {
 
   const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
 
-  const conditionOptions = [
-    { label: "Good", value: "GOOD" },
-    { label: "Injured", value: "INJURED" },
-    { label: "Scared", value: "SCARED" },
-    { label: "Sick", value: "SICK" },
-    { label: "Unknown", value: "UNKNOWN" }
-  ];
-
   useEffect(() => {
     const getReport = async () => {
       try {
@@ -334,11 +326,7 @@ const LostReportDetails = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CustomDropdown label="Condition" icon={CheckCircle} value={report.condition || ""} options={conditionOptions} onChange={val => setReport({ ...report, condition: val })} disabled={!isEditing} />
-                <div className="sm:hidden h-1"></div>
-                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
-              </div>
+              <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>

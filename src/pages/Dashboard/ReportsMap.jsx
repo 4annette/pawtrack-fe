@@ -103,19 +103,43 @@ const ReportsMap = () => {
         typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
 
     return (
-        <div className="relative w-full h-[70vh] bg-emerald-200/40 rounded-[3rem] p-4 shadow-lg border border-emerald-100 max-sm:p-2 max-sm:rounded-[2rem]">
+        <div className="relative w-full h-[70vh] bg-emerald-200/40 rounded-[3rem] p-4 shadow-lg border border-emerald-100 max-sm:p-2 max-sm:rounded-[2rem] overflow-hidden">
             <style>
                 {`
           .leaflet-popup-content-wrapper {
             padding: 0;
-            overflow: visible;
+            overflow: hidden !important;
             border-radius: 1.5rem;
             box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
             border: 4px solid white;
           }
-          .leaflet-popup-content { margin: 0 !important; width: 240px !important; }
+          .leaflet-popup-content { margin: 0 !important; width: 240px !important; overflow: hidden !important; }
           .leaflet-container { background: #f8fafc !important; border-radius: 2rem; }
           
+          /* FIXED CLOSE BUTTON STYLING */
+          .leaflet-container a.leaflet-popup-close-button {
+            top: 12px !important;
+            right: 12px !important;
+            padding: 4px !important;
+            width: 24px !important;
+            height: 24px !important;
+            background: white !important;
+            border-radius: 50% !important;
+            color: #64748b !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+            z-index: 100 !important;
+            font: 16px/24px Tahoma, Verdana, sans-serif !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none !important;
+          }
+
+          .leaflet-container a.leaflet-popup-close-button:hover {
+            color: #ef4444 !important;
+            transform: scale(1.1);
+          }
+
           .leaflet-control-zoom { 
             border: none !important; 
             margin-top: 100px !important; 
@@ -173,7 +197,7 @@ const ReportsMap = () => {
                     {reports.lost.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`lost-${report.id}`} position={[report.latitude, report.longitude]} icon={lostIcon}>
                             <Popup>
-                                <div className="flex flex-col font-sans">
+                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem]">
                                     <div className="h-28 bg-orange-50 relative overflow-hidden">
                                         {report.imageUrl ? (
                                             <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
@@ -182,7 +206,7 @@ const ReportsMap = () => {
                                                 <Camera className="w-10 h-10" />
                                             </div>
                                         )}
-                                        <div className="absolute top-3 left-3 px-3 py-1 bg-orange-500 text-white text-[9px] font-black rounded-full uppercase tracking-tighter shadow-md">Lost</div>
+                                        <div className="absolute top-5 left-5 px-3 py-1 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">Lost</div>
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
@@ -207,7 +231,7 @@ const ReportsMap = () => {
                     {reports.found.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`found-${report.id}`} position={[report.latitude, report.longitude]} icon={foundIcon}>
                             <Popup>
-                                <div className="flex flex-col font-sans">
+                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem]">
                                     <div className="h-28 bg-emerald-50 relative overflow-hidden">
                                         {report.imageUrl ? (
                                             <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
@@ -216,7 +240,7 @@ const ReportsMap = () => {
                                                 <Camera className="w-10 h-10" />
                                             </div>
                                         )}
-                                        <div className="absolute top-3 left-3 px-3 py-1 bg-emerald-500 text-white text-[9px] font-black rounded-full uppercase tracking-tighter shadow-md">Found</div>
+                                        <div className="absolute top-5 left-5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">Found</div>
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
@@ -240,6 +264,7 @@ const ReportsMap = () => {
                 </MapContainer>
             </div>
 
+            {/* SEARCH BAR */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[1001] w-full max-w-sm px-2 max-sm:top-5 max-sm:max-w-[85%]">
                 <form onSubmit={handleSearch} className="relative">
                     <input
@@ -258,6 +283,7 @@ const ReportsMap = () => {
                 </form>
             </div>
 
+            {/* RECENTER BUTTON */}
             <div className="absolute top-10 right-10 z-[1001] max-sm:top-auto max-sm:bottom-28 max-sm:right-5">
                 <button
                     onClick={handleRecenter}
@@ -267,7 +293,8 @@ const ReportsMap = () => {
                 </button>
             </div>
 
-            <div className="absolute bottom-16 left-1/7 -translate-x-1/2 z-[1001] flex items-center gap-6 bg-white/90 backdrop-blur-md px-7 py-3.75 rounded-full shadow-lg border border-white max-sm:bottom-8 max-sm:left-1/2 max-sm:gap-4 max-sm:px-5 max-sm:py-2.5">
+            {/* LEGEND - BOTTOM LEFT */}
+            <div className="absolute bottom-10 left-10 z-[1001] flex items-center gap-6 bg-white/90 backdrop-blur-md px-7 py-3 rounded-full shadow-lg border-2 border-white max-sm:bottom-6 max-sm:left-5 max-sm:gap-4 max-sm:px-5 max-sm:py-2.5">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-orange-50 rounded-lg max-sm:p-1">
                         <PawPrint className="w-5 h-5 text-orange-600 max-sm:w-4 max-sm:h-4" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Check, HelpCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReportById, markLostReportAsFound } from "@/services/api";
@@ -14,7 +15,6 @@ const ReminderModal = ({ notification, onClose }) => {
     if (!notification.lostReportId) {
       console.error("Notification is missing lostReportId:", notification);
       setError("This notification is missing the Report ID reference.");
-      // Even if error, we stop loading to show the error state (or close if you prefer)
       setLoading(false);
       return;
     }
@@ -23,15 +23,14 @@ const ReminderModal = ({ notification, onClose }) => {
       try {
         const data = await fetchLostReportById(notification.lostReportId);
 
-        // CHECK: If the report is already found, close the modal immediately.
         if (data.found) {
           toast.info("This report is already marked as found.");
-          onClose(); // Close without ever showing the modal
+          onClose(); 
           return;
         }
 
         setReport(data);
-        setLoading(false); // Only show the modal AFTER we confirm it's not found
+        setLoading(false); 
       } catch (error) {
         console.error("Failed to load report", error);
         setError("Could not load report details.");
@@ -53,13 +52,11 @@ const ReminderModal = ({ notification, onClose }) => {
     }
   };
 
-  // HIDE CONTENT COMPLETELY while loading or if notification is missing
-  // This prevents the "flash" of the empty card.
   if (!notification || loading) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/20 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -117,9 +114,9 @@ const ReminderModal = ({ notification, onClose }) => {
             </>
           )}
         </div>
-
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
