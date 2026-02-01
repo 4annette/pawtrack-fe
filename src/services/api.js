@@ -20,10 +20,6 @@ api.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// ==========================================
-//                AUTH & FCM
-// ==========================================
-
 export const loginUser = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
   return response.data;
@@ -76,10 +72,6 @@ export const logoutUser = async () => {
   }
 };
 
-// ==========================================
-//                NOTIFICATIONS
-// ==========================================
-
 export const fetchNotifications = async () => {
   const response = await api.get('/users/notifications');
   return response.data;
@@ -110,18 +102,10 @@ export const toggleNotifyUserAccount = async (notify) => {
   return response.data;
 };
 
-// ==========================================
-//                STATISTICS
-// ==========================================
-
 export const fetchStatistics = async () => {
   const response = await api.get('/statistics');
   return response.data;
 };
-
-// ==========================================
-//                FOUND REPORTS
-// ==========================================
 
 export const fetchFoundReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateFound', sortDirection = 'DESC') => {
   const response = await api.post(`/found-reports/filter`, filters || {}, {
@@ -181,10 +165,6 @@ export const deleteFoundReportImage = async (id) => {
   const response = await api.delete(`/found-reports/${id}/delete-image`);
   return response.data;
 };
-
-// ==========================================
-//                LOST REPORTS
-// ==========================================
 
 export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy = 'dateLost', sortDirection = 'DESC') => {
   const response = await api.post(`/lost-reports/filter`, filters || {}, {
@@ -251,9 +231,6 @@ export const deleteLostReportImage = async (id) => {
   return response.data;
 };
 
-// ==========================================
-//           USER & PROFILE ACTIONS
-// ==========================================
 export const fetchCurrentUser = async () => {
   const response = await api.get('/users');
   return response.data;
@@ -286,9 +263,6 @@ export const changeUsername = async (username) => {
   return response.data;
 };
 
-// ==========================================
-//                MY REPORTS
-// ==========================================
 export const fetchMyLostReportsList = async (page = 0, size = 5, sortBy = 'lostDate', direction = 'desc') => {
   const response = await api.get(`/lost-reports?page=${page}&size=${size}&sort=${sortBy},${direction}&all=false`);
   return response.data;
@@ -302,9 +276,6 @@ export const fetchMyFoundReportsList = async (page = 0, size = 5, sortBy = 'foun
 export const fetchMyLostReports = fetchMyLostReportsList;
 export const fetchMyFoundReports = fetchMyFoundReportsList;
 
-// ==========================================
-//                LINKING
-// ==========================================
 export const linkFoundToLostReport = async (foundReportId, lostReportId) => {
   const response = await api.patch(`/lost-reports/${lostReportId}/add-found-report/${foundReportId}`);
   return response.data;
@@ -338,6 +309,17 @@ export const confirmLostReportMatch = async (lostReportId) => {
 export const markLostReportAsFound = async (lostReportId) => {
   const response = await api.patch(`/lost-reports/${lostReportId}/found`);
   return response.data;
+};
+
+export const fetchAllMapReports = async () => {
+  const [lost, found] = await Promise.all([
+    api.post('/lost-reports/filter', {}, { params: { size: 1000 } }),
+    api.post('/found-reports/filter', {}, { params: { size: 1000 } })
+  ]);
+  return {
+    lost: lost.data.content || [],
+    found: found.data.content || []
+  };
 };
 
 export default api;
