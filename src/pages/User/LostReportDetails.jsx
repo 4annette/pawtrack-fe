@@ -170,7 +170,17 @@ const LostReportDetails = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await updateLostReport(id, report);
+      const rawDate = report.lostDate || originalReport.lostDate || originalReport.createdAt;
+      const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
+
+      const updateData = {
+        ...report,
+        date: formattedDate
+      };
+
+      delete updateData.lostDate;
+
+      await updateLostReport(id, updateData);
 
       if (report.found !== originalReport.found) {
         await toggleLostReportFoundStatus(id, report.found);
@@ -185,8 +195,10 @@ const LostReportDetails = () => {
       const updated = await fetchLostReportById(id);
       setReport(updated);
       setOriginalReport(updated);
-    } catch (err) { toast.error("Error saving changes"); }
-    finally { setSaving(false); }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error saving changes");
+    } finally { setSaving(false); }
   };
 
   const handleCancel = () => {
@@ -284,10 +296,10 @@ const LostReportDetails = () => {
 
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found?</span>
-                <button 
-                  type="button" 
-                  disabled={!isEditing} 
-                  onClick={() => setReport({ ...report, found: !report.found })} 
+                <button
+                  type="button"
+                  disabled={!isEditing}
+                  onClick={() => setReport({ ...report, found: !report.found })}
                   className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
