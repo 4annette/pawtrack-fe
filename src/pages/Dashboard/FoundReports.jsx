@@ -313,7 +313,9 @@ const FoundReports = () => {
     const [searchCenter, setSearchCenter] = useState(null);
     const [isCustomLocation, setIsCustomLocation] = useState(false);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [selectedFoundId, setSelectedFoundId] = useState(null);
+
+    // CHANGED: Use selectedFoundReport to store the whole object instead of just ID
+    const [selectedFoundReport, setSelectedFoundReport] = useState(null);
     const [sightingReportId, setSightingReportId] = useState(null);
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
@@ -380,15 +382,26 @@ const FoundReports = () => {
             {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div> : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {reports.map((report) => (
-                        <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden cursor-pointer">
+                        <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full">
                             <div className="h-64 bg-emerald-100">
-                                {report.imageUrl && <img src={report.imageUrl} className="w-full h-full object-cover" />}
+                                {report.imageUrl && <img src={report.imageUrl} className="w-full h-full object-cover" alt={report.title} />}
                             </div>
-                            <div className="p-5">
-                                <h3 className="font-bold">{report.title}</h3>
+                            <div className="p-5 flex-1 flex flex-col">
+                                <h3 className="font-bold mb-2">{report.title}</h3>
                                 <AddressDisplay lat={report.latitude} lng={report.longitude} onClick={() => setMapLocation({ lat: report.latitude, lng: report.longitude })} />
                                 <div className="flex gap-2 mt-4">
-                                    <button onClick={(e) => { e.stopPropagation(); setSelectedFoundId(report.id); }} className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-xs">This is my pet</button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setSelectedFoundReport(report); }}
+                                        className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold"
+                                    >
+                                        This is my pet
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }}
+                                        className="flex-1 bg-white border border-emerald-200 text-emerald-700 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" /> I saw this pet
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -406,12 +419,26 @@ const FoundReports = () => {
                             onClose={() => setDetailReport(null)}
                             report={detailReport}
                             onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }}
-                            onClaim={(id) => { setDetailReport(null); setSelectedFoundId(id); }}
+                            onClaim={(rep) => { setDetailReport(null); setSelectedFoundReport(rep); }}
                             onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }}
                         />
-                        <ClaimModal isOpen={!!selectedFoundId} onClose={() => setSelectedFoundId(null)} foundReportId={selectedFoundId} addLostReportToFoundReport={addLostReportToFoundReport} />
-                        <AddSightingModal isOpen={!!sightingReportId} onClose={() => setSightingReportId(null)} baseReportId={sightingReportId} type="FOUND" />
-                        <MapModal isOpen={!!mapLocation} onClose={() => setMapLocation(null)} location={mapLocation} />
+                        <ClaimModal
+                            isOpen={!!selectedFoundReport}
+                            onClose={() => setSelectedFoundReport(null)}
+                            foundReport={selectedFoundReport}
+                            addLostReportToFoundReport={addLostReportToFoundReport}
+                        />
+                        <AddSightingModal
+                            isOpen={!!sightingReportId}
+                            onClose={() => setSightingReportId(null)}
+                            baseReportId={sightingReportId}
+                            type="FOUND"
+                        />
+                        <MapModal
+                            isOpen={!!mapLocation}
+                            onClose={() => setMapLocation(null)}
+                            location={mapLocation}
+                        />
                     </div>
                 </div>,
                 document.body

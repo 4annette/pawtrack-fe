@@ -322,4 +322,14 @@ export const fetchAllMapReports = async () => {
   };
 };
 
+export const fetchFilteredLostReports = async (filters = {}) => {
+  const response = await api.post('/lost-reports/list', filters);
+  return response.data;
+};
+
+export const fetchFoundReportsList = async (filters = {}) => {
+  const response = await api.post('/found-reports/list', filters);
+  return response.data;
+};
+
 export default api;
