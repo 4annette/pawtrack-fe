@@ -320,14 +320,11 @@ export const CustomFileInput = ({ label, onChange, selectedFile }) => {
 
 export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSighting, onClaim }) => {
   if (!isOpen || !report) return null;
-  const isLostReport = !!report.lostDate;
+  const isLostReport = report.isLost ?? !!(report.lostDate || report.dateLost);
   const dateLabel = isLostReport ? "Date Lost" : "Date Found";
-  const dateValue = isLostReport ? report.lostDate : report.foundDate;
-
+  const dateValue = isLostReport ? (report.lostDate || report.dateLost) : (report.foundDate || report.dateFound);
   const getSpeciesLabelColor = () => {
-    if (isLostReport && report.statusColor) {
-      return `${report.statusColor} text-white border-transparent`;
-    }
+    if (isLostReport && report.statusColor) return `${report.statusColor} text-white border-transparent`;
     const c = String(report.condition || report.status || '').toUpperCase().trim();
     if (c === 'EXCELLENT') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
     if (c === 'GOOD') return 'bg-amber-100 text-amber-800 border-amber-200';
@@ -365,7 +362,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
               <span className="text-xs font-medium text-gray-500 block mb-1">{dateLabel}</span>
-              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Calendar className="w-4 h-4 text-emerald-500" /> {new Date(dateValue).toLocaleDateString()}</div>
+              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Calendar className="w-4 h-4 text-emerald-500" /> {dateValue ? new Date(dateValue).toLocaleDateString() : 'N/A'}</div>
             </div>
             <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
               <span className="text-xs font-medium text-gray-500 block mb-1">Chip Number</span>

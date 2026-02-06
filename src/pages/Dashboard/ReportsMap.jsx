@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { fetchAllMapReports } from '@/services/api';
+import { fetchAllMapReports, fetchFoundReportShort, fetchLostReportShort, addLostReportToFoundReport } from '@/services/api';
 import { Loader2, Calendar, MapPin, Navigation, Search, Camera, PawPrint } from 'lucide-react';
+import {
+    ReportDetailsModal,
+    AddSightingModal, MapModal, ClaimModal
+} from "@/components/DashboardComponents";
 
 const lostIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
@@ -40,6 +45,11 @@ const ReportsMap = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+    const [detailReport, setDetailReport] = useState(null);
+    const [sightingReportId, setSightingReportId] = useState(null);
+    const [mapLocation, setMapLocation] = useState(null);
+    const [selectedFoundReport, setSelectedFoundReport] = useState(null);
+
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -66,6 +76,23 @@ const ReportsMap = () => {
         }
         loadData();
     }, []);
+
+    const handleOpenDetails = async (id, type) => {
+        try {
+            const data = type === 'lost'
+                ? await fetchLostReportShort(id)
+                : await fetchFoundReportShort(id);
+
+            setDetailReport({
+                ...data,
+                isLost: type === 'lost',
+                lostDate: data.lostDate || data.dateLost,
+                foundDate: data.foundDate || data.dateFound
+            });
+        } catch (error) {
+            console.error("Failed to fetch report details", error);
+        }
+    };
 
     const handleRecenter = () => {
         if (userLocation) {
@@ -116,7 +143,6 @@ const ReportsMap = () => {
           .leaflet-popup-content { margin: 0 !important; width: 240px !important; overflow: hidden !important; }
           .leaflet-container { background: #f8fafc !important; border-radius: 2rem; }
           
-          /* FIXED CLOSE BUTTON STYLING */
           .leaflet-container a.leaflet-popup-close-button {
             top: 12px !important;
             right: 12px !important;
@@ -197,7 +223,7 @@ const ReportsMap = () => {
                     {reports.lost.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`lost-${report.id}`} position={[report.latitude, report.longitude]} icon={lostIcon}>
                             <Popup>
-                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem]">
+                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'lost')}>
                                     <div className="h-28 bg-orange-50 relative overflow-hidden">
                                         {report.imageUrl ? (
                                             <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
@@ -215,7 +241,7 @@ const ReportsMap = () => {
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             <div className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <Calendar className="w-3 h-3" />
-                                                {report.lostDate?.substring(0, 10)}
+                                                {(report.lostDate || report.dateLost || "")?.substring(0, 10)}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <MapPin className="w-3 h-3" />
@@ -231,7 +257,7 @@ const ReportsMap = () => {
                     {reports.found.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`found-${report.id}`} position={[report.latitude, report.longitude]} icon={foundIcon}>
                             <Popup>
-                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem]">
+                                <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'found')}>
                                     <div className="h-28 bg-emerald-50 relative overflow-hidden">
                                         {report.imageUrl ? (
                                             <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
@@ -249,7 +275,7 @@ const ReportsMap = () => {
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <Calendar className="w-3 h-3" />
-                                                {report.dateFound?.substring(0, 10)}
+                                                {(report.foundDate || report.dateFound || "")?.substring(0, 10)}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <MapPin className="w-3 h-3" />
@@ -306,6 +332,39 @@ const ReportsMap = () => {
                     <span className="text-[12px] font-black text-gray-600 uppercase tracking-widest italic max-sm:text-[10px]">Found</span>
                 </div>
             </div>
+
+            {createPortal(
+                <div className="fixed inset-0 pointer-events-none z-[9999]">
+                    <div className="pointer-events-auto">
+                        <ReportDetailsModal
+                            isOpen={!!detailReport}
+                            onClose={() => setDetailReport(null)}
+                            report={detailReport}
+                            onViewMap={(loc) => { setDetailReport(null); setMapLocation(loc); }}
+                            onAddSighting={(id) => { setDetailReport(null); setSightingReportId(id); }}
+                            onClaim={(rep) => { setDetailReport(null); setSelectedFoundReport(rep); }}
+                        />
+                        <ClaimModal
+                            isOpen={!!selectedFoundReport}
+                            onClose={() => setSelectedFoundReport(null)}
+                            foundReport={selectedFoundReport}
+                            addLostReportToFoundReport={addLostReportToFoundReport}
+                        />
+                        <AddSightingModal
+                            isOpen={!!sightingReportId}
+                            onClose={() => setSightingReportId(null)}
+                            baseReportId={sightingReportId}
+                            type={detailReport?.isLost ? "LOST_REPORT_VIEW" : "FOUND"}
+                        />
+                        <MapModal
+                            isOpen={!!mapLocation}
+                            onClose={() => setMapLocation(null)}
+                            location={mapLocation}
+                        />
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };
