@@ -119,6 +119,16 @@ export const fetchFoundReportById = async (id) => {
   return response.data;
 };
 
+export const fetchFoundReportShort = async (id) => {
+  const response = await api.get(`/found-reports/${id}/response-short`);
+  return response.data;
+};
+
+export const markFoundReportAsFound = async (reportId) => {
+  const response = await api.patch(`/found-reports/${reportId}/found`);
+  return response.data;
+};
+
 export const createFoundReport = async (reportData) => {
   const payload = {
     title: reportData.title,
@@ -175,6 +185,11 @@ export const fetchLostReports = async (page = 0, size = 10, filters = {}, sortBy
 
 export const fetchLostReportById = async (id) => {
   const response = await api.get(`/lost-reports/${id}`);
+  return response.data;
+};
+
+export const fetchLostReportShort = async (id) => {
+  const response = await api.get(`/lost-reports/${id}/response-short`);
   return response.data;
 };
 

@@ -19,7 +19,7 @@ import {
   deleteFoundReport,
   uploadFoundReportImage,
   deleteFoundReportImage,
-  logoutUser
+  markFoundReportAsFound
 } from "../../services/api";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import Notifications from "@/components/notifications/Notifications";
@@ -158,6 +158,18 @@ const FoundReportDetails = () => {
 
   }, [report?.latitude, report?.longitude]);
 
+  const handleToggleFound = async () => {
+    if (!isEditing) return;
+    
+    try {
+      await markFoundReportAsFound(id);
+      setReport({ ...report, found: !report.found });
+      toast.success("Status updated");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -278,7 +290,7 @@ const FoundReportDetails = () => {
 
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found?</span>
-                <button type="button" disabled={!isEditing} onClick={() => setReport({ ...report, found: !report.found })} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}>
+                <button type="button" disabled={!isEditing} onClick={handleToggleFound} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}>
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>

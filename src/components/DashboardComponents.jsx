@@ -11,8 +11,6 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import {
-  fetchMyLostReports,
-  fetchMyFoundReports,
   linkFoundToLostReport,
   createFoundReport,
   connectFoundReports,
@@ -20,8 +18,8 @@ import {
   fetchFilteredLostReports,
   fetchFoundReportsList,
   fetchCurrentUser,
-  fetchLostReportById,
-  fetchFoundReportById
+  fetchFoundReportShort,
+  fetchLostReportShort
 } from "@/services/api";
 
 let DefaultIcon = L.icon({
@@ -513,8 +511,8 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
       const getBase = async () => {
         try {
           const res = await (type === "LOST_REPORT_VIEW"
-            ? fetchLostReportById(baseReportId)
-            : fetchFoundReportById(baseReportId));
+            ? fetchLostReportShort(baseReportId)
+            : fetchFoundReportShort(baseReportId));
           setBaseDetails(res);
           setFormData(prev => ({ ...prev, species: res.species }));
         } catch (e) { console.warn(e); }
@@ -596,7 +594,7 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
               {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">No matching reports found.</p> : myReports.map(r => (
                 <div key={r.id} onClick={() => setSelectedExistingId(r.id)} className={`p-3 border rounded-lg cursor-pointer ${selectedExistingId === r.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'}`}>
                   <p className="font-bold text-sm">{r.title}</p>
-                  <p className="text-xs text-gray-500">{new Date(r.foundDate).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500">{new Date(r.foundDate || r.lostDate).toLocaleDateString()}</p>
                 </div>
               ))}
             </div>

@@ -264,7 +264,6 @@ const ReportsMap = () => {
                 </MapContainer>
             </div>
 
-            {/* SEARCH BAR */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[1001] w-full max-w-sm px-2 max-sm:top-5 max-sm:max-w-[85%]">
                 <form onSubmit={handleSearch} className="relative">
                     <input
@@ -283,7 +282,6 @@ const ReportsMap = () => {
                 </form>
             </div>
 
-            {/* RECENTER BUTTON */}
             <div className="absolute top-10 right-10 z-[1001] max-sm:top-auto max-sm:bottom-28 max-sm:right-5">
                 <button
                     onClick={handleRecenter}
@@ -293,7 +291,6 @@ const ReportsMap = () => {
                 </button>
             </div>
 
-            {/* LEGEND - BOTTOM LEFT */}
             <div className="absolute bottom-10 left-10 z-[1001] flex items-center gap-6 bg-white/90 backdrop-blur-md px-7 py-3 rounded-full shadow-lg border-2 border-white max-sm:bottom-6 max-sm:left-5 max-sm:gap-4 max-sm:px-5 max-sm:py-2.5">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-orange-50 rounded-lg max-sm:p-1">
