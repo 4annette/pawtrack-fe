@@ -4,7 +4,7 @@ import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, FileText, LogOut, Calendar, Hash, Dog,
   CheckCircle, MapPin, Link as LinkIcon, AlertCircle, Clock,
-  ChevronDown, Info, Save
+  ChevronDown, Info, Save, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -106,6 +106,7 @@ const FoundReportDetails = () => {
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
   const [addressText, setAddressText] = useState("Loading location...");
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   const hasFetched = useRef(false);
 
@@ -176,13 +177,7 @@ const FoundReportDetails = () => {
     try {
       const rawDate = report.foundDate || originalReport.foundDate;
       const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
-
-      const payload = {
-        ...report,
-        dateFound: formattedDate,
-        chipNumber: parseInt(report.chipNumber) || 0
-      };
-
+      const payload = { ...report, dateFound: formattedDate, chipNumber: parseInt(report.chipNumber) || 0 };
       delete payload.foundDate;
 
       await updateFoundReport(id, payload);
@@ -318,7 +313,6 @@ const FoundReportDetails = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Location Text</label>
                 <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed overflow-hidden">
-                  <Info className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                   <span className="truncate">{addressText}</span>
                 </div>
               </div>
@@ -339,7 +333,7 @@ const FoundReportDetails = () => {
               </div>
 
               <CustomDateTimePicker label="Date Found" value={report.foundDate || ""} />
-
+              
               {isEditing && (
                 <div className="flex justify-end pt-6">
                   <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
@@ -380,29 +374,129 @@ const FoundReportDetails = () => {
           <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm">
             <h3 className="text-xs font-black text-emerald-800 uppercase tracking-widest mb-4 flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Linked Lost Report</h3>
             {report.lostReport ? (
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 cursor-pointer" onClick={() => navigate(`/lost-report-details/${report.lostReport.id}`)}>
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 cursor-pointer" onClick={() => setSelectedMatch(report.lostReport)}>
                 <p className="font-bold text-sm text-emerald-900">{report.lostReport.title}</p>
                 <p className="text-xs text-emerald-600 mt-1 font-bold">{new Date(report.lostReport.lostDate).toLocaleDateString()}</p>
               </div>
-            ) : <p className="text-xs text-gray-400 italic font-bold">No linked lost report</p>}
+            ) : report.possibleLostReports?.length > 0 ? (
+              <div className="space-y-3">
+                {report.possibleLostReports.map(plr => (
+                  <div key={plr.id} className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-colors" onClick={() => setSelectedMatch(plr)}>
+                    <p className="font-bold text-sm text-emerald-900">{plr.title}</p>
+                    <p className="text-xs text-emerald-600 mt-1 font-bold">{new Date(plr.lostDate).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic font-bold">No linked lost report</p>
+            )}
           </div>
 
           <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm">
             <h3 className="text-xs font-black text-orange-800 uppercase tracking-widest mb-4 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Possible Matches</h3>
             <div className="space-y-3">
-              {report.possibleLostReports?.length > 0 ? report.possibleLostReports.map(plr => (
-                <div key={plr.id} className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center cursor-pointer" onClick={() => navigate(`/lost-report-details/${plr.id}`)}>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-orange-900 truncate">{plr.title}</p>
-                    <p className="text-[10px] text-orange-600 font-bold">{new Date(plr.lostDate).toLocaleDateString()}</p>
+              {report.connectedFoundReports?.length > 0 ? (
+                report.connectedFoundReports.map(plr => (
+                  <div key={plr.id} className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center cursor-pointer hover:bg-orange-100 transition-colors" onClick={() => setSelectedMatch(plr)}>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-orange-900 truncate">{plr.title}</p>
+                      <p className="text-[10px] text-orange-600 font-bold">{new Date(plr.foundDate).toLocaleDateString()}</p>
+                    </div>
+                    <LinkIcon className="w-4 h-4 text-orange-300 shrink-0 ml-2" />
                   </div>
-                  <LinkIcon className="w-4 h-4 text-orange-300 shrink-0 ml-2" />
-                </div>
-              )) : <p className="text-xs text-gray-400 italic font-bold">No possible matches found</p>}
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 italic font-bold">No possible matches found</p>
+              )}
             </div>
           </div>
         </div>
       </main>
+
+      {selectedMatch && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setSelectedMatch(null)}
+        >
+          <div 
+            className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden relative border border-emerald-100 animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setSelectedMatch(null)}
+              className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-[210]"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+
+            <div className="overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-emerald-100 rounded-xl">
+                  {selectedMatch.lostDate ? <AlertCircle className="w-5 h-5 text-emerald-600" /> : <Dog className="w-5 h-5 text-emerald-600" />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-emerald-900 leading-tight">{selectedMatch.title}</h2>
+                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                    {selectedMatch.lostDate ? 'Lost Report Preview' : 'Found Report Preview'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="aspect-video w-full rounded-2xl bg-gray-50 border-4 border-white shadow-md overflow-hidden mb-6">
+                {selectedMatch.imageUrl ? (
+                  <img src={selectedMatch.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                    <ImageIcon className="w-10 h-10" />
+                    <p className="text-[9px] font-black uppercase mt-1">No Photo</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50">
+                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Species</p>
+                    <p className="font-bold text-xs text-gray-700">{selectedMatch.species || "Unknown"}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50">
+                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Date</p>
+                    <p className="font-bold text-xs text-gray-700">
+                      {new Date(selectedMatch.lostDate || selectedMatch.foundDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Description</p>
+                  <p className="text-xs text-gray-600 font-medium leading-relaxed">
+                    {selectedMatch.description || "No description provided."}
+                  </p>
+                </div>
+              </div>
+
+              {selectedMatch.latitude && selectedMatch.longitude && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-[9px] font-black text-emerald-800 uppercase tracking-widest">
+                    <MapPin className="w-3.5 h-3.5" /> Map Location
+                  </div>
+                  <div className="h-40 w-full rounded-2xl overflow-hidden border border-emerald-100 shadow-inner relative z-0">
+                    <MapContainer
+                      center={[selectedMatch.latitude, selectedMatch.longitude]}
+                      zoom={14}
+                      scrollWheelZoom={false}
+                      style={{ height: "100%", width: "100%", zIndex: 0 }}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[selectedMatch.latitude, selectedMatch.longitude]} />
+                      <RecenterMap lat={selectedMatch.latitude} lng={selectedMatch.longitude} />
+                    </MapContainer>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

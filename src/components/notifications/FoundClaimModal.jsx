@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, Calendar, FileText, Check, AlertCircle, MapPin } from "lucide-react";
+import { X, Phone, Calendar, FileText, Check, AlertCircle, MapPin, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { fetchFoundReportById, fetchLostReportById, removeFoundReportFromLostReport } from "@/services/api";
+import { fetchFoundReportById, fetchLostReportById, removeLostReportFromFoundReport } from "@/services/api";
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -28,7 +28,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
 
     const fetchData = async () => {
       if (!notification.foundReportId || !notification.lostReportId) {
-        toast.error("This report is no longer available.");
+        toast.error("Invalid notification data.");
         onClose();
         return;
       }
@@ -40,12 +40,17 @@ const FoundClaimModal = ({ notification, onClose }) => {
         ]);
 
         if (!foundData || !lostData) {
-          toast.info("This match is no longer available or disconnected.");
+          toast.info("Reports could not be found.");
           onClose();
           return;
         }
 
-        if (!foundData.lostReport || foundData.lostReport.id !== lostData.id) {
+        const isDirectlyLinked = foundData.lostReport && String(foundData.lostReport.id) === String(lostData.id);
+        const isPossibleMatch = foundData.possibleLostReports?.some(
+          (rel) => String(rel.id) === String(lostData.id)
+        );
+
+        if (!isDirectlyLinked && !isPossibleMatch) {
           toast.info("These reports are no longer connected.");
           onClose();
           return;
@@ -68,11 +73,10 @@ const FoundClaimModal = ({ notification, onClose }) => {
   const handleDisconnect = async () => {
     if (window.confirm("Are you sure this is not the correct pet? This will disconnect the reports.")) {
       try {
-        await removeFoundReportFromLostReport(notification.lostReportId, notification.foundReportId);
-        toast.info("Reports disconnected.");
+        await removeLostReportFromFoundReport(notification.foundReportId, notification.lostReportId);
+        toast.success("Reports disconnected.");
         onClose();
       } catch (error) {
-        console.error(error);
         toast.error("Failed to disconnect.");
       }
     }
@@ -87,7 +91,6 @@ const FoundClaimModal = ({ notification, onClose }) => {
         className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl shadow-emerald-900/20 overflow-hidden max-h-[90vh] flex flex-col border border-white/50 ring-4 ring-emerald-50/50"
         onClick={(e) => e.stopPropagation()}
       >
-
         <div className="bg-emerald-600 p-5 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-500/30 rounded-xl backdrop-blur-sm">
@@ -102,7 +105,6 @@ const FoundClaimModal = ({ notification, onClose }) => {
         </div>
 
         <div className="overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-
           <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-3xl p-5 flex items-center gap-5 shadow-sm">
             <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-200">
               <Phone className="w-6 h-6" />
@@ -111,10 +113,10 @@ const FoundClaimModal = ({ notification, onClose }) => {
               <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Claimed By</p>
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <span className="text-sm font-bold text-emerald-900 truncate">
-                  {notification.fromUserName || "Unknown User"}
+                  {foundReport?.creator?.username || "Unknown User"}
                 </span>
                 <span className="text-base font-black text-emerald-600 bg-white px-3 py-1 rounded-lg border border-emerald-100 shadow-sm">
-                  {notification.fromUserPhone || "No phone"}
+                  {foundReport?.creator?.phone || "No phone"}
                 </span>
               </div>
             </div>
@@ -126,7 +128,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Their Lost Report</span>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
+            <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm">
               <div className="flex gap-4 mb-4">
                 <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
                   {lostReport?.imageUrl ? (
@@ -178,11 +180,8 @@ const FoundClaimModal = ({ notification, onClose }) => {
                 </div>
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
                   <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
-                      <Calendar className="w-3 h-3" />
-                      {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : 'N/A'}
-                    </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50 w-fit">
+                    <Calendar className="w-3 h-3" /> Found: {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
               </div>
@@ -205,7 +204,21 @@ const FoundClaimModal = ({ notification, onClose }) => {
               )}
             </div>
           </div>
+        </div>
 
+        <div className="p-6 bg-white border-t border-gray-100 flex gap-3 shrink-0">
+          <button
+            onClick={handleDisconnect}
+            className="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 transition-colors border border-red-100"
+          >
+            <Trash2 className="w-4 h-4" /> Not a Match
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 py-4 px-6 rounded-2xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
+          >
+            Keep Connected
+          </button>
         </div>
       </div>
     </div>,

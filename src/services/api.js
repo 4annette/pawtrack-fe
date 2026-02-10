@@ -306,6 +306,11 @@ export const addLostReportToFoundReport = async (foundReportId, lostReportId) =>
   return response.data;
 };
 
+export const removeLostReportFromFoundReport = async (foundReportId, lostReportId) => {
+  const response = await api.patch(`/found-reports/${foundReportId}/remove-lost-report/${lostReportId}`);
+  return response.data;
+};
+
 export const connectFoundReports = async (foundReportId, connectedFoundReportId) => {
   const response = await api.patch(`/found-reports/${foundReportId}/add-found-report/${connectedFoundReportId}`);
   return response.data;

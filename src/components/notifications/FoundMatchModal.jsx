@@ -104,23 +104,6 @@ const FoundMatchModal = ({ notification, onClose }) => {
         </div>
 
         <div className="overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-          <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-3xl p-5 flex items-center gap-5 shadow-sm">
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-200">
-              <Phone className="w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Connected By</p>
-              <div className="flex items-baseline justify-between flex-wrap gap-2">
-                <span className="text-sm font-bold text-emerald-900 truncate">
-                  {notification.fromUserName || "Unknown User"}
-                </span>
-                <span className="text-base font-black text-emerald-600 bg-white px-3 py-1 rounded-lg border border-emerald-100 shadow-sm">
-                  {notification.fromUserPhone || "No phone"}
-                </span>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
