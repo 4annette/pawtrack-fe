@@ -107,6 +107,8 @@ const FoundReportDetails = () => {
   const [newImage, setNewImage] = useState(null);
   const [addressText, setAddressText] = useState("Loading location...");
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [showFoundModal, setShowFoundModal] = useState(false);
+  const [tempSelectedLostId, setTempSelectedLostId] = useState(null);
 
   const hasFetched = useRef(false);
 
@@ -159,15 +161,33 @@ const FoundReportDetails = () => {
 
   }, [report?.latitude, report?.longitude]);
 
-  const handleToggleFound = async () => {
-    if (!isEditing) return;
-    
+  const executeMarkAsFound = async (lostId) => {
     try {
-      await markFoundReportAsFound(id);
+      await markFoundReportAsFound(id, lostId);
       setReport({ ...report, found: !report.found });
+      setShowFoundModal(false);
       toast.success("Status updated");
     } catch (err) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleToggleFound = async () => {
+    if (!isEditing) return;
+
+    if (report.found) {
+      await executeMarkAsFound(null);
+      return;
+    }
+
+    const hasPossible = report.possibleLostReports && report.possibleLostReports.length > 0;
+    const hasLost = !!report.lostReport;
+
+    if (hasPossible || hasLost) {
+      setTempSelectedLostId(report.lostReport ? report.lostReport.id : null);
+      setShowFoundModal(true);
+    } else {
+      await executeMarkAsFound(null);
     }
   };
 
@@ -333,7 +353,7 @@ const FoundReportDetails = () => {
               </div>
 
               <CustomDateTimePicker label="Date Found" value={report.foundDate || ""} />
-              
+
               {isEditing && (
                 <div className="flex justify-end pt-6">
                   <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
@@ -413,16 +433,45 @@ const FoundReportDetails = () => {
         </div>
       </main>
 
+      {showFoundModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl p-6 sm:p-8 flex flex-col gap-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black text-emerald-900 uppercase">Select Report</h2>
+              <button onClick={() => setShowFoundModal(false)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
+              {report.lostReport && (
+                <div onClick={() => setTempSelectedLostId(report.lostReport.id)} className={`p-4 rounded-2xl border-2 cursor-pointer ${tempSelectedLostId === report.lostReport.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100'}`}>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Original</p>
+                  <p className="font-bold text-sm">{report.lostReport.title}</p>
+                </div>
+              )}
+              {report.possibleLostReports?.map(plr => (
+                <div key={plr.id} onClick={() => setTempSelectedLostId(plr.id)} className={`p-4 rounded-2xl border-2 cursor-pointer ${tempSelectedLostId === plr.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100'}`}>
+                  <p className="font-bold text-sm">{plr.title}</p>
+                  <p className="text-xs text-gray-500">{new Date(plr.lostDate).toLocaleDateString()}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => executeMarkAsFound(tempSelectedLostId)} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all uppercase text-xs">Confirm & Link</button>
+              <button onClick={() => executeMarkAsFound(report.lostReport ? report.lostReport.id : null)} className="w-full bg-white text-gray-400 font-bold py-2 text-[10px] uppercase hover:text-emerald-600 transition-colors">Continue without change</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedMatch && (
-        <div 
+        <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
           onClick={() => setSelectedMatch(null)}
         >
-          <div 
+          <div
             className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden relative border border-emerald-100 animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <button 
+            <button
               onClick={() => setSelectedMatch(null)}
               className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-[210]"
             >

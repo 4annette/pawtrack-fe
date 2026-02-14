@@ -124,8 +124,9 @@ export const fetchFoundReportShort = async (id) => {
   return response.data;
 };
 
-export const markFoundReportAsFound = async (reportId) => {
-  const response = await api.patch(`/found-reports/${reportId}/found`);
+export const markFoundReportAsFound = async (reportId, lostReportId = null) => {
+  const url = `/found-reports/${reportId}/found${lostReportId ? `?lostReportId=${lostReportId}` : ''}`;
+  const response = await api.patch(url);
   return response.data;
 };
 
