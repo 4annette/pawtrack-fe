@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button"; 
-import PawTrackLogo from "@/components/PawTrackLogo"; 
+import { Button } from "@/components/ui/button";
+import PawTrackLogo from "@/components/PawTrackLogo";
 import { Search, MapPin, Heart } from "lucide-react";
 import { fetchStatistics } from "@/services/api";
 
@@ -32,18 +32,18 @@ const Home = () => {
 
       <nav className="flex items-center justify-between p-6 max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-2">
-           <PawTrackLogo size="md" /> 
+          <PawTrackLogo size="md" />
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
+          <Button
             onClick={() => navigate("/auth", { state: { mode: "login" } })}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md px-6 shadow-sm transition-all"
           >
             Login
           </Button>
 
-          <Button 
+          <Button
             onClick={() => navigate("/auth", { state: { mode: "register" } })}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md px-6 shadow-sm transition-all"
           >
@@ -53,8 +53,7 @@ const Home = () => {
       </nav>
 
       <main className="flex flex-col items-center justify-center text-center mt-20 px-4">
-        
-        {/* later add the num of the pets that founded */}
+
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-8">
           Helping reunite pets with their families
         </div>
@@ -64,26 +63,26 @@ const Home = () => {
         </h1>
 
         <p className="text-xl text-gray-600 max-w-2xl mb-10 leading-relaxed">
-          PawTrack connects pet owners, finders, and communities to help 
+          PawTrack connects pet owners, finders, and communities to help
           lost pets find their way back home.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-4xl w-full">
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
-                <Search className="w-10 h-10 text-blue-500 mb-4" />
-                <p className="text-xl font-bold text-gray-900">Search</p>
-                <p className="text-gray-500 text-sm">Find lost pets quickly</p>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
-                <MapPin className="w-10 h-10 text-green-600 mb-4" />
-                <p className="text-xl font-bold text-gray-900">Alert</p>
-                <p className="text-gray-500 text-sm">Stay updated on every action</p>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
-                <Heart className="w-10 h-10 text-rose-500 mb-4" />
-                <p className="text-xl font-bold text-gray-900">Reunite</p>
-                <p className="text-gray-500 text-sm">Bring them home safe</p>
-            </div>
+          <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
+            <Search className="w-10 h-10 text-blue-500 mb-4" />
+            <p className="text-xl font-bold text-gray-900">Search</p>
+            <p className="text-gray-500 text-sm">Find lost pets quickly</p>
+          </div>
+          <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
+            <MapPin className="w-10 h-10 text-green-600 mb-4" />
+            <p className="text-xl font-bold text-gray-900">Alert</p>
+            <p className="text-gray-500 text-sm">Stay updated on every action</p>
+          </div>
+          <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-md transition-shadow">
+            <Heart className="w-10 h-10 text-rose-500 mb-4" />
+            <p className="text-xl font-bold text-gray-900">Reunite</p>
+            <p className="text-gray-500 text-sm">Bring them home safe</p>
+          </div>
         </div>
 
       </main>

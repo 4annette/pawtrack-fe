@@ -13,28 +13,29 @@ import FoundReportDetails from "./pages/User/FoundReportDetails";
 import LostReportDetails from "./pages/User/LostReportDetails";
 import CreateFoundReport from './pages/CreateFoundReport';
 import CreateLostReport from './pages/CreateLostReport';
+import AccountSettings from "./pages/User/AccountSettings";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./index.css";
-import AccountSettings from "./pages/User/AccountSettings";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <FCMHandler />
       <Toaster position="top-center" richColors />
-      
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/my-reports" element={<MyReports />} />
-        <Route path="/found-report-details/:id" element={<FoundReportDetails />} />
-        <Route path="/lost-report-details/:id" element={<LostReportDetails />} />
-        <Route path="/create-found-report" element={<CreateFoundReport />} />
-        <Route path="/create-lost-report" element={<CreateLostReport />} />
-        <Route path="/account-settings" element={<AccountSettings />} />
-        
+
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/my-reports" element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
+        <Route path="/found-report-details/:id" element={<ProtectedRoute><FoundReportDetails /></ProtectedRoute>} />
+        <Route path="/lost-report-details/:id" element={<ProtectedRoute><LostReportDetails /></ProtectedRoute>} />
+        <Route path="/create-found-report" element={<ProtectedRoute><CreateFoundReport /></ProtectedRoute>} />
+        <Route path="/create-lost-report" element={<ProtectedRoute><CreateLostReport /></ProtectedRoute>} />
+        <Route path="/account-settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

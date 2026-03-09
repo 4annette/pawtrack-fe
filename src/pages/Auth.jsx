@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import PawTrackLogo from "@/components/PawTrackLogo"; 
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint } from "lucide-react"; 
+import PawTrackLogo from "@/components/PawTrackLogo";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X } from "lucide-react";
 import { toast } from "sonner";
 import { loginUser, registerUser, syncFcmToken, fetchStatistics } from "@/services/api";
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [isLogin, setIsLogin] = useState(
     location.state?.mode === "register" ? false : true
   );
@@ -67,14 +67,14 @@ const Auth = () => {
         localStorage.setItem('token', data.token);
 
         try {
-            await syncFcmToken();
-            console.log("FCM sync ffunction finished") 
+          await syncFcmToken();
+          console.log("FCM sync ffunction finished")
         } catch (fcmError) {
-            console.error("FCM Token sync failed, but login continued:", fcmError);
+          console.error("FCM Token sync failed, but login continued:", fcmError);
         }
 
         toast.success("Welcome back!");
-        navigate('/dashboard'); 
+        navigate('/dashboard');
       } else {
         await registerUser(formData);
         toast.success("Account created! Please sign in.");
@@ -89,38 +89,43 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
-      
+    <div className="min-h-screen flex w-full relative">
+      <Link 
+        to="/" 
+        className="absolute top-6 right-6 z-50 p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-all shadow-sm"
+      >
+        <X className="w-6 h-6" />
+      </Link>
+
       <div className="hidden lg:flex lg:w-1/2 gradient-hero relative overflow-hidden items-center justify-center">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full bg-sage-light blur-2xl opacity-60" />
         <div className="absolute bottom-32 right-20 w-48 h-48 rounded-full bg-sky-light blur-2xl opacity-60" />
-        
+
         <div className="relative z-10 flex flex-col items-center justify-center p-12 text-center">
-          
           <div className="bg-white/40 backdrop-blur-md p-10 rounded-2xl shadow-lg mb-8 animate-float">
-             <PawPrint className="w-24 h-24 text-emerald-600 fill-emerald-100" />
+            <PawPrint className="w-24 h-24 text-emerald-600 fill-emerald-100" />
           </div>
-          
+
           <h2 className="text-4xl font-display font-bold text-gray-800 mb-4">
-            Reunite with your <br/> furry friends
+            Reunite with your <br /> furry friends
           </h2>
           <p className="text-gray-600 text-lg max-w-md leading-relaxed">
             PawTrack helps lost pets find their way back home. Join our community of pet lovers today.
           </p>
 
           <div className="flex gap-8 mt-12">
-              <div>
-                <p className="text-2xl font-bold text-sage">{stats.foundedLostReports >= 1000 ? (stats.foundedLostReports / 1000).toFixed(1) + 'k' : stats.foundedLostReports}</p>
-                <p className="text-sm text-gray-500">Pets Reunited</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-sky">{stats.activeUsers >= 1000 ? (stats.activeUsers / 1000).toFixed(1) + 'k' : stats.activeUsers}</p>
-                <p className="text-sm text-gray-500">Active Users</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-sunny">{stats.successRate}%</p>
-                <p className="text-sm text-gray-500">Success Rate</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold text-sage">{stats.foundedLostReports >= 1000 ? (stats.foundedLostReports / 1000).toFixed(1) + 'k' : stats.foundedLostReports}</p>
+              <p className="text-sm text-gray-500">Pets Reunited</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-sky">{stats.activeUsers >= 1000 ? (stats.activeUsers / 1000).toFixed(1) + 'k' : stats.activeUsers}</p>
+              <p className="text-sm text-gray-500">Active Users</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-sunny">{stats.successRate}%</p>
+              <p className="text-sm text-gray-500">Success Rate</p>
+            </div>
           </div>
         </div>
       </div>
