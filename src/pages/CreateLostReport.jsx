@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     ArrowLeft, Dog, Cat, Hash, AlertTriangle,
     Loader2, CheckCircle, Upload, ImageIcon, X,
@@ -13,6 +14,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const [selectedDateStr, setSelectedDateStr] = useState("");
@@ -144,7 +146,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
         <div className="relative space-y-1.5" ref={containerRef}>
             <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {label}</label>
             <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-4 ring-emerald-500/5' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-                <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date & time'}</span>
+                <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder')}</span>
                 <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
             </div>
 
@@ -164,7 +166,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                     </div>
 
                     <div className="grid grid-cols-7 mb-2 text-center">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-[10px] font-bold text-emerald-300">{d}</span>))}
+                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-[10px] font-bold text-emerald-300">{d}</span>))}
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">
@@ -312,6 +314,7 @@ const StyledDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 };
 
 const SimpleFileInput = ({ label, onChange, selectedFile }) => {
+    const { t } = useTranslation();
     const fileInputRef = useRef(null);
     return (
         <div className="space-y-1.5">
@@ -331,7 +334,7 @@ const SimpleFileInput = ({ label, onChange, selectedFile }) => {
                         <div className="p-3 bg-emerald-100 rounded-full mb-3">
                             <Upload className="w-6 h-6 text-emerald-600" />
                         </div>
-                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Click to upload photo</span>
+                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{t('photo_upload_prompt')}</span>
                     </div>
                 )}
             </div>
@@ -340,6 +343,7 @@ const SimpleFileInput = ({ label, onChange, selectedFile }) => {
 };
 
 const CreateLostReport = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [imageFile, setImageFile] = useState(null);
@@ -354,7 +358,11 @@ const CreateLostReport = () => {
         longitude: null
     });
 
-    const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
+    const speciesOptions = [
+        { label: t('species_dog'), value: "DOG" },
+        { label: t('species_cat'), value: "CAT" },
+        { label: t('species_other'), value: "OTHER" }
+    ];
 
     const handleLocationSelect = useCallback((lat, lng) => {
         setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
@@ -368,7 +376,7 @@ const CreateLostReport = () => {
         e.preventDefault();
 
         if (!formData.latitude || !formData.longitude) {
-            toast.error("Please search or click on the map to select a location.");
+            toast.error(t('error_location_required'));
             return;
         }
 
@@ -399,17 +407,25 @@ const CreateLostReport = () => {
             const newReport = await createLostReport(payload);
 
             if (imageFile && newReport.id) {
-                try { await uploadLostReportImage(newReport.id, imageFile); toast.success("Success!"); }
-                catch { toast.warning("Image failed, but report created."); }
-            } else { toast.success("Lost report created!"); }
+                try {
+                    await uploadLostReportImage(newReport.id, imageFile);
+                    toast.success(t('success_report_created'));
+                }
+                catch {
+                    toast.warning(t('warning_image_failed'));
+                }
+            } else {
+                toast.success(t('success_report_created'));
+            }
             navigate("/dashboard");
-        } catch { toast.error("Failed to create report."); }
+        } catch {
+            toast.error(t('error_report_failed'));
+        }
         finally { setLoading(false); }
     };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-
             <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
                 <div className="container mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -426,25 +442,25 @@ const CreateLostReport = () => {
             <div className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-emerald-900/5 border border-emerald-100/50 p-6 md:p-10">
                     <h1 className="text-3xl font-black text-emerald-900 mb-2 flex items-center gap-3 tracking-tight">
-                        <AlertTriangle className="w-8 h-8 text-emerald-600" /> Report Lost Pet
+                        <AlertTriangle className="w-8 h-8 text-emerald-600" /> {t('report_lost_title')}
                     </h1>
-                    <p className="text-emerald-700 mb-10 font-bold text-sm">Help the community identify your pet.</p>
+                    <p className="text-emerald-700 mb-10 font-bold text-sm">{t('report_lost_subtitle')}</p>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Report Title</label>
-                            <input type="text" required placeholder="e.g. Lost Golden Retriever near Downtown" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.title} onChange={e => updateField('title', e.target.value)} />
+                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_report_title')}</label>
+                            <input type="text" required placeholder={t('placeholder_report_title')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.title} onChange={e => updateField('title', e.target.value)} />
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Description</label>
-                            <textarea required placeholder="Describe markings, collar, etc." className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.description} onChange={e => updateField('description', e.target.value)} />
+                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_description')}</label>
+                            <textarea required placeholder={t('placeholder_description')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.description} onChange={e => updateField('description', e.target.value)} />
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-end">
                                 <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
-                                    <MapPin className="w-3 h-3" /> Location Lost
+                                    <MapPin className="w-3 h-3" /> {t('label_location_lost')}
                                 </label>
                                 {formData.latitude && (
                                     <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
@@ -458,25 +474,25 @@ const CreateLostReport = () => {
                                 onLocationSelect={handleLocationSelect}
                             />
                             {!formData.latitude && (
-                                <p className="text-xs text-orange-500 font-medium ml-1">* Please allow location access or click on the map.</p>
+                                <p className="text-xs text-orange-500 font-medium ml-1">*{t('location_helper_text')}</p>
                             )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <StyledDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => updateField('species', val)} />
+                            <StyledDropdown label={t('label_species')} icon={Dog} value={formData.species} options={speciesOptions} onChange={val => updateField('species', val)} />
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>
-                                <input type="number" placeholder="Optional" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.chipNumber} onChange={e => updateField('chipNumber', e.target.value)} />
+                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> {t('label_chip_number')}</label>
+                                <input type="number" placeholder={t('placeholder_optional')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.chipNumber} onChange={e => updateField('chipNumber', e.target.value)} />
                             </div>
                         </div>
 
-                        <CustomDateTimePicker label="Date & Time Lost" value={formData.dateLost} onChange={val => updateField('dateLost', val)} />
+                        <CustomDateTimePicker label={t('label_date_time_lost')} value={formData.dateLost} onChange={val => updateField('dateLost', val)} />
 
-                        <SimpleFileInput label="Pet Photo" selectedFile={imageFile} onChange={setImageFile} />
+                        <SimpleFileInput label={t('label_pet_photo')} selectedFile={imageFile} onChange={setImageFile} />
 
                         <div className="pt-6">
                             <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-5 rounded-[24px] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em]">
-                                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Save Lost Report"}
+                                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('btn_save_lost_report')}
                             </button>
                         </div>
                     </form>

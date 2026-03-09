@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     ArrowLeft, Dog, Cat, CheckCircle, Calendar, Hash,
     ChevronDown, Check, ChevronLeft, ChevronRight, Clock,
@@ -13,6 +14,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const [selectedDateStr, setSelectedDateStr] = useState("");
@@ -146,7 +148,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
         <div className="relative space-y-1.5" ref={containerRef}>
             <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
             <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date & time'}</span>
+                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder')}</span>
                 <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
             </div>
 
@@ -166,7 +168,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                     </div>
 
                     <div className="grid grid-cols-7 mb-2 text-center">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
+                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">
@@ -318,6 +320,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 };
 
 const CustomImageInput = ({ label, onChange, selectedFile }) => {
+    const { t } = useTranslation();
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
     const handleFileChange = (e) => {
@@ -336,18 +339,18 @@ const CustomImageInput = ({ label, onChange, selectedFile }) => {
                             <CheckCircle className="w-5 h-5 flex-shrink-0" />
                             <span className="text-sm font-bold truncate">{selectedFile.name}</span>
                         </div>
-                        <button type="button" onClick={() => onChange(null)} className="text-xs font-black text-red-500 hover:underline ml-2">Remove</button>
+                        <button type="button" onClick={() => onChange(null)} className="text-xs font-black text-red-500 hover:underline ml-2">{t('remove_btn')}</button>
                     </div>
                 ) : (
                     <div className="w-full flex gap-3 justify-center">
                         <button type="button" onClick={() => fileInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
                             <div className="p-2 bg-emerald-100 rounded-full mb-2 group-hover:bg-emerald-200 transition-colors"><Upload className="w-5 h-5 text-emerald-600" /></div>
-                            <span className="text-xs font-black text-gray-600 group-hover:text-emerald-700 uppercase tracking-tighter">Upload</span>
+                            <span className="text-xs font-black text-gray-600 group-hover:text-emerald-700 uppercase tracking-tighter">{t('upload_btn')}</span>
                         </button>
                         <div className="w-px bg-gray-100 my-2"></div>
                         <button type="button" onClick={() => cameraInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
                             <div className="p-2 bg-blue-100 rounded-full mb-2 group-hover:bg-blue-200 transition-colors"><Camera className="w-5 h-5 text-blue-600" /></div>
-                            <span className="text-xs font-black text-gray-600 group-hover:text-blue-700 uppercase tracking-tighter">Camera</span>
+                            <span className="text-xs font-black text-gray-600 group-hover:text-blue-700 uppercase tracking-tighter">{t('camera_btn')}</span>
                         </button>
                     </div>
                 )}
@@ -357,6 +360,7 @@ const CustomImageInput = ({ label, onChange, selectedFile }) => {
 };
 
 const CreateFoundReport = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [imageFile, setImageFile] = useState(null);
@@ -372,13 +376,22 @@ const CreateFoundReport = () => {
         longitude: null
     });
 
-    const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
-    const conditionOptions = [{ label: "Excellent", value: "EXCELLENT" }, { label: "Good", value: "GOOD" }, { label: "Bad", value: "BAD" }];
+    const speciesOptions = [
+        { label: t('species_dog'), value: "DOG" },
+        { label: t('species_cat'), value: "CAT" },
+        { label: t('species_other'), value: "OTHER" }
+    ];
+
+    const conditionOptions = [
+        { label: t('condition_excellent'), value: "EXCELLENT" },
+        { label: t('condition_good'), value: "GOOD" },
+        { label: t('condition_bad'), value: "BAD" }
+    ];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.latitude || !formData.longitude) {
-            toast.error("Please search or click on the map to select a location.");
+            toast.error(t('error_location_required'));
             return;
         }
         setLoading(true);
@@ -390,24 +403,22 @@ const CreateFoundReport = () => {
             }
             const newReport = await createFoundReport({ ...formData, dateFound: formattedDate });
             if (imageFile && newReport?.id) {
-                try { await uploadFoundReportImage(newReport.id, imageFile); toast.success("Success!"); }
-                catch { toast.warning("Image failed, but report created."); }
-            } else { toast.success("Report created!"); }
+                try { await uploadFoundReportImage(newReport.id, imageFile); toast.success(t('success_report_created')); }
+                catch { toast.warning(t('warning_image_failed')); }
+            } else { toast.success(t('success_report_created')); }
             navigate("/dashboard");
-        } catch { toast.error("Error creating report."); }
+        } catch { toast.error(t('error_report_failed')); }
         finally { setLoading(false); }
     };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-
             <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
                 <div className="container mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
                         <PawTrackLogo size="sm" />
                     </div>
-
                     <div className="flex items-center gap-4">
                         <Notifications />
                         <ProfileButton />
@@ -417,22 +428,22 @@ const CreateFoundReport = () => {
 
             <div className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
                 <div className="bg-white rounded-[32px] shadow-xl border border-emerald-100 p-6 md:p-8">
-                    <h1 className="text-2xl font-black text-emerald-900 mb-2">Details about the pet</h1>
-                    <p className="text-emerald-700 mb-8 font-medium">Please provide details to help identification.</p>
+                    <h1 className="text-2xl font-black text-emerald-900 mb-2">{t('report_found_details_title')}</h1>
+                    <p className="text-emerald-700 mb-8 font-medium">{t('report_found_details_subtitle')}</p>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Report Title</label>
+                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_report_title')}</label>
                             <input type="text" required className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/5 transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Description</label>
+                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_description')}</label>
                             <textarea required className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-end">
                                 <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
-                                    <MapPin className="w-3 h-3" /> Location Found
+                                    <MapPin className="w-3 h-3" /> {t('label_location_found')}
                                 </label>
                                 {formData.latitude && (
                                     <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
@@ -444,24 +455,24 @@ const CreateFoundReport = () => {
                                 onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
                             />
                             {!formData.latitude && (
-                                <p className="text-xs text-orange-500 font-medium ml-1">* Please click on the map to pin the location.</p>
+                                <p className="text-xs text-orange-500 font-medium ml-1">*{t('location_picker_helper')}</p>
                             )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <CustomDropdown label="Species" icon={Dog} value={formData.species} options={speciesOptions} onChange={val => setFormData({ ...formData, species: val })} />
-                            <CustomDropdown label="Condition" icon={CheckCircle} value={formData.condition} options={conditionOptions} onChange={val => setFormData({ ...formData, condition: val })} />
+                            <CustomDropdown label={t('label_species')} icon={Dog} value={formData.species} options={speciesOptions} onChange={val => setFormData({ ...formData, species: val })} />
+                            <CustomDropdown label={t('label_condition')} icon={CheckCircle} value={formData.condition} options={conditionOptions} onChange={val => setFormData({ ...formData, condition: val })} />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <CustomDateTimePicker label="Date & Time Found" value={formData.dateFound} onChange={val => setFormData({ ...formData, dateFound: val })} />
+                            <CustomDateTimePicker label={t('label_date_time_found')} value={formData.dateFound} onChange={val => setFormData({ ...formData, dateFound: val })} />
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>
+                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> {t('label_chip_number')}</label>
                                 <input type="number" className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm" value={formData.chipNumber} onChange={e => setFormData({ ...formData, chipNumber: e.target.value })} />
                             </div>
                         </div>
-                        <CustomImageInput label="Add Photo" selectedFile={imageFile} onChange={setImageFile} />
+                        <CustomImageInput label={t('label_add_photo')} selectedFile={imageFile} onChange={setImageFile} />
                         <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2 text-xs uppercase tracking-widest">
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Create Report"}
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('btn_save_found_report')}
                         </button>
                     </form>
                 </div>

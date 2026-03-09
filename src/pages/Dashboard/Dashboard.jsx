@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, X, Loader2, Search, User, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import PawTrackLogo from "@/components/PawTrackLogo";
@@ -11,6 +12,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("found");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,7 +49,7 @@ const Dashboard = () => {
       const data = await fetchMyLostReports(0, 50);
       setMyLostReports(data.content || []);
     } catch (error) {
-      toast.error("Could not load your lost reports");
+      toast.error(t('load_lost_reports_failed'));
     } finally {
       setLoadingLostReports(false);
     }
@@ -59,10 +61,10 @@ const Dashboard = () => {
     setSubmittingClaim(true);
     try {
       await addLostReportToFoundReport(selectedFoundReportId, lostReportId);
-      toast.success("Request sent! The finder has been notified.");
+      toast.success(t('request_sent_success'));
       setIsClaimModalOpen(false);
     } catch (error) {
-      toast.error("Failed to link reports. Try again.");
+      toast.error(t('link_reports_failed'));
     } finally {
       setSubmittingClaim(false);
     }
@@ -79,10 +81,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-
       <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
         <div className="container mx-auto flex items-center justify-between relative">
-
           <div className="flex items-center gap-6" ref={logoMenuRef}>
             <button
               type="button"
@@ -100,20 +100,20 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("lost")}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
               >
-                Lost Reports
+                {t('lost_reports_tab')}
               </button>
               <button
                 onClick={() => setActiveTab("found")}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
               >
-                Found Reports
+                {t('found_reports_tab')}
               </button>
               <button
                 onClick={() => setActiveTab("map")}
                 className={`flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'map' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 <MapIcon className="w-4 h-4" />
-                Map View
+                {t('map_view_tab')}
               </button>
             </nav>
 
@@ -125,21 +125,21 @@ const Dashboard = () => {
                     onPointerDown={() => { setActiveTab("lost"); setIsMobileMenuOpen(false); }}
                     className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    Lost Reports
+                    {t('lost_reports_tab')}
                   </button>
                   <button
                     type="button"
                     onPointerDown={() => { setActiveTab("found"); setIsMobileMenuOpen(false); }}
                     className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left transition-colors ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    Found Reports
+                    {t('found_reports_tab')}
                   </button>
                   <button
                     type="button"
                     onPointerDown={() => { setActiveTab("map"); setIsMobileMenuOpen(false); }}
                     className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left transition-colors ${activeTab === 'map' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    Map View
+                    {t('map_view_tab')}
                   </button>
                 </div>
               </div>
@@ -161,7 +161,7 @@ const Dashboard = () => {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-emerald-50/50">
-              <h3 className="font-black text-emerald-900 text-lg">Select Your Matching Pet</h3>
+              <h3 className="font-black text-emerald-900 text-lg">{t('claim_modal_title')}</h3>
               <button
                 onClick={() => setIsClaimModalOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -178,12 +178,12 @@ const Dashboard = () => {
               ) : myLostReports.length === 0 ? (
                 <div className="text-center py-10 px-4">
                   <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-bold">You don't have any active lost reports.</p>
+                  <p className="text-gray-500 font-bold">{t('no_lost_reports')}</p>
                   <button
                     onClick={() => navigate('/my-reports')}
                     className="mt-4 text-emerald-600 font-bold text-sm hover:underline"
                   >
-                    Create a report first
+                    {t('create_report_first')}
                   </button>
                 </div>
               ) : (
@@ -217,12 +217,11 @@ const Dashboard = () => {
             </div>
 
             <div className="p-4 bg-gray-50 text-[10px] text-gray-500 text-center font-medium border-t border-gray-100">
-              Selecting a pet will notify the finder immediately.
+              {t('claim_footer_info')}
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, FileText, LogOut, Calendar, Hash, Dog,
@@ -47,22 +48,26 @@ const RecenterMap = ({ lat, lng }) => {
   return null;
 };
 
-const CustomDateTimePicker = ({ label, value }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-      <Calendar className="w-3 h-3" /> {label}
-    </label>
-    <div className="w-full p-3 rounded-xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
-      <Clock className="w-3.5 h-3.5 text-emerald-300" />
-      {value ? value.replace('T', ' ').substring(0, 16) : "Not set"}
+const CustomDateTimePicker = ({ label, value }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+        <Calendar className="w-3 h-3" /> {label}
+      </label>
+      <div className="w-full p-3 rounded-xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed">
+        <Clock className="w-3.5 h-3.5 text-emerald-300" />
+        {value ? value.replace('T', ' ').substring(0, 16) : t('not_set')}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-  const selectedOption = options.find(opt => opt.value === value) || { label: "Not set", value: "" };
+  const selectedOption = options.find(opt => opt.value === value) || { label: t('not_set'), value: "" };
 
   useEffect(() => {
     const handleClickOutside = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); };
@@ -96,6 +101,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled 
 };
 
 const FoundReportDetails = () => {
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -105,15 +111,23 @@ const FoundReportDetails = () => {
   const [report, setReport] = useState(null);
   const [originalReport, setOriginalReport] = useState(null);
   const [newImage, setNewImage] = useState(null);
-  const [addressText, setAddressText] = useState("Loading location...");
+  const [addressText, setAddressText] = useState("");
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showFoundModal, setShowFoundModal] = useState(false);
   const [tempSelectedLostId, setTempSelectedLostId] = useState(null);
 
   const hasFetched = useRef(false);
 
-  const speciesOptions = [{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }];
-  const conditionOptions = [{ label: "Excellent", value: "EXCELLENT" }, { label: "Good", value: "GOOD" }, { label: "Bad", value: "BAD" }];
+  const speciesOptions = [
+    { label: t('species_dog'), value: "DOG" },
+    { label: t('species_cat'), value: "CAT" },
+    { label: t('species_other'), value: "OTHER" }
+  ];
+  const conditionOptions = [
+    { label: t('condition_excellent'), value: "EXCELLENT" },
+    { label: t('condition_good'), value: "GOOD" },
+    { label: t('condition_bad'), value: "BAD" }
+  ];
 
   useEffect(() => {
     if (hasFetched.current) return;
@@ -124,51 +138,52 @@ const FoundReportDetails = () => {
         setOriginalReport(data);
         hasFetched.current = true;
       } catch (err) {
-        toast.error("Report not found");
+        toast.error(t('report_not_found_toast'));
         navigate("/my-reports");
       } finally { setLoading(false); }
     };
     getReport();
-  }, [id, navigate]);
+  }, [id, navigate, t]);
 
   useEffect(() => {
     if (!report || !report.latitude || !report.longitude) {
       if (report && (!report.latitude || !report.longitude)) {
-        setAddressText("No location coordinates set");
+        setAddressText(t('no_location_coords_text'));
       }
       return;
     }
 
     const timerId = setTimeout(() => {
-      setAddressText("Fetching address...");
+      setAddressText(t('fetching_address_text'));
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${report.latitude}&lon=${report.longitude}`, {
-        headers: { 'Accept-Language': 'en' }
+        headers: { 'Accept-Language': i18n.language }
       })
-        .then(res => {
-          if (!res.ok) throw new Error("OSM Blocked");
-          return res.json();
-        })
+        .then(res => res.json())
         .then(json => {
-          const addr = json.address;
-          const city = addr?.city || addr?.town || addr?.village || "";
-          const country = addr?.country || "";
-          setAddressText([city, country].filter(Boolean).join(", "));
+          if (json.address) {
+            const addr = json.address;
+            const city = addr?.city || addr?.town || addr?.village || "";
+            const country = addr?.country || "";
+            const formatted = [city, country].filter(Boolean).join(", ");
+            setAddressText(formatted || t('map_location_only_text'));
+          } else {
+            setAddressText(t('map_location_only_text'));
+          }
         })
-        .catch(() => setAddressText("Location available on map below"));
+        .catch(() => setAddressText(t('map_location_only_text')));
     }, 1000);
 
     return () => clearTimeout(timerId);
-
-  }, [report?.latitude, report?.longitude]);
+  }, [report?.latitude, report?.longitude, t, i18n.language]);
 
   const executeMarkAsFound = async (lostId) => {
     try {
       await markFoundReportAsFound(id, lostId);
       setReport({ ...report, found: !report.found });
       setShowFoundModal(false);
-      toast.success("Status updated");
+      toast.success(t('status_updated_toast'));
     } catch (err) {
-      toast.error("Failed to update status");
+      toast.error(t('status_update_failed_toast'));
     }
   };
 
@@ -206,13 +221,13 @@ const FoundReportDetails = () => {
         setReport(prev => ({ ...prev, imageUrl: updatedData.imageUrl || updatedData }));
         setOriginalReport(prev => ({ ...prev, imageUrl: updatedData.imageUrl || updatedData }));
       }
-      toast.success("Saved");
+      toast.success(t('saved_toast'));
       setIsEditing(false);
       setNewImage(null);
       const updated = await fetchFoundReportById(id);
       setReport(updated);
       setOriginalReport(updated);
-    } catch (err) { toast.error("Error saving"); }
+    } catch (err) { toast.error(t('error_saving_toast')); }
     finally { setSaving(false); }
   };
 
@@ -223,15 +238,15 @@ const FoundReportDetails = () => {
   };
 
   const handleRemovePhoto = async () => {
-    if (window.confirm("Permanently delete this photo?")) {
+    if (window.confirm(t('confirm_delete_photo'))) {
       try {
         await deleteFoundReportImage(id);
         const updated = { ...report, imageUrl: null };
         setReport(updated);
         setOriginalReport(updated);
         setNewImage(null);
-        toast.success("Photo removed");
-      } catch (err) { toast.error("Could not remove photo"); }
+        toast.success(t('photo_removed_toast'));
+      } catch (err) { toast.error(t('could_not_remove_photo_toast')); }
     }
   };
 
@@ -262,23 +277,33 @@ const FoundReportDetails = () => {
         <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-[32px] sm:rounded-[40px] shadow-xl border border-emerald-100 p-5 sm:p-10 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-emerald-900 tracking-tight">{isEditing ? "Edit Report" : "Report Details"}</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-emerald-900 tracking-tight">
+                {isEditing ? t('edit_report_title') : t('report_details_title')}
+              </h1>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               {!isEditing ? (
                 <>
-                  <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95"><Edit3 className="w-4 h-4" /> Edit</button>
-                  <button onClick={async () => { if (window.confirm("Delete permanently?")) { await deleteFoundReport(id); navigate("/my-reports", { state: { activeTab: 'found' } }); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95">
+                    <Edit3 className="w-4 h-4" /> {t('edit_btn', { format: 'uppercase' })}
+                  </button>
+                  <button onClick={async () => { if (window.confirm(t('confirm_delete_report'))) { await deleteFoundReport(id); navigate("/my-reports", { state: { activeTab: 'found' } }); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" /> {t('delete_btn', { format: 'uppercase' })}
+                  </button>
                 </>
               ) : (
-                <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm"><X className="w-4 h-4" /> Cancel</button>
+                <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
+                  <X className="w-4 h-4" /> {t('cancel', { format: 'uppercase' })}
+                </button>
               )}
             </div>
           </div>
 
           <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
             <div className="space-y-6">
-              <label className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] block">Report Photo</label>
+              <label className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] block">
+                {t('label_pet_photo', { format: 'uppercase' })}
+              </label>
               <div className="relative aspect-square rounded-[32px] overflow-hidden border-4 border-white shadow-2xl bg-gray-100">
                 {newImage ? (
                   <img src={URL.createObjectURL(newImage)} className="w-full h-full object-cover" alt="New Preview" />
@@ -294,17 +319,21 @@ const FoundReportDetails = () => {
               {isEditing && (
                 <div className="space-y-3">
                   <label className="w-full bg-white border border-emerald-200 py-3.5 rounded-2xl flex items-center justify-center gap-3 text-xs font-black text-emerald-600 cursor-pointer hover:bg-emerald-50 shadow-sm transition-all">
-                    <Camera className="w-4 h-4" /> {report.imageUrl ? 'CHANGE PHOTO' : 'ADD PHOTO'}
+                    <Camera className="w-4 h-4" /> {report.imageUrl ? t('change_photo_btn', { format: 'uppercase' }) : t('add_photo_btn', { format: 'uppercase' })}
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewImage(e.target.files[0])} />
                   </label>
                   {report.imageUrl && (
-                    <button type="button" onClick={handleRemovePhoto} className="w-full py-1 text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors">Delete current photo</button>
+                    <button type="button" onClick={handleRemovePhoto} className="w-full py-1 text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors">
+                      {t('delete_current_photo_btn', { format: 'uppercase' })}
+                    </button>
                   )}
                 </div>
               )}
 
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Found?</span>
+                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" /> {t('label_found_question', { format: 'uppercase' })}
+                </span>
                 <button type="button" disabled={!isEditing} onClick={handleToggleFound} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}>
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
                 </button>
@@ -313,38 +342,46 @@ const FoundReportDetails = () => {
 
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">Title</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                  {t('label_report_title', { format: 'uppercase' })}
+                </label>
                 {isEditing ? (
                   <input type="text" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm focus:ring-4 focus:ring-emerald-500/5 transition-all" value={report.title || ""} onChange={e => setReport({ ...report, title: e.target.value })} />
                 ) : (
-                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.title || "Untitled"}</div>
+                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700">{report.title || t('untitled')}</div>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">Description</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                  {t('label_description', { format: 'uppercase' })}
+                </label>
                 {isEditing ? (
                   <textarea className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold h-24 resize-none outline-none bg-white shadow-sm" value={report.description || ""} onChange={e => setReport({ ...report, description: e.target.value })} />
                 ) : (
-                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700 min-h-[60px] whitespace-pre-wrap">{report.description || "No description provided."}</div>
+                  <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/10 text-sm font-bold text-gray-700 min-h-[60px] whitespace-pre-wrap">{report.description || t('no_description_provided')}</div>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Location Text</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3" /> {t('label_location_text', { format: 'uppercase' })}
+                </label>
                 <div className="w-full p-3.5 rounded-2xl border border-emerald-50 bg-emerald-50/20 text-sm font-bold text-gray-400 flex items-center gap-2 cursor-not-allowed overflow-hidden">
                   <span className="truncate">{addressText}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CustomDropdown label="Condition" icon={CheckCircle} value={report.condition || ""} options={conditionOptions} onChange={val => setReport({ ...report, condition: val })} disabled={!isEditing} />
+                <CustomDropdown label={t('label_condition')} icon={CheckCircle} value={report.condition || ""} options={conditionOptions} onChange={val => setReport({ ...report, condition: val })} disabled={!isEditing} />
                 <div className="sm:hidden h-1"></div>
-                <CustomDropdown label="Species" icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
+                <CustomDropdown label={t('label_species')} icon={Dog} value={report.species || ""} options={speciesOptions} onChange={val => setReport({ ...report, species: val })} disabled={!isEditing} />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> Chip Number</label>
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                  <Hash className="w-3 h-3" /> {t('label_chip_number', { format: 'uppercase' })}
+                </label>
                 {isEditing ? (
                   <input type="number" className="w-full p-3.5 rounded-2xl border border-emerald-100 text-sm font-bold outline-none bg-white shadow-sm" value={report.chipNumber || ""} onChange={e => setReport({ ...report, chipNumber: e.target.value })} />
                 ) : (
@@ -352,13 +389,13 @@ const FoundReportDetails = () => {
                 )}
               </div>
 
-              <CustomDateTimePicker label="Date Found" value={report.foundDate || ""} />
+              <CustomDateTimePicker label={t('label_date_found')} value={report.foundDate || ""} />
 
               {isEditing && (
                 <div className="flex justify-end pt-6">
                   <button type="submit" disabled={saving} className="w-full sm:w-auto bg-emerald-600 text-white font-black px-10 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {saving ? "SAVING..." : "SAVE"}
+                    {saving ? t('saving_btn', { format: 'uppercase' }) : t('save_btn', { format: 'uppercase' })}
                   </button>
                 </div>
               )}
@@ -368,7 +405,7 @@ const FoundReportDetails = () => {
           {report.latitude && report.longitude && (
             <div className="mt-10 border-t border-emerald-100 pt-8">
               <h3 className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                <MapPin className="w-4 h-4" /> Found Location Map
+                <MapPin className="w-4 h-4" /> {t('found_location_map_title', { format: 'uppercase' })}
               </h3>
               <div className="h-64 sm:h-72 w-full rounded-2xl overflow-hidden border border-emerald-200 shadow-sm relative z-0">
                 <MapContainer
@@ -381,7 +418,7 @@ const FoundReportDetails = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                   <Marker position={[report.latitude, report.longitude]}>
-                    <Popup>Found here</Popup>
+                    <Popup>{t('found_here_popup')}</Popup>
                   </Marker>
                   <RecenterMap lat={report.latitude} lng={report.longitude} />
                 </MapContainer>
@@ -392,7 +429,9 @@ const FoundReportDetails = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm">
-            <h3 className="text-xs font-black text-emerald-800 uppercase tracking-widest mb-4 flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Linked Lost Report</h3>
+            <h3 className="text-xs font-black text-emerald-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <LinkIcon className="w-4 h-4" /> {t('linked_lost_report_title', { format: 'uppercase' })}
+            </h3>
             {report.lostReport ? (
               <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 cursor-pointer" onClick={() => setSelectedMatch(report.lostReport)}>
                 <p className="font-bold text-sm text-emerald-900">{report.lostReport.title}</p>
@@ -408,12 +447,14 @@ const FoundReportDetails = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-400 italic font-bold">No linked lost report</p>
+              <p className="text-xs text-gray-400 italic font-bold">{t('no_linked_report')}</p>
             )}
           </div>
 
           <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm">
-            <h3 className="text-xs font-black text-orange-800 uppercase tracking-widest mb-4 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Possible Matches</h3>
+            <h3 className="text-xs font-black text-orange-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" /> {t('possible_matches_title', { format: 'uppercase' })}
+            </h3>
             <div className="space-y-3">
               {report.connectedFoundReports?.length > 0 ? (
                 report.connectedFoundReports.map(plr => (
@@ -426,7 +467,7 @@ const FoundReportDetails = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-gray-400 italic font-bold">No possible matches found</p>
+                <p className="text-xs text-gray-400 italic font-bold">{t('no_possible_matches')}</p>
               )}
             </div>
           </div>
@@ -437,13 +478,13 @@ const FoundReportDetails = () => {
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl p-6 sm:p-8 flex flex-col gap-6" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-black text-emerald-900 uppercase">Select Report</h2>
+              <h2 className="text-lg font-black text-emerald-900 uppercase">{t('select_report_modal_title', { format: 'uppercase' })}</h2>
               <button onClick={() => setShowFoundModal(false)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
             <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
               {report.lostReport && (
                 <div onClick={() => setTempSelectedLostId(report.lostReport.id)} className={`p-4 rounded-2xl border-2 cursor-pointer ${tempSelectedLostId === report.lostReport.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100'}`}>
-                  <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Original</p>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">{t('original_label', { format: 'uppercase' })}</p>
                   <p className="font-bold text-sm">{report.lostReport.title}</p>
                 </div>
               )}
@@ -455,8 +496,8 @@ const FoundReportDetails = () => {
               ))}
             </div>
             <div className="flex flex-col gap-2">
-              <button onClick={() => executeMarkAsFound(tempSelectedLostId)} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all uppercase text-xs">Confirm & Link</button>
-              <button onClick={() => executeMarkAsFound(report.lostReport ? report.lostReport.id : null)} className="w-full bg-white text-gray-400 font-bold py-2 text-[10px] uppercase hover:text-emerald-600 transition-colors">Continue without change</button>
+              <button onClick={() => executeMarkAsFound(tempSelectedLostId)} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all uppercase text-xs">{t('confirm_link_btn', { format: 'uppercase' })}</button>
+              <button onClick={() => executeMarkAsFound(report.lostReport ? report.lostReport.id : null)} className="w-full bg-white text-gray-400 font-bold py-2 text-[10px] uppercase hover:text-emerald-600 transition-colors">{t('continue_no_change_btn', { format: 'uppercase' })}</button>
             </div>
           </div>
         </div>
@@ -486,7 +527,7 @@ const FoundReportDetails = () => {
                 <div>
                   <h2 className="text-lg font-black text-emerald-900 leading-tight">{selectedMatch.title}</h2>
                   <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
-                    {selectedMatch.lostDate ? 'Lost Report Preview' : 'Found Report Preview'}
+                    {selectedMatch.lostDate ? t('lost_report_preview', { format: 'uppercase' }) : t('found_report_preview', { format: 'uppercase' })}
                   </span>
                 </div>
               </div>
@@ -497,7 +538,7 @@ const FoundReportDetails = () => {
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
                     <ImageIcon className="w-10 h-10" />
-                    <p className="text-[9px] font-black uppercase mt-1">No Photo</p>
+                    <p className="text-[9px] font-black uppercase mt-1">{t('no_photo', { format: 'uppercase' })}</p>
                   </div>
                 )}
               </div>
@@ -505,20 +546,20 @@ const FoundReportDetails = () => {
               <div className="space-y-4 mb-6">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50">
-                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Species</p>
-                    <p className="font-bold text-xs text-gray-700">{selectedMatch.species || "Unknown"}</p>
+                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('label_species', { format: 'uppercase' })}</p>
+                    <p className="font-bold text-xs text-gray-700">{selectedMatch.species || t('unknown')}</p>
                   </div>
                   <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50">
-                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Date</p>
+                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('date_label', { format: 'uppercase' })}</p>
                     <p className="font-bold text-xs text-gray-700">
                       {new Date(selectedMatch.lostDate || selectedMatch.foundDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Description</p>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{t('label_description', { format: 'uppercase' })}</p>
                   <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                    {selectedMatch.description || "No description provided."}
+                    {selectedMatch.description || t('no_description_provided')}
                   </p>
                 </div>
               </div>
@@ -526,7 +567,7 @@ const FoundReportDetails = () => {
               {selectedMatch.latitude && selectedMatch.longitude && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-[9px] font-black text-emerald-800 uppercase tracking-widest">
-                    <MapPin className="w-3.5 h-3.5" /> Map Location
+                    <MapPin className="w-3.5 h-3.5" /> {t('map_location_label', { format: 'uppercase' })}
                   </div>
                   <div className="h-40 w-full rounded-2xl overflow-hidden border border-emerald-100 shadow-inner relative z-0">
                     <MapContainer

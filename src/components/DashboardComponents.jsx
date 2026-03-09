@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Calendar, ChevronLeft, ChevronRight, Clock, ChevronDown, Check,
   ImageIcon, Upload, CheckCircle, X, Dog, AlertCircle, Hash, MapPin,
@@ -45,6 +46,7 @@ const RecenterMap = ({ lat, lng }) => {
 };
 
 const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
+  const { t } = useTranslation();
   const map = useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
@@ -55,12 +57,13 @@ const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
   });
   return position === null ? null : (
     <Marker position={position}>
-      <Popup>Selected Location</Popup>
+      <Popup>{t('selected_location_popup')}</Popup>
     </Marker>
   );
 };
 
 const FormMapPicker = ({ onLocationSelect }) => {
+  const { t } = useTranslation();
   const [position, setPosition] = useState(null);
   const [center, setCenter] = useState([37.9838, 23.7275]);
 
@@ -81,7 +84,7 @@ const FormMapPicker = ({ onLocationSelect }) => {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-        <MapPin className="w-3 h-3" /> Pin Location
+        <MapPin className="w-3 h-3" /> {t('label_pin_location')}
       </label>
       <div className="h-48 w-full rounded-xl overflow-hidden border border-emerald-100 shadow-sm z-0 relative">
         <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
@@ -90,12 +93,15 @@ const FormMapPicker = ({ onLocationSelect }) => {
           <LocationMarker position={position} setPosition={setPosition} onLocationSelect={onLocationSelect} />
         </MapContainer>
       </div>
-      <div className="text-[10px] text-gray-400 text-center">{position ? `Selected: ${position[0].toFixed(5)}, ${position[1].toFixed(5)}` : "Tap map to select location"}</div>
+      <div className="text-[10px] text-gray-400 text-center">
+        {position ? `${t('selected_coords_text')}: ${position[0].toFixed(5)}, ${position[1].toFixed(5)}` : t('tap_map_helper')}
+      </div>
     </div>
   );
 };
 
 export const CustomDateTimePicker = ({ label, value, onChange }) => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState("");
@@ -167,17 +173,17 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
     <div className="relative space-y-1.5" ref={containerRef}>
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
       <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-        <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date & time'}</span>
+        <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder')}</span>
         <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
       </div>
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-xl shadow-xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
           <div className="flex justify-between items-center mb-4">
             <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
-            <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+            <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}</span>
             <button type="button" onClick={() => changeMonth(1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronRight className="w-4 h-4" /></button>
           </div>
-          <div className="grid grid-cols-7 mb-2 text-center">{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}</div>
+          <div className="grid grid-cols-7 mb-2 text-center">{[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}</div>
           <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">{renderCalendarDays()}</div>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -192,7 +198,7 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
                 {isMinOpen && (<div className="absolute bottom-full mb-1 left-0 w-full max-h-32 overflow-y-auto bg-white border border-emerald-100 rounded-lg shadow-xl z-50">{minutes.map(m => (<div key={m} onClick={() => { setSelectedMinute(m); updateValue(selectedDateStr, selectedHour, m); setIsMinOpen(false); }} className={`p-2 text-center text-xs font-bold cursor-pointer hover:bg-emerald-50 ${selectedMinute === m ? 'bg-emerald-600 text-white' : 'text-gray-700'}`}>{m}</div>))}</div>)}
               </div>
             </div>
-            <button type="button" onClick={() => setIsOpen(false)} className="bg-emerald-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-emerald-700 uppercase">OK</button>
+            <button type="button" onClick={() => setIsOpen(false)} className="bg-emerald-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-emerald-700 uppercase">{t('ok_btn', { format: 'uppercase' })}</button>
           </div>
         </div>
       )}
@@ -201,6 +207,7 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
 };
 
 export const CustomDatePicker = ({ label, value, onChange }) => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
   const containerRef = useRef(null);
@@ -227,17 +234,17 @@ export const CustomDatePicker = ({ label, value, onChange }) => {
     <div className="relative space-y-1.5" ref={containerRef}>
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
       <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-        <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value ? value : 'Select date'}</span>
+        <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value ? value : t('dtp_placeholder_short')}</span>
         <Calendar className="w-4 h-4 text-emerald-500" />
       </div>
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-xl shadow-xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
           <div className="flex justify-between items-center mb-4">
             <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
-            <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+            <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}</span>
             <button type="button" onClick={() => changeMonth(1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronRight className="w-4 h-4" /></button>
           </div>
-          <div className="grid grid-cols-7 mb-2 text-center">{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}</div>
+          <div className="grid grid-cols-7 mb-2 text-center">{[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}</div>
           <div className="grid grid-cols-7 gap-1 place-items-center">{renderCalendarDays()}</div>
         </div>
       )}
@@ -246,10 +253,11 @@ export const CustomDatePicker = ({ label, value, onChange }) => {
 };
 
 export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   useEffect(() => { const h = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
-  const selectedOption = options.find(opt => opt.value === value) || options[0];
+  const selectedOption = options.find(opt => opt.value === value) || { label: t('not_set'), value: "" };
   return (
     <div className="relative space-y-1.5" ref={containerRef}>
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1">{Icon && <Icon className="w-3 h-3" />} {label}</label>
@@ -272,6 +280,7 @@ export const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) 
 };
 
 export const CustomImageInput = ({ label, onChange, selectedFile }) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const handleFileChange = (e) => { const file = e.target.files[0]; if (file) onChange(file); };
@@ -284,18 +293,18 @@ export const CustomImageInput = ({ label, onChange, selectedFile }) => {
         {selectedFile ? (
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center gap-2 text-emerald-700 overflow-hidden"><CheckCircle className="w-5 h-5 flex-shrink-0" /><span className="text-sm font-medium truncate">{selectedFile.name}</span></div>
-            <button type="button" onClick={() => onChange(null)} className="text-xs text-red-500 hover:underline ml-2">Remove</button>
+            <button type="button" onClick={() => onChange(null)} className="text-xs text-red-500 hover:underline ml-2">{t('remove_btn_text')}</button>
           </div>
         ) : (
           <div className="w-full flex gap-3 justify-center">
             <button type="button" onClick={() => fileInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
               <div className="p-2 bg-emerald-100 rounded-full mb-2 group-hover:bg-emerald-200 transition-colors"><Upload className="w-5 h-5 text-emerald-600" /></div>
-              <span className="text-xs font-semibold text-gray-600 group-hover:text-emerald-700">Upload Photo</span>
+              <span className="text-xs font-semibold text-gray-600 group-hover:text-emerald-700">{t('upload_photo_btn', { format: 'uppercase' })}</span>
             </button>
             <div className="w-px bg-gray-200 my-2"></div>
             <button type="button" onClick={() => cameraInputRef.current.click()} className="flex-1 flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-emerald-200 transition-all group">
               <div className="p-2 bg-blue-100 rounded-full mb-2 group-hover:bg-blue-200 transition-colors"><Camera className="w-5 h-5 text-blue-600" /></div>
-              <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-700">Take Photo</span>
+              <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-700">{t('take_photo_btn', { format: 'uppercase' })}</span>
             </button>
           </div>
         )}
@@ -305,6 +314,7 @@ export const CustomImageInput = ({ label, onChange, selectedFile }) => {
 };
 
 export const CustomFileInput = ({ label, onChange, selectedFile }) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const handleFileChange = (e) => { const file = e.target.files[0]; if (file) onChange(file); };
   return (
@@ -312,17 +322,19 @@ export const CustomFileInput = ({ label, onChange, selectedFile }) => {
       <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> {label}</label>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
       <div onClick={() => fileInputRef.current.click()} className={`w-full p-4 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 hover:border-emerald-300 hover:bg-gray-50'}`}>
-        {selectedFile ? (<div className="flex items-center gap-2 text-emerald-700"><CheckCircle className="w-5 h-5" /><span className="text-sm font-medium truncate max-w-[200px]">{selectedFile.name}</span></div>) : (<div className="flex flex-col items-center text-gray-400"><Upload className="w-6 h-6 mb-2" /><span className="text-sm font-medium">Click to upload a photo</span><span className="text-xs opacity-70">JPG, PNG supported</span></div>)}
+        {selectedFile ? (<div className="flex items-center gap-2 text-emerald-700"><CheckCircle className="w-5 h-5" /><span className="text-sm font-medium truncate max-w-[200px]">{selectedFile.name}</span></div>) : (<div className="flex flex-col items-center text-gray-400"><Upload className="w-6 h-6 mb-2" /><span className="text-sm font-medium">{t('click_upload_helper')}</span><span className="text-xs opacity-70">{t('file_types_helper')}</span></div>)}
       </div>
     </div>
   );
 };
 
 export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSighting, onClaim }) => {
+  const { t } = useTranslation();
   if (!isOpen || !report) return null;
   const isLostReport = report.isLost ?? !!(report.lostDate || report.dateLost);
-  const dateLabel = isLostReport ? "Date Lost" : "Date Found";
+  const dateLabel = isLostReport ? t('label_date_lost') : t('label_date_found');
   const dateValue = isLostReport ? (report.lostDate || report.dateLost) : (report.foundDate || report.dateFound);
+
   const getSpeciesLabelColor = () => {
     if (isLostReport && report.statusColor) return `${report.statusColor} text-white border-transparent`;
     const c = String(report.condition || report.status || '').toUpperCase().trim();
@@ -332,17 +344,24 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  const getTranslatedSpecies = (species) => {
+    const s = String(species).toUpperCase();
+    if (s === 'DOG') return t('species_dog');
+    if (s === 'CAT') return t('species_cat');
+    return t('species_other');
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="relative h-64 sm:h-80 bg-gray-100 shrink-0">
-          {report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50"><Dog className="w-16 h-16 opacity-30 mb-2" /><span className="text-sm font-medium">No Image</span></div>}
+          {report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50"><Dog className="w-16 h-16 opacity-30 mb-2" /><span className="text-sm font-medium">{t('no_image_text')}</span></div>}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black hover:bg-gray-800 rounded-full text-white shadow-lg"><X className="w-5 h-5" /></button>
           <div className="absolute bottom-0 left-0 p-6 text-white w-full">
             <div className="flex items-center gap-2 mb-2">
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getSpeciesLabelColor()}`}>
-                {report.species}
+                {getTranslatedSpecies(report.species)}
               </span>
             </div>
             <h2 className="text-2xl font-bold leading-tight">{report.title}</h2>
@@ -350,33 +369,33 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
-            <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Description</h4>
-            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{report.description || "No description."}</p>
+            <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {t('label_description', { format: 'uppercase' })}</h4>
+            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{report.description || t('no_description_provided')}</p>
           </div>
           {isLostReport && report.statusSentence && (
             <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
-              <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> Status</h4>
+              <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> {t('label_status', { format: 'uppercase' })}</h4>
               <div className="flex items-center gap-2 font-bold text-sm uppercase text-gray-700">{report.statusSentence.replace(/_/g, ' ')}</div>
             </div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
               <span className="text-xs font-medium text-gray-500 block mb-1">{dateLabel}</span>
-              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Calendar className="w-4 h-4 text-emerald-500" /> {dateValue ? new Date(dateValue).toLocaleDateString() : 'N/A'}</div>
+              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Calendar className="w-4 h-4 text-emerald-500" /> {dateValue ? new Date(dateValue).toLocaleDateString() : t('not_applicable')}</div>
             </div>
             <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-              <span className="text-xs font-medium text-gray-500 block mb-1">Chip Number</span>
-              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Hash className="w-4 h-4 text-emerald-500" /> {report.chipNumber || "Not Scanned"}</div>
+              <span className="text-xs font-medium text-gray-500 block mb-1">{t('label_chip_number')}</span>
+              <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm"><Hash className="w-4 h-4 text-emerald-500" /> {report.chipNumber || t('not_scanned_text')}</div>
             </div>
           </div>
 
           {report.latitude && report.longitude && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Exact Location</h4>
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> {t('label_exact_location', { format: 'uppercase' })}</h4>
               <div className="h-48 w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm z-0 relative">
                 <MapContainer center={[report.latitude, report.longitude]} zoom={13} style={{ height: "100%", width: "100%" }}>
                   <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[report.latitude, report.longitude]}><Popup>Report Location</Popup></Marker>
+                  <Marker position={[report.latitude, report.longitude]}><Popup>{t('report_location_popup')}</Popup></Marker>
                   <RecenterMap lat={report.latitude} lng={report.longitude} />
                 </MapContainer>
               </div>
@@ -388,7 +407,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
                 onClick={() => onAddSighting(report.id)}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-[0.98]"
               >
-                <Eye className="w-5 h-5" /> I Found This Pet
+                <Eye className="w-5 h-5" /> {t('btn_i_found_this')}
               </button>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3">
@@ -396,13 +415,13 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
                   onClick={() => onClaim(report)}
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-[0.98]"
                 >
-                  <CheckCircle className="w-5 h-5" /> This is my pet
+                  <CheckCircle className="w-5 h-5" /> {t('btn_is_my_pet')}
                 </button>
                 <button
                   onClick={() => onAddSighting(report.id)}
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white border border-emerald-200 text-emerald-700 font-bold text-sm hover:bg-emerald-50 shadow-sm transition-all active:scale-[0.98]"
                 >
-                  <Eye className="w-5 h-5" /> I saw this pet
+                  <Eye className="w-5 h-5" /> {t('btn_i_saw_this')}
                 </button>
               </div>
             )}
@@ -414,6 +433,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
 };
 
 export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundReport }) => {
+  const { t } = useTranslation();
   const [myLostReports, setMyLostReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -431,16 +451,16 @@ export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundR
           setCurrentUser(user);
           setMyLostReports(reportsData || []);
         } catch {
-          toast.error("Error loading reports.");
+          toast.error(t('error_loading_reports'));
         }
       };
       loadData();
     }
-  }, [isOpen, foundReport]);
+  }, [isOpen, foundReport, t]);
 
   const handleClaim = async (lid) => {
     if (foundReport?.creator?.id === currentUser?.id) {
-      toast.error("You cannot claim a found report that you created yourself.");
+      toast.error(t('error_claim_self'));
       return;
     }
 
@@ -451,10 +471,10 @@ export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundR
       } else {
         await linkFoundToLostReport(foundReport.id, lid);
       }
-      toast.success("Notification sent to the finder!");
+      toast.success(t('claim_success_toast'));
       onClose();
     } catch {
-      toast.error("Error connecting reports.");
+      toast.error(t('error_connecting_reports'));
     } finally {
       setLoading(false);
     }
@@ -465,16 +485,16 @@ export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundR
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
-        <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-bold text-gray-900">Claim Pet</h3><button onClick={onClose}><X className="w-5 h-5 text-gray-500" /></button></div>
-        <p className="text-xs text-gray-400 mb-4 font-semibold uppercase tracking-wider">Your Active {foundReport?.species} Reports</p>
+        <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-bold text-gray-900">{t('claim_pet_title')}</h3><button onClick={onClose}><X className="w-5 h-5 text-gray-500" /></button></div>
+        <p className="text-xs text-gray-400 mb-4 font-semibold uppercase tracking-wider">{t('active_reports_label', { species: foundReport?.species })}</p>
         <div className="space-y-3 max-h-60 overflow-y-auto">
           {myLostReports.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">No matching active lost reports found.</div>
+            <div className="text-center py-8 text-gray-400 text-sm">{t('no_matching_lost_reports')}</div>
           ) : (
             myLostReports.map(r => (
               <div key={r.id} className="border border-gray-100 p-3 rounded-lg flex justify-between items-center hover:bg-gray-50 cursor-pointer">
                 <span className="font-bold text-sm">{r.title}</span>
-                <button onClick={() => handleClaim(r.id)} disabled={loading} className="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-md hover:bg-emerald-700 transition-colors">Select</button>
+                <button onClick={() => handleClaim(r.id)} disabled={loading} className="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-md hover:bg-emerald-700 transition-colors">{t('select_btn_text')}</button>
               </div>
             ))
           )}
@@ -485,6 +505,7 @@ export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundR
 };
 
 export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND" }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("NEW");
   const [myReports, setMyReports] = useState([]);
@@ -528,17 +549,17 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
           ]);
           setCurrentUser(user);
           setMyReports(data || []);
-        } catch { toast.error("Error loading."); }
+        } catch { toast.error(t('error_loading_generic')); }
       };
       load();
     }
-  }, [isOpen, mode, baseDetails]);
+  }, [isOpen, mode, baseDetails, t]);
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
     try {
       if (baseDetails?.creator?.id === currentUser?.id) {
-        toast.error("You cannot connect a report you created.");
+        toast.error(t('error_connect_self'));
         setLoading(false); return;
       }
       let targetId = null;
@@ -552,11 +573,11 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
       if (targetId) {
         if (type === "LOST_REPORT_VIEW") await linkFoundToLostReport(targetId, baseReportId);
         else await connectFoundReports(baseReportId, targetId);
-        toast.success("Linked!"); onClose();
+        toast.success(t('linked_success_toast')); onClose();
       }
     } catch (error) {
-      if (error.response?.status === 406) toast.error("You cannot link this report.");
-      else toast.error("Error.");
+      if (error.response?.status === 406) toast.error(t('error_link_not_allowed'));
+      else toast.error(t('error_generic'));
     } finally { setLoading(false); }
   };
 
@@ -564,31 +585,31 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4 font-bold text-xl"><h3>Sighting</h3><button onClick={onClose}><X className="w-5 h-5" /></button></div>
+        <div className="flex justify-between items-center mb-4 font-bold text-xl"><h3>{t('sighting_modal_title')}</h3><button onClick={onClose}><X className="w-5 h-5" /></button></div>
         <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
-          <button type="button" onClick={() => setMode("NEW")} className={`flex-1 py-2 text-sm font-medium rounded-md ${mode === "NEW" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}>New Report</button>
-          <button type="button" onClick={() => setMode("EXISTING")} className={`flex-1 py-2 text-sm font-medium rounded-md ${mode === "EXISTING" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}>Link Existing</button>
+          <button type="button" onClick={() => setMode("NEW")} className={`flex-1 py-2 text-sm font-medium rounded-md ${mode === "NEW" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}>{t('mode_new_report')}</button>
+          <button type="button" onClick={() => setMode("EXISTING")} className={`flex-1 py-2 text-sm font-medium rounded-md ${mode === "EXISTING" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}>{t('mode_link_existing')}</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "NEW" && (
             <>
-              <input type="text" required placeholder="Title" className="w-full p-2 border rounded-lg text-sm" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-              <textarea required placeholder="Description" className="w-full p-2 border rounded-lg text-sm h-20" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              <input type="text" required placeholder={t('placeholder_report_title')} className="w-full p-2 border rounded-lg text-sm" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+              <textarea required placeholder={t('placeholder_description')} className="w-full p-2 border rounded-lg text-sm h-20" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               <div className="grid grid-cols-2 gap-4">
-                <CustomDropdown label="Species" value={formData.species} options={[{ label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }]} onChange={v => setFormData({ ...formData, species: v })} />
-                <CustomDropdown label="Condition" value={formData.condition} options={[{ label: "Excellent", value: "EXCELLENT" }, { label: "Good", value: "GOOD" }, { label: "Bad", value: "BAD" }]} onChange={v => setFormData({ ...formData, condition: v })} />
+                <CustomDropdown label={t('label_species')} value={formData.species} options={[{ label: t('species_dog'), value: "DOG" }, { label: t('species_cat'), value: "CAT" }, { label: t('species_other'), value: "OTHER" }]} onChange={v => setFormData({ ...formData, species: v })} />
+                <CustomDropdown label={t('label_condition')} value={formData.condition} options={[{ label: t('condition_excellent'), value: "EXCELLENT" }, { label: t('condition_good'), value: "GOOD" }, { label: t('condition_bad'), value: "BAD" }]} onChange={v => setFormData({ ...formData, condition: v })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <CustomDateTimePicker label="Date & Time Found" value={formData.dateFound} onChange={v => setFormData({ ...formData, dateFound: v })} />
-                <input type="number" placeholder="Chip Number" className="w-full p-2.5 border rounded-lg text-sm" value={formData.chipNumber} onChange={e => setFormData({ ...formData, chipNumber: e.target.value })} />
+                <CustomDateTimePicker label={t('label_date_time_found')} value={formData.dateFound} onChange={v => setFormData({ ...formData, dateFound: v })} />
+                <input type="number" placeholder={t('label_chip_number')} className="w-full p-2.5 border rounded-lg text-sm" value={formData.chipNumber} onChange={e => setFormData({ ...formData, chipNumber: e.target.value })} />
               </div>
               <FormMapPicker onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))} />
-              <CustomImageInput label="Photo" selectedFile={imageFile} onChange={setImageFile} />
+              <CustomImageInput label={t('label_add_photo')} selectedFile={imageFile} onChange={setImageFile} />
             </>
           )}
           {mode === "EXISTING" && (
             <div className="space-y-3">
-              {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">No matching reports found.</p> : myReports.map(r => (
+              {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">{t('no_matching_reports')}</p> : myReports.map(r => (
                 <div key={r.id} onClick={() => setSelectedExistingId(r.id)} className={`p-3 border rounded-lg cursor-pointer ${selectedExistingId === r.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'}`}>
                   <p className="font-bold text-sm">{r.title}</p>
                   <p className="text-xs text-gray-500">{new Date(r.foundDate || r.lostDate).toLocaleDateString()}</p>
@@ -596,7 +617,7 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
               ))}
             </div>
           )}
-          <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg mt-4">{loading ? "Processing..." : "Connect"}</button>
+          <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg mt-4">{loading ? t('auth_processing') : t('connect_btn_text')}</button>
         </form>
       </div>
     </div>
@@ -604,6 +625,7 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
 };
 
 export const MapModal = ({ isOpen, onClose, location }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
   const lat = location?.lat || location?.latitude;
   const lng = location?.lng || location?.longitude;
@@ -612,22 +634,22 @@ export const MapModal = ({ isOpen, onClose, location }) => {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
       <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative flex flex-col h-[500px]">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
-          <h3 className="font-bold text-gray-800">Pet Location</h3>
+          <h3 className="font-bold text-gray-800">{t('pet_location_title')}</h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
         </div>
         <div className="flex-1 relative bg-gray-50">
           {hasCoords ? (
             <MapContainer center={[lat, lng]} zoom={13} style={{ height: "100%", width: "100%" }}>
               <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <Marker position={[lat, lng]}><Popup>Location of the pet</Popup></Marker>
+              <Marker position={[lat, lng]}><Popup>{t('pet_location_popup')}</Popup></Marker>
               <RecenterMap lat={lat} lng={lng} />
             </MapContainer>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2"><MapPin className="w-12 h-12 text-gray-300" /><p>No valid coordinates available.</p></div>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2"><MapPin className="w-12 h-12 text-gray-300" /><p>{t('no_valid_coords')}</p></div>
           )}
         </div>
         <div className="p-3 bg-gray-50 text-xs text-center text-gray-500 border-t border-gray-100 font-mono">
-          {hasCoords ? `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Location unavailable"}
+          {hasCoords ? `${t('label_coordinates')}: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : t('location_unavailable')}
         </div>
       </div>
     </div>

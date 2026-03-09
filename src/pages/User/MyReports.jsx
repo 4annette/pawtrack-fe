@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   MapPin, Calendar, FileText,
   ChevronDown, Check,
@@ -17,23 +18,24 @@ import { toast } from "sonner";
 import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
-const formatDate = (dateString) => {
-  if (!dateString) return "Date not set";
+const formatDate = (dateString, t) => {
+  if (!dateString) return t('date_not_set');
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Invalid Date";
+    if (isNaN(date.getTime())) return t('invalid_date');
     return date.toLocaleDateString();
   } catch (e) {
-    return "Date Error";
+    return t('date_error');
   }
 };
 
 const AddressDisplay = ({ lat, lng }) => {
-  const [address, setAddress] = useState("Loading...");
+  const { t } = useTranslation();
+  const [address, setAddress] = useState(t('loading_dots'));
 
   useEffect(() => {
     if (lat === null || lat === undefined || lng === null || lng === undefined) {
-      setAddress("Location not set");
+      setAddress(t('location_not_set'));
       return;
     }
 
@@ -54,10 +56,10 @@ const AddressDisplay = ({ lat, lng }) => {
             const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
             const country = data.address.country || "";
             const locString = [city, country].filter(Boolean).join(", ");
-            setAddress(locString || "View on map");
+            setAddress(locString || t('view_on_map'));
           }
         } catch (error) {
-          if (isMounted) setAddress("View on map");
+          if (isMounted) setAddress(t('view_on_map'));
         }
       };
       fetchAddress();
@@ -67,7 +69,7 @@ const AddressDisplay = ({ lat, lng }) => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [lat, lng]);
+  }, [lat, lng, t]);
 
   return (
     <span className="flex items-center gap-1.5 truncate text-emerald-600 font-medium">
@@ -97,8 +99,8 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all duration-200 bg-white shadow-sm text-xs font-bold ${isOpen
-            ? (isLost ? 'border-orange-500 ring-2 ring-orange-100' : 'border-emerald-500 ring-2 ring-emerald-100')
-            : 'border-gray-100 hover:border-gray-300'
+          ? (isLost ? 'border-orange-500 ring-2 ring-orange-100' : 'border-emerald-500 ring-2 ring-emerald-100')
+          : 'border-gray-100 hover:border-gray-300'
           } text-gray-700`}
       >
         <span className="truncate">{selectedOption.label}</span>
@@ -112,8 +114,8 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
                 key={option.value}
                 onClick={() => { onChange(option.value); setIsOpen(false); }}
                 className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${option.value === value
-                    ? (isLost ? 'bg-orange-600 text-white' : 'bg-emerald-600 text-white')
-                    : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
+                  ? (isLost ? 'bg-orange-600 text-white' : 'bg-emerald-600 text-white')
+                  : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
                   }`}
               >
                 <span className="font-bold">{option.label}</span>
@@ -128,6 +130,7 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
 };
 
 const MyReports = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [reports, setReports] = useState([]);
@@ -196,7 +199,7 @@ const MyReports = () => {
       console.error("Failed to load list", error);
       setReports([]);
       if (error?.response?.status === 403) {
-        toast.error("Session expired. Please log in again.");
+        toast.error(t('session_expired_toast'));
       }
     } finally {
       setLoading(false);
@@ -215,27 +218,27 @@ const MyReports = () => {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    if (window.confirm("Delete this report permanently?")) {
+    if (window.confirm(t('confirm_delete_report'))) {
       try {
         activeTab === 'lost' ? await deleteLostReport(id) : await deleteFoundReport(id);
-        toast.success("Report deleted");
+        toast.success(t('report_deleted_toast'));
         loadReports();
       } catch (err) {
-        toast.error("Failed to delete");
+        toast.error(t('failed_delete_report_toast'));
       }
     }
   };
 
   const sortOptions = [
-    { label: "Newest First", value: "date_desc" },
-    { label: "Oldest First", value: "date_asc" },
-    { label: "Alphabetical", value: "title_asc" }
+    { label: t('sort_newest'), value: "date_desc" },
+    { label: t('sort_oldest'), value: "date_asc" },
+    { label: t('sort_alphabetical'), value: "title_asc" }
   ];
 
   const sizeOptions = [
-    { label: "Show 5", value: 5 },
-    { label: "Show 10", value: 10 },
-    { label: "Show 20", value: 20 }
+    { label: t('show_count', { count: 5 }), value: 5 },
+    { label: t('show_count', { count: 10 }), value: 10 },
+    { label: t('show_count', { count: 20 }), value: 20 }
   ];
 
   return (
@@ -263,12 +266,12 @@ const MyReports = () => {
                     <button onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }}
                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
                     >
-                      My Lost Reports
+                      {t('my_lost_reports')}
                     </button>
                     <button onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }}
                       className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
                     >
-                      My Found Reports
+                      {t('my_found_reports')}
                     </button>
                   </div>
                 </div>
@@ -280,13 +283,13 @@ const MyReports = () => {
                 onClick={() => handleTabChange("lost")}
                 className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                Lost
+                {t('lost_tab')}
               </button>
               <button
                 onClick={() => handleTabChange("found")}
                 className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                Found
+                {t('found_tab')}
               </button>
             </nav>
           </div>
@@ -305,8 +308,12 @@ const MyReports = () => {
               <FileText className="w-6 h-6" />
             </div>
             <div>
-              <h1 className={`text-xl font-bold ${activeTab === 'lost' ? 'text-orange-900' : 'text-emerald-900'}`}>My {activeTab === 'lost' ? 'Lost' : 'Found'} Reports</h1>
-              <p className={`text-xs uppercase font-black tracking-widest ${activeTab === 'lost' ? 'text-orange-700' : 'text-emerald-700'}`}>{totalElements} Total Records</p>
+              <h1 className={`text-xl font-bold ${activeTab === 'lost' ? 'text-orange-900' : 'text-emerald-900'}`}>
+                {activeTab === 'lost' ? t('my_lost_reports_title') : t('my_found_reports_title')}
+              </h1>
+              <p className={`text-xs uppercase font-black tracking-widest ${activeTab === 'lost' ? 'text-orange-700' : 'text-emerald-700'}`}>
+                {t('total_records', { count: totalElements }, { format: 'uppercase' })}
+              </p>
             </div>
           </div>
 
@@ -319,7 +326,7 @@ const MyReports = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-300">
             <Loader2 className="w-10 h-10 animate-spin" />
-            <p className="text-xs font-black uppercase tracking-widest">Updating List</p>
+            <p className="text-xs font-black uppercase tracking-widest">{t('updating_list_status', { format: 'uppercase' })}</p>
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -338,7 +345,7 @@ const MyReports = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{report.title}</h3>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
-                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate)}</span>
+                          <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate, t)}</span>
                           <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
                           <AddressDisplay lat={report.latitude} lng={report.longitude} />
                         </div>
@@ -348,13 +355,13 @@ const MyReports = () => {
                             onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}?edit=true` : `/found-report-details/${report.id}?edit=true`); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
                           >
-                            <Settings2 className="w-3.5 h-3.5" /> Edit
+                            <Settings2 className="w-3.5 h-3.5" /> {t('edit_btn_inline')}
                           </button>
                           <button
                             onClick={(e) => handleDelete(e, report.id)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
                           >
-                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                            <Trash2 className="w-3.5 h-3.5" /> {t('delete_btn_inline')}
                           </button>
                         </div>
                       </div>
@@ -402,8 +409,8 @@ const MyReports = () => {
                             key={i}
                             onClick={() => setPage(i)}
                             className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all duration-200 ${page === i
-                                ? (activeTab === 'lost' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-200')
-                                : `text-gray-400 ${activeTab === 'lost' ? 'hover:bg-orange-50 hover:text-orange-600' : 'hover:bg-emerald-50 hover:text-emerald-600'}`
+                              ? (activeTab === 'lost' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-200')
+                              : `text-gray-400 ${activeTab === 'lost' ? 'hover:bg-orange-50 hover:text-orange-600' : 'hover:bg-emerald-50 hover:text-emerald-600'}`
                               }`}
                           >
                             {i + 1}
@@ -433,7 +440,7 @@ const MyReports = () => {
             ) : (
               <div className="bg-white rounded-[40px] py-20 text-center border-2 border-dashed border-gray-100">
                 <Settings2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-800">No reports found</h3>
+                <h3 className="text-xl font-bold text-gray-800">{t('no_reports_found')}</h3>
               </div>
             )}
           </div>

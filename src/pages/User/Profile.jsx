@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Save, Trash2, Edit3, X } from "lucide-react";
 import { updateUserProfile, deleteUserAccount, fetchCurrentUser } from "../../services/api.js";
 import PawTrackLogo from "@/components/PawTrackLogo";
@@ -8,6 +9,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -35,13 +37,13 @@ const Profile = () => {
           username: data.username
         });
       } catch (error) {
-        toast.error("Failed to load profile details.");
+        toast.error(t('profile_load_error'));
       } finally {
         setLoading(false);
       }
     };
     getUserData();
-  }, []);
+  }, [t]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,24 +55,24 @@ const Profile = () => {
     setLoading(true);
     try {
       await updateUserProfile(formData);
-      toast.success("Profile updated successfully!");
+      toast.success(t('profile_update_success'));
       setIsEditing(false);
     } catch (error) {
-      toast.error("Failed to update profile.");
+      toast.error(t('profile_update_error'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure? This will permanently delete your account.")) {
+    if (window.confirm(t('confirm_delete_account'))) {
       try {
         await deleteUserAccount(formData.editedUserId);
         localStorage.removeItem("token");
         navigate("/auth");
-        toast.success("Account deleted.");
+        toast.success(t('account_deleted_toast'));
       } catch (error) {
-        toast.error("Error deleting account.");
+        toast.error(t('account_delete_error'));
       }
     }
   };
@@ -78,7 +80,7 @@ const Profile = () => {
   const InfoRow = ({ label, value }) => (
     <div className="py-3 border-b border-gray-50 flex justify-between items-center">
       <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">{label}</span>
-      <span className="font-bold text-gray-700">{value || "Not provided"}</span>
+      <span className="font-bold text-gray-700">{value || t('not_provided_text')}</span>
     </div>
   );
 
@@ -102,14 +104,14 @@ const Profile = () => {
         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-black text-emerald-900">
-              {isEditing ? "Edit Profile" : "Your Profile"}
+              {isEditing ? t('edit_profile_title') : t('your_profile_title')}
             </h1>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 text-xs font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-50 px-3 py-2 rounded-xl transition-colors"
               >
-                <Edit3 className="w-4 h-4" /> Edit
+                <Edit3 className="w-4 h-4" /> {t('edit_btn', { format: 'uppercase' })}
               </button>
             )}
           </div>
@@ -128,14 +130,14 @@ const Profile = () => {
                 <h2 className="text-xl font-bold">@{formData.username}</h2>
               </div>
 
-              <InfoRow label="First Name" value={formData.firstName} />
-              <InfoRow label="Last Name" value={formData.lastName} />
-              <InfoRow label="Email" value={formData.email} />
-              <InfoRow label="Phone" value={formData.phone} />
+              <InfoRow label={t('auth_first_name', { format: 'uppercase' })} value={formData.firstName} />
+              <InfoRow label={t('auth_last_name', { format: 'uppercase' })} value={formData.lastName} />
+              <InfoRow label={t('auth_email', { format: 'uppercase' })} value={formData.email} />
+              <InfoRow label={t('phone_label', { format: 'uppercase' })} value={formData.phone} />
 
               <button type="button" onClick={handleDelete} className="w-full py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors mt-8 flex items-center justify-center gap-2 text-xs uppercase tracking-widest">
                 <Trash2 className="w-4 h-4" />
-                Delete Account
+                {t('delete_account_btn', { format: 'uppercase' })}
               </button>
             </div>
           ) : (
@@ -143,31 +145,31 @@ const Profile = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">First Name</label>
-                  <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('auth_first_name', { format: 'uppercase' })}</label>
+                  <input name="firstName" placeholder={t('auth_first_name')} value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Last Name</label>
-                  <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('auth_last_name', { format: 'uppercase' })}</label>
+                  <input name="lastName" placeholder={t('auth_last_name')} value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Email Address</label>
-                <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('auth_email', { format: 'uppercase' })}</label>
+                <input name="email" type="email" placeholder={t('auth_email')} value={formData.email} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">Phone Number</label>
-                <input name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" />
+                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('phone_label', { format: 'uppercase' })}</label>
+                <input name="phone" placeholder={t('phone_placeholder')} value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" />
               </div>
 
               <div className="flex gap-3 mt-8">
                 <button type="button" onClick={() => setIsEditing(false)} className="flex-1 bg-gray-100 text-gray-600 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
-                  <X className="w-4 h-4" /> Cancel
+                  <X className="w-4 h-4" /> {t('cancel', { format: 'uppercase' })}
                 </button>
                 <button type="submit" disabled={loading} className="flex-[2] bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 uppercase text-xs tracking-widest">
-                  {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" /> Save Changes</>}
+                  {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" /> {t('save_changes', { format: 'uppercase' })}</>}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     Plus, Search, Filter, Dog, CheckCircle, Eye, MapPin,
     Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Check,
@@ -28,6 +29,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const CustomDatePicker = ({ label, value, onChange }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const containerRef = useRef(null);
@@ -82,7 +84,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
         <div className="relative space-y-1.5" ref={containerRef}>
             <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
             <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date'}</span>
+                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder_short')}</span>
                 <Calendar className="w-4 h-4 text-emerald-500" />
             </div>
 
@@ -102,7 +104,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                     </div>
 
                     <div className="grid grid-cols-7 mb-2 text-center">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
+                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 place-items-center">
@@ -143,6 +145,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
 };
 
 const LocationPickerModal = ({ isOpen, onClose, onConfirm, initialPosition }) => {
+    const { t } = useTranslation();
     const [selectedPos, setSelectedPos] = useState(initialPosition || { lat: 37.9838, lng: 23.7275 });
 
     useEffect(() => {
@@ -158,8 +161,8 @@ const LocationPickerModal = ({ isOpen, onClose, onConfirm, initialPosition }) =>
             <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-emerald-50">
                     <div>
-                        <h3 className="font-bold text-emerald-900">Choose Search Location</h3>
-                        <p className="text-xs text-emerald-600">Click on the map to set the center point</p>
+                        <h3 className="font-bold text-emerald-900">{t('choose_location_title')}</h3>
+                        <p className="text-xs text-emerald-600">{t('choose_location_subtitle')}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-emerald-100 rounded-full transition-colors">
                         <X className="w-5 h-5 text-emerald-700" />
@@ -181,12 +184,12 @@ const LocationPickerModal = ({ isOpen, onClose, onConfirm, initialPosition }) =>
                 </div>
 
                 <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium text-sm">Cancel</button>
+                    <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium text-sm">{t('cancel')}</button>
                     <button
                         onClick={() => { onConfirm(selectedPos); onClose(); }}
                         className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm shadow-md shadow-emerald-200"
                     >
-                        Search Here
+                        {t('search_here_btn')}
                     </button>
                 </div>
             </div>
@@ -205,12 +208,13 @@ const LocationPickerMarker = ({ position, setPosition }) => {
 };
 
 const AddressDisplay = ({ lat, lng, onClick }) => {
+    const { t } = useTranslation();
     const [address, setAddress] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!lat || !lng) {
-            setAddress("No location provided");
+            setAddress(t('no_location_provided'));
             return;
         }
 
@@ -223,10 +227,10 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
                 if (isMounted && data.address) {
                     const city = data.address.city || data.address.town || data.address.village || "";
                     const country = data.address.country || "";
-                    setAddress([city, country].filter(Boolean).join(", ") || "Location details available");
+                    setAddress([city, country].filter(Boolean).join(", ") || t('location_details_available'));
                 }
             } catch (error) {
-                if (isMounted) setAddress("View Map Location");
+                if (isMounted) setAddress(t('view_map_location'));
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -234,7 +238,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
 
         fetchAddress();
         return () => { isMounted = false; };
-    }, [lat, lng]);
+    }, [lat, lng, t]);
 
     return (
         <button
@@ -242,7 +246,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
             className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
         >
             <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" />
-            <span className="truncate font-medium">{loading ? "Loading address..." : address}</span>
+            <span className="truncate font-medium">{loading ? t('loading_address') : address}</span>
         </button>
     );
 };
@@ -285,7 +289,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
                                 onClick={() => { onChange(option.value); setIsOpen(false); }}
                                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${option.value === value ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                             >
-                                {option.label}
+                                <span className="uppercase">{option.label}</span>
                                 {option.value === value && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                             </div>
                         ))}
@@ -297,6 +301,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
 };
 
 const FoundReports = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -305,17 +310,17 @@ const FoundReports = () => {
     const [sortBy, setSortBy] = useState("dateFound_desc");
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-    
+
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
-    const [filters, setFilters] = useState({ 
-        search: "", 
-        species: "", 
-        condition: "", 
-        dateAfter: "", 
-        dateBefore: "", 
-        chipNumber: "", 
-        radius: 25 
+    const [filters, setFilters] = useState({
+        search: "",
+        species: "",
+        condition: "",
+        dateAfter: "",
+        dateBefore: "",
+        chipNumber: "",
+        radius: 25
     });
 
     const [userLocation, setUserLocation] = useState(null);
@@ -365,25 +370,25 @@ const FoundReports = () => {
                 };
                 const [field, dir] = sortBy.split('_');
                 const data = await fetchFoundReports(page, pageSize, payload, field, dir);
-                
+
                 setReports(data.content || []);
                 setTotalPages(data.page?.totalPages || 0);
                 setTotalElements(data.page?.totalElements || 0);
             } catch (err) {
-                toast.error("Failed to load reports");
+                toast.error(t('load_reports_failed'));
             } finally {
                 setLoading(false);
             }
         };
         const timer = setTimeout(fetchReports, 500);
         return () => clearTimeout(timer);
-    }, [page, filters, pageSize, sortBy, searchCenter]);
+    }, [page, filters, pageSize, sortBy, searchCenter, t]);
 
     const handleCustomLocationSelect = (latlng) => {
         setSearchCenter(latlng);
         setIsCustomLocation(true);
         setPage(0);
-        toast.success("Search area updated");
+        toast.success(t('search_area_updated'));
     };
 
     const resetToUserLocation = () => {
@@ -391,7 +396,7 @@ const FoundReports = () => {
             setSearchCenter(userLocation);
             setIsCustomLocation(false);
             setPage(0);
-            toast.info("Reset to your current location");
+            toast.info(t('reset_to_location'));
         }
     };
 
@@ -407,22 +412,22 @@ const FoundReports = () => {
         <div className="space-y-8 animate-in fade-in pb-12">
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-emerald-100 shadow-sm">
                 <div>
-                    <h2 className="text-2xl font-bold text-emerald-900 mb-2">Found a pet?</h2>
-                    <p className="text-emerald-700 max-w-xl">Create a report to help owners find their pets.</p>
+                    <h2 className="text-2xl font-bold text-emerald-900 mb-2">{t('found_pet_banner_title')}</h2>
+                    <p className="text-emerald-700 max-w-xl">{t('found_pet_banner_subtitle')}</p>
                 </div>
                 <button onClick={() => navigate("/create-found-report")} className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
-                    <Plus className="w-5 h-5" /> Report Founded Pet
+                    <Plus className="w-5 h-5" /> {t('report_found_btn')}
                 </button>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-30">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Found Reports</h1>
-                    <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
+                    <h1 className="text-3xl font-bold text-gray-900">{t('found_reports_heading')}</h1>
+                    <p className="text-gray-500 mt-1">{loading ? t('searching_status') : `${totalElements} ${t('reports_found_count')}`}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <ToolbarDropdown label="Show" value={pageSize} options={[{ label: "6", value: 6 }, { label: "9", value: 9 }, { label: "12", value: 12 }]} onChange={(v) => {setPageSize(v); setPage(0);}} align="left" />
-                    <ToolbarDropdown label="Sort" value={sortBy} options={[{ label: "Newest First", value: "dateFound_desc" }, { label: "Oldest First", value: "dateFound_asc" }, { label: "Title", value: "title_asc" }]} onChange={(v) => {setSortBy(v); setPage(0);}} />
+                    <ToolbarDropdown label={t('show_label')} value={pageSize} options={[{ label: "6", value: 6 }, { label: "9", value: 9 }, { label: "12", value: 12 }]} onChange={(v) => { setPageSize(v); setPage(0); }} align="left" />
+                    <ToolbarDropdown label={t('sort_label')} value={sortBy} options={[{ label: t('sort_newest'), value: "dateFound_desc" }, { label: t('sort_oldest'), value: "dateFound_asc" }, { label: t('sort_title'), value: "title_asc" }]} onChange={(v) => { setSortBy(v); setPage(0); }} />
                 </div>
             </div>
 
@@ -430,21 +435,21 @@ const FoundReports = () => {
                 <div className="bg-white p-3 rounded-xl border border-gray-200 flex flex-wrap items-center gap-3 shadow-sm">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                         <MapIcon className="w-4 h-4 text-emerald-500" />
-                        <span className="font-medium">Searching area:</span>
+                        <span className="font-medium">{t('searching_area_label')}:</span>
                         {searchCenter ? (
                             <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded text-xs font-semibold border border-emerald-100">
-                                {isCustomLocation ? "Custom Map Location" : "My Current Location"} ({filters.radius}km)
+                                {isCustomLocation ? t('custom_map_location') : t('my_current_location')} ({filters.radius}km)
                             </span>
-                        ) : <span className="text-gray-400 italic">Getting location...</span>}
+                        ) : <span className="text-gray-400 italic">{t('getting_location_status')}</span>}
                     </div>
                     <div className="flex-1"></div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setIsPickerOpen(true)} className="text-xs flex items-center gap-1 bg-white border border-gray-300 hover:border-emerald-500 hover:text-emerald-600 px-3 py-1.5 rounded-lg transition-colors font-medium">
-                            <MapPin className="w-3.5 h-3.5" /> Pick on Map
+                            <MapPin className="w-3.5 h-3.5" /> {t('pick_on_map_btn')}
                         </button>
                         {isCustomLocation && userLocation && (
                             <button onClick={resetToUserLocation} className="text-xs flex items-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-medium border border-emerald-100">
-                                <Navigation className="w-3.5 h-3.5" /> Use My Location
+                                <Navigation className="w-3.5 h-3.5" /> {t('use_my_location_btn')}
                             </button>
                         )}
                     </div>
@@ -453,27 +458,27 @@ const FoundReports = () => {
                 <div className="flex gap-3 items-center">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input type="text" placeholder="Search title or description..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => {setFilters({...filters, search: e.target.value}); setPage(0);}} />
+                        <input type="text" placeholder={t('search_placeholder')} className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }} />
                     </div>
                     <button onClick={() => setShowFilterPanel(!showFilterPanel)} className={`p-3 rounded-xl border transition-all flex items-center gap-2 shadow-md ${showFilterPanel ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'}`}>
-                        <Filter className="w-5 h-5 text-white" /> <span className="hidden sm:inline font-medium text-sm">Filters</span>
+                        <Filter className="w-5 h-5 text-white" /> <span className="hidden sm:inline font-medium text-sm">{t('filters_btn')}</span>
                     </button>
                 </div>
 
                 {showFilterPanel && (
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-emerald-50 rounded-xl shadow-xl border border-emerald-100 p-6 z-40 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
-                            <h3 className="font-semibold text-emerald-900">Filter Options</h3>
-                            <button onClick={() => setFilters({search:"", species:"", condition:"", dateAfter:"", dateBefore:"", chipNumber:"", radius: 25})} className="text-xs text-red-500 hover:underline">Clear all</button>
+                            <h3 className="font-semibold text-emerald-900">{t('filter_options_title')}</h3>
+                            <button onClick={() => setFilters({ search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", radius: 25 })} className="text-xs text-red-500 hover:underline">{t('clear_all_btn')}</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{label:"All",value:""},{label:"Dog",value:"DOG"},{label:"Cat",value:"CAT"},{label:"Other",value:"OTHER"}]} onChange={(val) => {setFilters({...filters, species: val}); setPage(0);}} />
-                            <CustomDropdown label="Condition" icon={CheckCircle} value={filters.condition} options={[{label:"Any",value:""},{label:"Excellent",value:"EXCELLENT"},{label:"Good",value:"GOOD"},{label:"Bad",value:"BAD"}]} onChange={(val) => {setFilters({...filters, condition: val}); setPage(0);}} />
-                            <CustomDatePicker label="Found After" value={filters.dateAfter} onChange={(val) => {setFilters({...filters, dateAfter: val}); setPage(0);}} />
-                            <CustomDatePicker label="Found Before" value={filters.dateBefore} onChange={(val) => {setFilters({...filters, dateBefore: val}); setPage(0);}} />
+                            <CustomDropdown label={t('label_species')} icon={Dog} value={filters.species} options={[{ label: t('all'), value: "" }, { label: t('species_dog'), value: "DOG" }, { label: t('species_cat'), value: "CAT" }, { label: t('species_other'), value: "OTHER" }]} onChange={(val) => { setFilters({ ...filters, species: val }); setPage(0); }} />
+                            <CustomDropdown label={t('label_condition')} icon={CheckCircle} value={filters.condition} options={[{ label: t('any'), value: "" }, { label: t('condition_excellent'), value: "EXCELLENT" }, { label: t('condition_good'), value: "GOOD" }, { label: t('condition_bad'), value: "BAD" }]} onChange={(val) => { setFilters({ ...filters, condition: val }); setPage(0); }} />
+                            <CustomDatePicker label={t('label_found_after')} value={filters.dateAfter} onChange={(val) => { setFilters({ ...filters, dateAfter: val }); setPage(0); }} />
+                            <CustomDatePicker label={t('label_found_before')} value={filters.dateBefore} onChange={(val) => { setFilters({ ...filters, dateBefore: val }); setPage(0); }} />
                             <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Hash className="w-3 h-3" /> Chip Number</label>
-                                <input type="number" placeholder="e.g. 123456789" className="w-full p-2.5 rounded-lg border border-emerald-100 text-sm focus:ring-2 focus:ring-emerald-500" value={filters.chipNumber} onChange={(e) => {setFilters({...filters, chipNumber: e.target.value}); setPage(0);}} />
+                                <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Hash className="w-3 h-3" /> {t('label_chip_number')}</label>
+                                <input type="number" placeholder="e.g. 123456789" className="w-full p-2.5 rounded-lg border border-emerald-100 text-sm focus:ring-2 focus:ring-emerald-500" value={filters.chipNumber} onChange={(e) => { setFilters({ ...filters, chipNumber: e.target.value }); setPage(0); }} />
                             </div>
                         </div>
                     </div>
@@ -485,7 +490,7 @@ const FoundReports = () => {
                     {reports.length === 0 ? (
                         <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                             <Dog className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>No found reports match your criteria.</p>
+                            <p>{t('no_found_reports_match')}</p>
                         </div>
                     ) : (
                         reports.map((report) => (
@@ -499,17 +504,17 @@ const FoundReports = () => {
                                         <h3 className="font-bold text-gray-900 line-clamp-1">{report.title}</h3>
                                         <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">{new Date(report.foundDate).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || "No description provided."}</p>
-                                    
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || t('no_description_provided')}</p>
+
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-                                        <AddressDisplay 
-                                            lat={report.latitude} 
-                                            lng={report.longitude} 
+                                        <AddressDisplay
+                                            lat={report.latitude}
+                                            lng={report.longitude}
                                             onClick={() => setMapLocation({ lat: report.latitude, lng: report.longitude })}
                                         />
                                         <div className="flex gap-2">
-                                            <button onClick={(e) => { e.stopPropagation(); setSelectedFoundReport(report); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><CheckCircle className="w-4 h-4" /> This is my pet</button>
-                                            <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 font-semibold text-xs hover:bg-emerald-50 shadow-sm"><Eye className="w-4 h-4" /> I saw this pet</button>
+                                            <button onClick={(e) => { e.stopPropagation(); setSelectedFoundReport(report); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><CheckCircle className="w-4 h-4" /> {t('this_is_my_pet_btn')}</button>
+                                            <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 font-semibold text-xs hover:bg-emerald-50 shadow-sm"><Eye className="w-4 h-4" /> {t('i_saw_this_pet_btn')}</button>
                                         </div>
                                     </div>
                                 </div>

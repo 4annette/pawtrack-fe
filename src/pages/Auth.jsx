@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { loginUser, registerUser, syncFcmToken, fetchStatistics } from "@/services/api";
 
 const Auth = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -68,21 +70,20 @@ const Auth = () => {
 
         try {
           await syncFcmToken();
-          console.log("FCM sync ffunction finished")
         } catch (fcmError) {
           console.error("FCM Token sync failed, but login continued:", fcmError);
         }
 
-        toast.success("Welcome back!");
+        toast.success(t('auth_welcome_back'));
         navigate('/dashboard');
       } else {
         await registerUser(formData);
-        toast.success("Account created! Please sign in.");
+        toast.success(t('auth_account_created'));
         setIsLogin(true);
       }
     } catch (err) {
       console.error(err);
-      toast.error("Authentication failed. Please check your details.");
+      toast.error(t('auth_failed'));
     } finally {
       setLoading(false);
     }
@@ -90,12 +91,21 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex w-full relative">
-      <Link 
-        to="/" 
-        className="absolute top-6 right-6 z-50 p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-all shadow-sm"
-      >
-        <X className="w-6 h-6" />
-      </Link>
+      <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+        <button
+          onClick={() => i18n.changeLanguage(i18n.language.startsWith('el') ? 'en' : 'el')}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-md border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all"
+        >
+          <Globe className="w-4 h-4 text-emerald-600" />
+          {i18n.language.split('-')[0].toUpperCase()}
+        </button>
+        <Link 
+          to="/" 
+          className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-all shadow-sm"
+        >
+          <X className="w-6 h-6" />
+        </Link>
+      </div>
 
       <div className="hidden lg:flex lg:w-1/2 gradient-hero relative overflow-hidden items-center justify-center">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full bg-sage-light blur-2xl opacity-60" />
@@ -106,25 +116,25 @@ const Auth = () => {
             <PawPrint className="w-24 h-24 text-emerald-600 fill-emerald-100" />
           </div>
 
-          <h2 className="text-4xl font-display font-bold text-gray-800 mb-4">
-            Reunite with your <br /> furry friends
+          <h2 className="text-4xl font-display font-bold text-gray-800 mb-4 whitespace-pre-line">
+            {t('auth_hero_title')}
           </h2>
           <p className="text-gray-600 text-lg max-w-md leading-relaxed">
-            PawTrack helps lost pets find their way back home. Join our community of pet lovers today.
+            {t('auth_hero_subtitle')}
           </p>
 
           <div className="flex gap-8 mt-12">
             <div>
               <p className="text-2xl font-bold text-sage">{stats.foundedLostReports >= 1000 ? (stats.foundedLostReports / 1000).toFixed(1) + 'k' : stats.foundedLostReports}</p>
-              <p className="text-sm text-gray-500">Pets Reunited</p>
+              <p className="text-sm text-gray-500">{t('stats_reunited')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-sky">{stats.activeUsers >= 1000 ? (stats.activeUsers / 1000).toFixed(1) + 'k' : stats.activeUsers}</p>
-              <p className="text-sm text-gray-500">Active Users</p>
+              <p className="text-sm text-gray-500">{t('stats_active_users')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-sunny">{stats.successRate}%</p>
-              <p className="text-sm text-gray-500">Success Rate</p>
+              <p className="text-sm text-gray-500">{t('stats_success_rate')}</p>
             </div>
           </div>
         </div>
@@ -138,10 +148,10 @@ const Auth = () => {
 
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">
-              {isLogin ? "Welcome back!" : "Create account"}
+              {isLogin ? t('auth_welcome_title') : t('auth_register_title')}
             </h1>
             <p className="text-gray-500">
-              {isLogin ? "Sign in to continue tracking" : "Join PawTrack today"}
+              {isLogin ? t('auth_welcome_desc') : t('auth_register_desc')}
             </p>
           </div>
 
@@ -150,17 +160,17 @@ const Auth = () => {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">{t('auth_first_name')}</Label>
                     <Input id="firstName" name="firstName" placeholder="Jane" value={formData.firstName} onChange={handleChange} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">{t('auth_last_name')}</Label>
                     <Input id="lastName" name="lastName" placeholder="Doe" value={formData.lastName} onChange={handleChange} required />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t('auth_email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input id="email" name="email" type="email" placeholder="hello@example.com" value={formData.email} onChange={handleChange} className="pl-11" required />
@@ -170,7 +180,7 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t('auth_username')}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input id="username" name="username" type="text" placeholder="coolcat123" value={formData.username} onChange={handleChange} className="pl-11" required />
@@ -178,7 +188,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth_password')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
@@ -202,19 +212,19 @@ const Auth = () => {
             </div>
 
             <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-11 rounded-lg font-bold shadow-md transition-all hover:scale-[1.02]" disabled={loading}>
-              {loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}
+              {loading ? t('auth_processing') : (isLogin ? t('login') : t('signup'))}
               {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
           </form>
 
           <p className="text-center mt-8 text-gray-500">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            {isLogin ? t('auth_no_account') : t('auth_has_account')}{" "}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-emerald-600 hover:text-emerald-700 font-semibold"
             >
-              {isLogin ? "Sign up" : "Sign in"}
+              {isLogin ? t('signup') : t('login')}
             </button>
           </p>
         </div>

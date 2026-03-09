@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, User, Lock, Save, Loader2, Eye, EyeOff, BellRing, ShieldCheck, Search, PawPrint, ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ChevronRight, User, Lock, Save, Loader2, Eye, EyeOff, BellRing, ShieldCheck, Search, PawPrint, ArrowLeft, Globe } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  changeUsername, 
-  changePassword, 
-  loginUser, 
-  logoutUser, 
+import {
+  changeUsername,
+  changePassword,
+  loginUser,
+  logoutUser,
   fetchUserDetails,
   toggleNotifyFoundReportLost,
   toggleNotifyFoundReportFound,
@@ -18,6 +19,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const AccountSettings = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState("menu");
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -52,10 +54,16 @@ const AccountSettings = () => {
     try {
       await apiFn(newValue);
       setSettings(prev => ({ ...prev, [key]: newValue }));
-      toast.success("Preference updated");
+      toast.success(t('settings_updated'));
     } catch (error) {
-      toast.error("Failed to update preference");
+      toast.error(t('settings_update_failed'));
     }
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language.startsWith('el') ? 'en' : 'el';
+    i18n.changeLanguage(newLang);
+    document.documentElement.lang = newLang;
   };
 
   const MenuOption = ({ icon: Icon, title, description, onClick, colorClass = "text-gray-600 bg-gray-50" }) => (
@@ -147,7 +155,7 @@ const AccountSettings = () => {
     const handleSubmit = async (e) => {
       e.preventDefault();
       if (!username.trim() || !password.trim()) {
-        toast.error("Please fill in all fields");
+        toast.error(t('fill_all_fields'));
         return;
       }
       setLoading(true);
@@ -159,19 +167,19 @@ const AccountSettings = () => {
           const loginResponse = await loginUser({ username, password });
           const newToken = loginResponse.token || loginResponse.access_token || loginResponse;
           if (newToken) {
-            localStorage.setItem("token", JSON.stringify(newToken).replace(/^"|"$/g, '')); 
-            toast.success("Username updated successfully!");
+            localStorage.setItem("token", JSON.stringify(newToken).replace(/^"|"$/g, ''));
+            toast.success(t('username_updated'));
             setCurrentView("menu");
           } else {
             throw new Error("No token received");
           }
         } catch (loginError) {
-          toast.error("Username changed. Please sign in manually.");
+          toast.error(t('reauth_manual'));
           await logoutUser();
           navigate("/auth");
         }
       } catch (error) {
-        toast.error("Failed to update username. It might be taken.");
+        toast.error(t('username_taken'));
       } finally {
         setLoading(false);
       }
@@ -180,13 +188,13 @@ const AccountSettings = () => {
     return (
       <div className="animate-in slide-in-from-right-8 duration-500">
         <div className="flex items-center gap-4 mb-8">
-          <button 
+          <button
             onClick={() => setCurrentView("menu")}
             className="p-3 bg-white border border-gray-100 rounded-full hover:bg-gray-50 hover:shadow-md transition-all text-gray-600 group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Back</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('back')}</h1>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8">
@@ -194,15 +202,15 @@ const AccountSettings = () => {
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
               <User className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-black text-gray-900">Change Username</h2>
-            <p className="text-gray-500 font-medium mt-1">Enter your new username and confirm with your password.</p>
+            <h2 className="text-2xl font-black text-gray-900">{t('change_username')}</h2>
+            <p className="text-gray-500 font-medium mt-1">{t('change_username_desc')}</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <CustomInput label="New Username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. PetLover99" />
-            <PasswordInput label="Current Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Required to confirm changes" />
+            <CustomInput label={t('new_username')} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. PetLover99" />
+            <PasswordInput label={t('current_password')} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('confirm_password_desc')} />
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Save Changes
+              {t('save_changes')}
             </button>
           </form>
         </div>
@@ -217,16 +225,16 @@ const AccountSettings = () => {
     const handleSubmit = async (e) => {
       e.preventDefault();
       if (formData.newPassword !== formData.confirmationPassword) {
-        toast.error("New passwords do not match");
+        toast.error(t('passwords_mismatch'));
         return;
       }
       setLoading(true);
       try {
         await changePassword(formData);
-        toast.success("Password changed successfully");
+        toast.success(t('password_updated'));
         setCurrentView("menu");
       } catch (error) {
-        toast.error("Failed to change password. Verify your old password.");
+        toast.error(t('password_update_failed'));
       } finally {
         setLoading(false);
       }
@@ -235,13 +243,13 @@ const AccountSettings = () => {
     return (
       <div className="animate-in slide-in-from-right-8 duration-500">
         <div className="flex items-center gap-4 mb-8">
-          <button 
+          <button
             onClick={() => setCurrentView("menu")}
             className="p-3 bg-white border border-gray-100 rounded-full hover:bg-gray-50 hover:shadow-md transition-all text-gray-600 group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Back</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('back')}</h1>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8">
@@ -249,16 +257,16 @@ const AccountSettings = () => {
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
               <Lock className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-black text-gray-900">Change Password</h2>
-            <p className="text-gray-500 font-medium mt-1">Ensure your account is secure with a strong password.</p>
+            <h2 className="text-2xl font-black text-gray-900">{t('change_password')}</h2>
+            <p className="text-gray-500 font-medium mt-1">{t('change_password_desc')}</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <PasswordInput label="Current Password" value={formData.oldPassword} onChange={(e) => setFormData({...formData, oldPassword: e.target.value})} />
-            <PasswordInput label="New Password" value={formData.newPassword} onChange={(e) => setFormData({...formData, newPassword: e.target.value})} />
-            <PasswordInput label="Confirm New Password" value={formData.confirmationPassword} onChange={(e) => setFormData({...formData, confirmationPassword: e.target.value})} />
+            <PasswordInput label={t('current_password')} value={formData.oldPassword} onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })} />
+            <PasswordInput label={t('new_password')} value={formData.newPassword} onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })} />
+            <PasswordInput label={t('confirm_new_password')} value={formData.confirmationPassword} onChange={(e) => setFormData({ ...formData, confirmationPassword: e.target.value })} />
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white font-bold text-lg rounded-2xl hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 mt-4">
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Update Password
+              {t('update_password')}
             </button>
           </form>
         </div>
@@ -282,49 +290,70 @@ const AccountSettings = () => {
         <div className="max-w-lg mx-auto">
           {currentView === "menu" && (
             <div className="space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-8">Account Settings</h1>
-              
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-8">{t('account_settings')}</h1>
+
               <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Profile Security</h2>
-                <MenuOption icon={User} title="Change Username" description="Update your display name" colorClass="bg-blue-50 text-blue-600" onClick={() => setCurrentView("username")} />
-                <MenuOption icon={Lock} title="Change Password" description="Update your login credentials" colorClass="bg-emerald-50 text-emerald-600" onClick={() => setCurrentView("password")} />
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">{t('profile_security')}</h2>
+                <MenuOption icon={User} title={t('change_username')} description={t('update_display_name')} colorClass="bg-blue-50 text-blue-600" onClick={() => setCurrentView("username")} />
+                <MenuOption icon={Lock} title={t('change_password')} description={t('update_credentials')} colorClass="bg-emerald-50 text-emerald-600" onClick={() => setCurrentView("password")} />
               </section>
 
               <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Notification Preferences</h2>
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">{t('language_preference')}</h2>
+                <button
+                  onClick={toggleLanguage}
+                  className="w-full flex items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 group"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:scale-110 duration-300">
+                      <Globe className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">{t('app_language')}</h3>
+                      <p className="text-sm text-gray-500 font-medium">{i18n.language.startsWith('el') ? 'Ελληνικά' : 'English'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 text-emerald-700 font-black text-xs group-hover:bg-emerald-50">
+                    {i18n.language.split('-')[0].toUpperCase()}
+                  </div>
+                </button>
+              </section>
+
+              <section className="space-y-3">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">{t('notification_preferences')}</h2>
                 {loadingSettings ? (
                   <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-600" /></div>
                 ) : (
                   <>
-                    <ToggleOption 
-                      icon={Search} 
-                      title="Lost Pet Matches" 
-                      description="Notify when a found report matches your lost report" 
-                      value={settings.lostReportNotifyLost} 
+                    <ToggleOption
+                      icon={Search}
+                      title={t('lost_pet_matches')}
+                      description={t('lost_pet_matches_desc')}
+                      value={settings.lostReportNotifyLost}
                       onToggle={() => handleToggle('lostReportNotifyLost', toggleNotifyFoundReportLost)}
                       colorClass="bg-orange-50 text-orange-600"
                     />
-                    <ToggleOption 
-                      icon={PawPrint} 
-                      title="Found Pet Matches" 
-                      description="Notify when a lost report matches your found report" 
-                      value={settings.foundReportNotifyFound} 
+                    <ToggleOption
+                      icon={PawPrint}
+                      title={t('found_pet_matches')}
+                      description={t('found_pet_matches_desc')}
+                      value={settings.foundReportNotifyFound}
                       onToggle={() => handleToggle('foundReportNotifyFound', toggleNotifyFoundReportFound)}
                       colorClass="bg-purple-50 text-purple-600"
                     />
-                    <ToggleOption 
-                      icon={BellRing} 
-                      title="Similar Found Pets" 
-                      description="Notify when other similar pets are found" 
-                      value={settings.lostReportNotify} 
+                    <ToggleOption
+                      icon={BellRing}
+                      title={t('similar_found_pets')}
+                      description={t('similar_found_pets_desc')}
+                      value={settings.lostReportNotify}
                       onToggle={() => handleToggle('lostReportNotify', toggleNotifyLostReport)}
                       colorClass="bg-pink-50 text-pink-600"
                     />
-                    <ToggleOption 
-                      icon={ShieldCheck} 
-                      title="Account Alerts" 
-                      description="Notify on username or password changes" 
-                      value={settings.userAccountNotify} 
+                    <ToggleOption
+                      icon={ShieldCheck}
+                      title={t('account_alerts')}
+                      description={t('account_alerts_desc')}
+                      value={settings.userAccountNotify}
                       onToggle={() => handleToggle('userAccountNotify', toggleNotifyUserAccount)}
                       colorClass="bg-indigo-50 text-indigo-600"
                     />

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -39,11 +40,13 @@ const MapController = ({ coords }) => {
 };
 
 const ReportsMap = () => {
+    const { t } = useTranslation();
     const [reports, setReports] = useState({ lost: [], found: [] });
     const [loading, setLoading] = useState(true);
     const [flyToCoords, setFlyToCoords] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all');
 
     const [detailReport, setDetailReport] = useState(null);
     const [sightingReportId, setSightingReportId] = useState(null);
@@ -115,6 +118,14 @@ const ReportsMap = () => {
             }
         } catch (error) {
             console.error("Search failed", error);
+        }
+    };
+
+    const toggleFilter = (filter) => {
+        if (activeFilter === filter) {
+            setActiveFilter('all');
+        } else {
+            setActiveFilter(filter);
         }
     };
 
@@ -220,7 +231,7 @@ const ReportsMap = () => {
 
                     <MapController coords={flyToCoords} />
 
-                    {reports.lost.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
+                    {(activeFilter === 'all' || activeFilter === 'lost') && reports.lost.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`lost-${report.id}`} position={[report.latitude, report.longitude]} icon={lostIcon}>
                             <Popup>
                                 <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'lost')}>
@@ -232,7 +243,9 @@ const ReportsMap = () => {
                                                 <Camera className="w-10 h-10" />
                                             </div>
                                         )}
-                                        <div className="absolute top-5 left-5 px-3 py-1 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">Lost</div>
+                                        <div className="absolute top-5 left-5 px-3 py-1 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">
+                                            {t('lost_badge', { format: 'uppercase' })}
+                                        </div>
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
@@ -254,7 +267,7 @@ const ReportsMap = () => {
                         </Marker>
                     ))}
 
-                    {reports.found.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
+                    {(activeFilter === 'all' || activeFilter === 'found') && reports.found.filter(r => isValidCoord(r.latitude, r.longitude)).map((report) => (
                         <Marker key={`found-${report.id}`} position={[report.latitude, report.longitude]} icon={foundIcon}>
                             <Popup>
                                 <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'found')}>
@@ -266,7 +279,9 @@ const ReportsMap = () => {
                                                 <Camera className="w-10 h-10" />
                                             </div>
                                         )}
-                                        <div className="absolute top-5 left-5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">Found</div>
+                                        <div className="absolute top-5 left-5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-full uppercase tracking-tighter shadow-md z-20">
+                                            {t('found_badge', { format: 'uppercase' })}
+                                        </div>
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
@@ -294,7 +309,7 @@ const ReportsMap = () => {
                 <form onSubmit={handleSearch} className="relative">
                     <input
                         type="text"
-                        placeholder="Search location..."
+                        placeholder={t('search_location_placeholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full px-7 py-4 bg-white/90 backdrop-blur-md border-2 border-white rounded-full shadow-lg focus:outline-none font-bold text-gray-600 placeholder:text-gray-300 text-sm max-sm:py-3 max-sm:px-5 max-sm:text-xs"
@@ -318,19 +333,29 @@ const ReportsMap = () => {
             </div>
 
             <div className="absolute bottom-10 left-10 z-[1001] flex items-center gap-6 bg-white/90 backdrop-blur-md px-7 py-3 rounded-full shadow-lg border-2 border-white max-sm:bottom-6 max-sm:left-5 max-sm:gap-4 max-sm:px-5 max-sm:py-2.5">
-                <div className="flex items-center gap-2">
+                <button 
+                    onClick={() => toggleFilter('lost')}
+                    className={`flex items-center gap-2 hover:opacity-70 transition-all ${activeFilter === 'found' ? 'opacity-30 grayscale' : 'opacity-100'}`}
+                >
                     <div className="p-1.5 bg-orange-50 rounded-lg max-sm:p-1">
                         <PawPrint className="w-5 h-5 text-orange-600 max-sm:w-4 max-sm:h-4" />
                     </div>
-                    <span className="text-[12px] font-black text-gray-600 uppercase tracking-widest italic max-sm:text-[10px]">Lost</span>
-                </div>
+                    <span className="text-[12px] font-black text-gray-600 uppercase tracking-widest italic max-sm:text-[10px]">
+                        {t('lost_filter', { format: 'uppercase' })}
+                    </span>
+                </button>
                 <div className="w-px h-6 bg-gray-200 max-sm:h-4" />
-                <div className="flex items-center gap-2">
+                <button 
+                    onClick={() => toggleFilter('found')}
+                    className={`flex items-center gap-2 hover:opacity-70 transition-all ${activeFilter === 'lost' ? 'opacity-30 grayscale' : 'opacity-100'}`}
+                >
                     <div className="p-1.5 bg-emerald-50 rounded-lg max-sm:p-1">
                         <PawPrint className="w-5 h-5 text-emerald-600 max-sm:w-4 max-sm:h-4" />
                     </div>
-                    <span className="text-[12px] font-black text-gray-600 uppercase tracking-widest italic max-sm:text-[10px]">Found</span>
-                </div>
+                    <span className="text-[12px] font-black text-gray-600 uppercase tracking-widest italic max-sm:text-[10px]">
+                        {t('found_filter', { format: 'uppercase' })}
+                    </span>
+                </button>
             </div>
 
             {createPortal(

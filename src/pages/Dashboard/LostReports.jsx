@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     Plus, Search, Filter, Dog, Eye, MapPin,
     Loader2, Clock, ChevronLeft, ChevronRight,
@@ -15,6 +16,7 @@ import {
 } from "@/components/DashboardComponents";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const containerRef = useRef(null);
@@ -69,7 +71,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
         <div className="relative space-y-1.5" ref={containerRef}>
             <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> {label}</label>
             <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
-                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || 'Select date'}</span>
+                <span className={`text-sm ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder_short')}</span>
                 <Calendar className="w-4 h-4 text-emerald-500" />
             </div>
 
@@ -89,7 +91,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                     </div>
 
                     <div className="grid grid-cols-7 mb-2 text-center">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
+                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-xs font-bold text-emerald-400">{d}</span>))}
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 place-items-center">
@@ -97,7 +99,6 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                             const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
                             const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
                             const days = [];
-
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
 
@@ -171,12 +172,13 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 };
 
 const AddressDisplay = ({ lat, lng, onClick }) => {
+    const { t } = useTranslation();
     const [address, setAddress] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!lat || !lng) {
-            setAddress("No location provided");
+            setAddress(t('no_location_provided'));
             return;
         }
 
@@ -191,10 +193,10 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
                     const city = data.address.city || data.address.town || data.address.village || "";
                     const country = data.address.country || "";
                     const locString = [city, country].filter(Boolean).join(", ");
-                    setAddress(locString || "Location details available");
+                    setAddress(locString || t('location_details_available'));
                 }
             } catch (error) {
-                if (isMounted) setAddress("View Map Location");
+                if (isMounted) setAddress(t('view_map_location'));
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -202,7 +204,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
 
         fetchAddress();
         return () => { isMounted = false; };
-    }, [lat, lng]);
+    }, [lat, lng, t]);
 
     return (
         <button
@@ -210,7 +212,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
             className="w-full flex items-center text-xs text-gray-600 hover:text-emerald-700 transition-colors text-left group-hover:text-emerald-600"
         >
             <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-500 flex-shrink-0" />
-            <span className="truncate font-medium">{loading ? "Loading address..." : address}</span>
+            <span className="truncate font-medium">{loading ? t('loading_address') : address}</span>
         </button>
     );
 };
@@ -253,7 +255,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
                                 onClick={() => { onChange(option.value); setIsOpen(false); }}
                                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${option.value === value ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                             >
-                                {option.label}
+                                <span className="uppercase">{option.label}</span>
                                 {option.value === value && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                             </div>
                         ))}
@@ -265,6 +267,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
 };
 
 const LostReports = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -345,13 +348,13 @@ const LostReports = () => {
     }
 
     const statusOptions = [
-        { label: "All Statuses", value: "" },
-        { label: "Less than 3 Hours", value: "LESS_THAN_3_HOURS" },
-        { label: "Less than 10 Hours", value: "LESS_THAN_10_HOURS" },
-        { label: "Less than 1 Day", value: "LESS_THAN_1_DAY" },
-        { label: "Less than 1 Week", value: "LESS_THAN_1_WEEK" },
-        { label: "Less than 1 Month", value: "LESS_THAN_1_MONTH" },
-        { label: "More than 1 Month", value: "MORE_THAN_1_MONTH" }
+        { label: t('all_statuses'), value: "" },
+        { label: t('less_than_3_hours'), value: "LESS_THAN_3_HOURS" },
+        { label: t('less_than_10_hours'), value: "LESS_THAN_10_HOURS" },
+        { label: t('less_than_1_day'), value: "LESS_THAN_1_DAY" },
+        { label: t('less_than_1_week'), value: "LESS_THAN_1_WEEK" },
+        { label: t('less_than_1_month'), value: "LESS_THAN_1_MONTH" },
+        { label: t('more_than_1_month'), value: "MORE_THAN_1_MONTH" }
     ];
 
     useEffect(() => {
@@ -444,14 +447,14 @@ const LostReports = () => {
                 }
             } catch (err) {
                 console.error(err);
-                toast.error("Failed to load lost reports");
+                toast.error(t('load_lost_reports_failed_toast'));
             } finally {
                 setLoading(false);
             }
         };
         const timer = setTimeout(() => { fetchReports(); }, 300);
         return () => clearTimeout(timer);
-    }, [page, filters, pageSize, sortBy, userLocation, locationStatus]);
+    }, [page, filters, pageSize, sortBy, userLocation, locationStatus, t]);
 
     const handleStatusChange = (val) => {
         setFilters(prev => ({ ...prev, status: val, dateAfter: "", dateBefore: "" }));
@@ -467,44 +470,44 @@ const LostReports = () => {
         <div className="space-y-8 animate-in fade-in pb-12">
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-orange-100 shadow-sm">
                 <div>
-                    <h2 className="text-2xl font-bold text-orange-900 mb-2">Lost your pet?</h2>
-                    <p className="text-orange-800 max-w-xl opacity-90">Report your missing pet immediately to notify the community and get help.</p>
+                    <h2 className="text-2xl font-bold text-orange-900 mb-2">{t('lost_pet_banner_title')}</h2>
+                    <p className="text-orange-800 max-w-xl opacity-90">{t('lost_pet_banner_subtitle')}</p>
                 </div>
                 <button onClick={() => navigate("/create-lost-report")} className="whitespace-nowrap bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg shadow-orange-200 transition-transform hover:scale-105 flex items-center gap-2">
-                    <Plus className="w-5 h-5" /> Report Lost Pet
+                    <Plus className="w-5 h-5" /> {t('report_lost_btn')}
                 </button>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-30">
                 <div>
                     <div className="flex items-center gap-2">
-                        <h1 className="text-3xl font-bold text-gray-900">Lost Reports</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">{t('lost_reports_heading')}</h1>
                         {locationStatus === "success" && (
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
-                                <Navigation className="w-3 h-3" /> Near you (25km)
+                                <Navigation className="w-3 h-3" /> {t('near_you_label')} (25km)
                             </span>
                         )}
                     </div>
-                    <p className="text-gray-500 mt-1">{loading ? "Searching..." : `${totalElements} reports found.`}</p>
+                    <p className="text-gray-500 mt-1">{loading ? t('searching_status') : `${totalElements} ${t('reports_found_count')}`}</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <ToolbarDropdown
-                        label="Show"
+                        label={t('show_label')}
                         value={pageSize}
                         options={[{ label: "6", value: 6 }, { label: "9", value: 9 }, { label: "12", value: 12 }, { label: "15", value: 15 }]}
                         onChange={(val) => { setPageSize(val); setPage(0); }}
                         align="left"
                     />
                     <ToolbarDropdown
-                        label="Sort"
+                        label={t('sort_label')}
                         value={sortBy}
                         options={[
-                            { label: "Newest First", value: "dateLost_desc" },
-                            { label: "Oldest First", value: "dateLost_asc" },
-                            { label: "Distance", value: "distance_asc" },
-                            { label: "Title", value: "title_asc" },
-                            { label: "Species", value: "species_asc" }
+                            { label: t('sort_newest'), value: "dateLost_desc" },
+                            { label: t('sort_oldest'), value: "dateLost_asc" },
+                            { label: t('distance_label'), value: "distance_asc" },
+                            { label: t('sort_title'), value: "title_asc" },
+                            { label: t('label_species'), value: "species_asc" }
                         ]}
                         onChange={(val) => { setSortBy(val); setPage(0); }}
                     />
@@ -515,23 +518,23 @@ const LostReports = () => {
                 <div className="flex gap-3 items-center">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }} />
+                        <input type="text" placeholder={t('search_placeholder')} className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={filters.search} onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }} />
                     </div>
                     <button onClick={() => setShowFilterPanel(!showFilterPanel)} className={`p-3 rounded-xl border transition-all flex items-center gap-2 shadow-md ${showFilterPanel ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'}`}>
-                        <Filter className="w-5 h-5 text-white" /> <span className="hidden sm:inline font-medium text-sm">Filters</span>
+                        <Filter className="w-5 h-5 text-white" /> <span className="hidden sm:inline font-medium text-sm">{t('filters_btn')}</span>
                     </button>
                 </div>
                 {showFilterPanel && (
                     <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-xl shadow-xl border border-emerald-100 p-6 z-40 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-emerald-200">
-                            <h3 className="font-semibold text-emerald-900">Filter Options</h3>
-                            <button onClick={() => setFilters({ search: "", species: "", status: "", dateAfter: "", dateBefore: "", radius: 25 })} className="text-xs text-red-500 hover:underline">Clear all</button>
+                            <h3 className="font-semibold text-emerald-900">{t('filter_options_title')}</h3>
+                            <button onClick={() => setFilters({ search: "", species: "", status: "", dateAfter: "", dateBefore: "", radius: 25 })} className="text-xs text-red-500 hover:underline">{t('clear_all_btn')}</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <CustomDropdown label="Species" icon={Dog} value={filters.species} options={[{ label: "All", value: "" }, { label: "Dog", value: "DOG" }, { label: "Cat", value: "CAT" }, { label: "Other", value: "OTHER" }]} onChange={(val) => { setFilters({ ...filters, species: val }); setPage(0); }} />
-                            <CustomDropdown label="Time Status" icon={Clock} value={filters.status} options={statusOptions} onChange={handleStatusChange} />
-                            <CustomDatePicker label="Lost After" value={filters.dateAfter} onChange={(val) => handleDateChange('dateAfter', val)} />
-                            <CustomDatePicker label="Lost Before" value={filters.dateBefore} onChange={(val) => handleDateChange('dateBefore', val)} />
+                            <CustomDropdown label={t('label_species')} icon={Dog} value={filters.species} options={[{ label: t('all'), value: "" }, { label: t('species_dog'), value: "DOG" }, { label: t('species_cat'), value: "CAT" }, { label: t('species_other'), value: "OTHER" }]} onChange={(val) => { setFilters({ ...filters, species: val }); setPage(0); }} />
+                            <CustomDropdown label={t('time_status_label')} icon={Clock} value={filters.status} options={statusOptions} onChange={handleStatusChange} />
+                            <CustomDatePicker label={t('lost_after_label')} value={filters.dateAfter} onChange={(val) => handleDateChange('dateAfter', val)} />
+                            <CustomDatePicker label={t('lost_before_label')} value={filters.dateBefore} onChange={(val) => handleDateChange('dateBefore', val)} />
                         </div>
                     </div>
                 )}
@@ -571,7 +574,7 @@ const LostReports = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || "No description provided."}</p>
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || t('no_description_provided')}</p>
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
 
                                         <AddressDisplay
@@ -581,12 +584,12 @@ const LostReports = () => {
                                                 if (report.latitude && report.longitude) {
                                                     setMapLocation({ lat: report.latitude, lng: report.longitude });
                                                 } else {
-                                                    toast.error("No map coordinates available");
+                                                    toast.error(t('no_map_coords_error'));
                                                 }
                                             }}
                                         />
 
-                                        <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><Eye className="w-4 h-4" /> I Found This Pet</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><Eye className="w-4 h-4" /> {t('i_found_this_pet_btn')}</button>
                                     </div>
                                 </div>
                             </div>

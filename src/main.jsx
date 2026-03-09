@@ -17,6 +17,7 @@ import AccountSettings from "./pages/User/AccountSettings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./index.css";
+import './i18n';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
