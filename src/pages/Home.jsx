@@ -1,14 +1,37 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Navbar from "@/components/i18n/NavBar";
+import Navbar from "@/components/i18n/Navbar";
 import { Search, MapPin, Heart } from "lucide-react";
 import { fetchStatistics } from "@/services/api";
 
 const Home = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [reunitedCount, setReunitedCount] = useState(2500);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    
+    if (token && token !== "undefined" && token !== "null") {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        
+        if (payload.exp > Date.now() / 1000) {
+          navigate("/dashboard");
+          return;
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (error) {
+        localStorage.removeItem("token");
+      }
+    } else {
+      localStorage.removeItem("token");
+    }
+
     const getStats = async () => {
       try {
         const stats = await fetchStatistics();
@@ -20,12 +43,13 @@ const Home = () => {
       }
     };
     getStats();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-green-50">
       <div className="absolute top-20 left-20 w-32 h-32 rounded-full bg-sage-light blur-2xl opacity-60 pointer-events-none" />
       <div className="absolute bottom-32 right-20 w-48 h-48 rounded-full bg-sky-light blur-2xl opacity-60 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-white/20 blur-3xl opacity-30 pointer-events-none" />
 
       <Navbar />
 

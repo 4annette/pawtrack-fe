@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X, Phone, Calendar, FileText, Check, AlertCircle, MapPin, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -19,6 +20,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const FoundClaimModal = ({ notification, onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [foundReport, setFoundReport] = useState(null);
   const [lostReport, setLostReport] = useState(null);
@@ -28,7 +30,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
 
     const fetchData = async () => {
       if (!notification.foundReportId || !notification.lostReportId) {
-        toast.error("Invalid notification data.");
+        toast.error(t('invalid_notif_data'));
         onClose();
         return;
       }
@@ -40,7 +42,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
         ]);
 
         if (!foundData || !lostData) {
-          toast.info("Reports could not be found.");
+          toast.info(t('reports_not_found'));
           onClose();
           return;
         }
@@ -51,7 +53,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
         );
 
         if (!isDirectlyLinked && !isPossibleMatch) {
-          toast.info("These reports are no longer connected.");
+          toast.info(t('reports_no_longer_connected'));
           onClose();
           return;
         }
@@ -61,23 +63,23 @@ const FoundClaimModal = ({ notification, onClose }) => {
         setLoading(false);
       } catch (error) {
         console.error(error);
-        toast.error("Could not load report details.");
+        toast.error(t('load_details_error'));
         onClose();
       }
     };
     fetchData();
-  }, [notification, onClose]);
+  }, [notification, onClose, t]);
 
   if (!notification || loading) return null;
 
   const handleDisconnect = async () => {
-    if (window.confirm("Are you sure this is not the correct pet? This will disconnect the reports.")) {
+    if (window.confirm(t('confirm_not_match'))) {
       try {
         await removeLostReportFromFoundReport(notification.foundReportId, notification.lostReportId);
-        toast.success("Reports disconnected.");
+        toast.success(t('reports_disconnected'));
         onClose();
       } catch (error) {
-        toast.error("Failed to disconnect.");
+        toast.error(t('disconnect_failed'));
       }
     }
   };
@@ -97,8 +99,8 @@ const FoundClaimModal = ({ notification, onClose }) => {
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-black text-lg tracking-tight leading-none">Pet Claim</h2>
-              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">Someone thinks this is their pet</p>
+              <h2 className="font-black text-lg tracking-tight leading-none">{t('pet_claim_title')}</h2>
+              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">{t('pet_claim_desc')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
@@ -110,13 +112,13 @@ const FoundClaimModal = ({ notification, onClose }) => {
               <Phone className="w-6 h-6" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Claimed By</p>
+              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('claimed_by')}</p>
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <span className="text-sm font-bold text-emerald-900 truncate">
-                  {foundReport?.creator?.username || "Unknown User"}
+                  {foundReport?.creator?.username || t('unknown')}
                 </span>
                 <span className="text-base font-black text-emerald-600 bg-white px-3 py-1 rounded-lg border border-emerald-100 shadow-sm">
-                  {foundReport?.creator?.phone || "No phone"}
+                  {foundReport?.creator?.phone || t('no_phone')}
                 </span>
               </div>
             </div>
@@ -125,7 +127,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Their Lost Report</span>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('their_lost_report')}</span>
             </div>
 
             <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm">
@@ -138,10 +140,10 @@ const FoundClaimModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{lostReport?.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 mb-2">{lostReport?.description}</p>
+                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{lostReport?.title || t('untitled')}</h3>
+                  <p className="text-xs text-gray-500 line-clamp-2 mb-2">{lostReport?.description || t('no_description_provided')}</p>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-600 bg-orange-50 w-fit px-2.5 py-1 rounded-lg border border-orange-100">
-                    <Calendar className="w-3 h-3" /> Lost: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : 'N/A'}
+                    <Calendar className="w-3 h-3" /> {t('label_date_lost')}: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : t('not_applicable')}
                   </div>
                 </div>
               </div>
@@ -166,7 +168,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">Your Found Report</span>
+              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">{t('your_found_report')}</span>
             </div>
 
             <div className="bg-white border border-emerald-100/80 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -179,9 +181,9 @@ const FoundClaimModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title}</h3>
+                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title || t('untitled')}</h3>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50 w-fit">
-                    <Calendar className="w-3 h-3" /> Found: {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : 'N/A'}
+                    <Calendar className="w-3 h-3" /> {t('label_date_found')}: {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : t('not_applicable')}
                   </div>
                 </div>
               </div>
@@ -197,7 +199,7 @@ const FoundClaimModal = ({ notification, onClose }) => {
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <Marker position={[foundReport.latitude, foundReport.longitude]}>
-                      <Popup>Found Here</Popup>
+                      <Popup>{t('found_here_popup')}</Popup>
                     </Marker>
                   </MapContainer>
                 </div>
@@ -211,13 +213,13 @@ const FoundClaimModal = ({ notification, onClose }) => {
             onClick={handleDisconnect}
             className="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 transition-colors border border-red-100"
           >
-            <Trash2 className="w-4 h-4" /> Not a Match
+            <Trash2 className="w-4 h-4" /> {t('not_a_match_btn')}
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-4 px-6 rounded-2xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
           >
-            Keep Connected
+            {t('keep_connected_btn')}
           </button>
         </div>
       </div>

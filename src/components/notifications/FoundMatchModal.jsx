@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, Calendar, FileText, AlertCircle, Link2Off } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { X, Calendar, FileText, AlertCircle, Link2Off } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,6 +20,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const FoundMatchModal = ({ notification, onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [myFoundReport, setMyFoundReport] = useState(null);
   const [theirFoundReport, setTheirFoundReport] = useState(null);
@@ -28,7 +30,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
 
     const fetchData = async () => {
       if (!notification.foundReportId || !notification.connectedFoundReportId) {
-        toast.error("Report details missing.");
+        toast.error(t('invalid_notif_data'));
         onClose();
         return;
       }
@@ -40,7 +42,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
         ]);
 
         if (!myData || !theirData) {
-          toast.info("One of the reports is no longer available.");
+          toast.info(t('reports_not_found'));
           onClose();
           return;
         }
@@ -49,7 +51,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
           myData.connectedFoundReports.some(r => r.id === theirData.id);
 
         if (!isConnected) {
-          toast.info("These reports are no longer connected.");
+          toast.info(t('reports_no_longer_connected'));
           onClose();
           return;
         }
@@ -59,22 +61,22 @@ const FoundMatchModal = ({ notification, onClose }) => {
         setLoading(false);
       } catch (error) {
         console.error(error);
-        toast.error("Could not load report details.");
+        toast.error(t('load_details_error'));
         onClose();
       }
     };
     fetchData();
-  }, [notification, onClose]);
+  }, [notification, onClose, t]);
 
   const handleDisconnect = async () => {
-    if (window.confirm("Are you sure? This will disconnect the sighting match.")) {
+    if (window.confirm(t('match_modal_confirm_disconnect'))) {
       try {
         await disconnectFoundReports(notification.foundReportId, notification.connectedFoundReportId);
-        toast.info("Match disconnected.");
+        toast.info(t('reports_disconnected'));
         onClose();
       } catch (error) {
         console.error(error);
-        toast.error("Failed to disconnect.");
+        toast.error(t('disconnect_failed'));
       }
     }
   };
@@ -96,8 +98,8 @@ const FoundMatchModal = ({ notification, onClose }) => {
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-black text-lg tracking-tight leading-none">Sighting Match</h2>
-              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">Possible duplicate or connected sighting</p>
+              <h2 className="font-black text-lg tracking-tight leading-none">{t('match_modal_recognized_title')}</h2>
+              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">{t('match_modal_recognized_desc')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
@@ -107,7 +109,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">Their Found Report</span>
+              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">{t('match_modal_their_report')}</span>
             </div>
 
             <div className="bg-white border border-emerald-100/80 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -120,12 +122,12 @@ const FoundMatchModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{theirFoundReport?.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{theirFoundReport?.description}</p>
+                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{theirFoundReport?.title || t('untitled')}</h3>
+                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{theirFoundReport?.description || t('no_description_provided')}</p>
                   <div className="flex flex-wrap gap-2">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
                       <Calendar className="w-3 h-3" />
-                      {theirFoundReport?.foundDate ? new Date(theirFoundReport.foundDate).toLocaleDateString() : 'N/A'}
+                      {theirFoundReport?.foundDate ? new Date(theirFoundReport.foundDate).toLocaleDateString() : t('not_applicable')}
                     </div>
                   </div>
                 </div>
@@ -142,7 +144,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <Marker position={[theirFoundReport.latitude, theirFoundReport.longitude]}>
-                      <Popup>Their Sighting</Popup>
+                      <Popup>{t('pet_location_popup')}</Popup>
                     </Marker>
                   </MapContainer>
                 </div>
@@ -153,7 +155,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Your Found Report</span>
+              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">{t('match_modal_your_report')}</span>
             </div>
 
             <div className="bg-white border border-blue-100/80 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
@@ -166,9 +168,9 @@ const FoundMatchModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{myFoundReport?.title}</h3>
+                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{myFoundReport?.title || t('untitled')}</h3>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 w-fit px-2.5 py-1 rounded-lg border border-blue-100">
-                    <Calendar className="w-3 h-3" /> Found: {myFoundReport?.foundDate ? new Date(myFoundReport.foundDate).toLocaleDateString() : 'N/A'}
+                    <Calendar className="w-3 h-3" /> {t('label_date_found')}: {myFoundReport?.foundDate ? new Date(myFoundReport.foundDate).toLocaleDateString() : t('not_applicable')}
                   </div>
                 </div>
               </div>
@@ -196,7 +198,7 @@ const FoundMatchModal = ({ notification, onClose }) => {
             onClick={handleDisconnect}
             className="w-full py-4 rounded-2xl bg-white border-2 border-red-50 text-red-400 font-black text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            <Link2Off className="w-4 h-4" /> Not the same pet
+            <Link2Off className="w-4 h-4" /> {t('match_modal_not_same_pet')}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Bell, Search, AlertCircle, X } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead } from "@/services/api";
 import MatchModal from "@/components/notifications/MatchModal";
@@ -8,6 +9,7 @@ import FoundClaimModal from "@/components/notifications/FoundClaimModal";
 import FoundMatchModal from "@/components/notifications/FoundMatchModal";
 
 const Notifications = () => {
+    const { t } = useTranslation();
     const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [selectedNotification, setSelectedNotification] = useState(null);
@@ -107,9 +109,9 @@ const Notifications = () => {
                 {isNotificationMenuOpen && (
                     <div className="fixed sm:absolute right-0 sm:right-0 top-16 sm:top-auto left-4 sm:left-auto right-4 sm:mt-4 sm:w-96 bg-white rounded-3xl sm:rounded-[32px] shadow-2xl shadow-emerald-900/10 border border-gray-100 py-3 z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right ring-4 ring-gray-50/50">
                         <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-                            <h3 className="font-black text-gray-800 text-sm tracking-wide">Notifications</h3>
+                            <h3 className="font-black text-gray-800 text-sm tracking-wide">{t('notif_list_header')}</h3>
                             <div className="flex items-center gap-3">
-                                {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} New</span>}
+                                {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} {t('notif_list_new')}</span>}
                                 <button 
                                     onClick={() => setIsNotificationMenuOpen(false)}
                                     className="sm:hidden p-1 text-gray-400 hover:text-gray-600"
@@ -126,8 +128,8 @@ const Notifications = () => {
                                         <Bell className="w-8 h-8 opacity-50" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-gray-400">All caught up!</p>
-                                        <p className="text-xs text-gray-300 mt-1">No new notifications for now.</p>
+                                        <p className="text-sm font-bold text-gray-400">{t('notif_list_empty_title')}</p>
+                                        <p className="text-xs text-gray-300 mt-1">{t('notif_list_empty_desc')}</p>
                                     </div>
                                 </div>
                             ) : (
@@ -155,24 +157,24 @@ const Notifications = () => {
                                                     <p className={`text-sm leading-snug ${n.read ? 'text-gray-600' : 'text-gray-900 font-bold'}`}>
                                                         {isLostMatch ? (
                                                             <>
-                                                                <span className="text-emerald-700 font-black">{n.fromUserName}</span> might have found your pet!
+                                                                <span className="text-emerald-700 font-black">{n.fromUserName}</span> {t('notif_list_lost_match')}
                                                             </>
                                                         ) : isFoundMatch ? (
                                                             <>
-                                                                Might you found <span className="text-emerald-700 font-black">{n.fromUserName}'s</span> pet!
+                                                                {t('notif_list_found_match', { name: n.fromUserName })}
                                                             </>
                                                         ) : isConnectedFound ? (
                                                             <>
-                                                                Might you and <span className="text-emerald-700 font-black">{n.fromUserName}</span> found the same pet!
+                                                                {t('notif_list_same_pet', { name: n.fromUserName })}
                                                             </>
                                                         ) : isReminder ? (
-                                                            "Did you find your pet?"
+                                                            t('notif_list_reminder')
                                                         ) : (
                                                             n.notificationType
                                                         )}
                                                     </p>
                                                     {!isMatch && (
-                                                        <p className="text-xs text-gray-400 mt-1">System Notification</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{t('notif_list_system')}</p>
                                                     )}
                                                 </div>
 

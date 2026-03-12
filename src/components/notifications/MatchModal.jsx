@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X, Phone, Calendar, FileText, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -19,6 +20,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MatchModal = ({ notification, onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [foundReport, setFoundReport] = useState(null);
   const [lostReport, setLostReport] = useState(null);
@@ -28,7 +30,7 @@ const MatchModal = ({ notification, onClose }) => {
 
     const fetchData = async () => {
       if (!notification.foundReportId || !notification.lostReportId) {
-        toast.error("This report is no longer available.");
+        toast.error(t('pm_error_unavailable'));
         onClose();
         return;
       }
@@ -40,7 +42,7 @@ const MatchModal = ({ notification, onClose }) => {
         ]);
 
         if (!foundData || !lostData || !foundData.lostReport) {
-          toast.info("This match is no longer available or disconnected.");
+          toast.info(t('pm_error_disconnected'));
           onClose();
           return;
         }
@@ -50,34 +52,34 @@ const MatchModal = ({ notification, onClose }) => {
         setLoading(false);
       } catch (error) {
         console.error(error);
-        toast.error("Could not load report details.");
+        toast.error(t('pm_error_load'));
         onClose();
       }
     };
     fetchData();
-  }, [notification]);
+  }, [notification, t, onClose]);
 
   if (!notification || loading) return null;
 
   const handleConfirm = async () => {
     try {
       await confirmLostReportMatch(notification.lostReportId);
-      toast.success("Great! We're glad you found your pet.");
+      toast.success(t('pm_success_found'));
       onClose();
     } catch (error) {
       console.error("Error confirming match:", error);
-      toast.error("Something went wrong while confirming the match.");
+      toast.error(t('pm_error_confirm'));
     }
   };
 
   const handleReject = async () => {
     try {
       await removeFoundReportFromLostReport(notification.lostReportId, notification.foundReportId);
-      toast.info("Report disconnected from your lost report.");
+      toast.info(t('pm_info_disconnected'));
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to disconnect report.");
+      toast.error(t('pm_error_disconnect'));
     }
   };
 
@@ -96,8 +98,8 @@ const MatchModal = ({ notification, onClose }) => {
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-black text-lg tracking-tight leading-none">Potential Match</h2>
-              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">Is this your missing pet?</p>
+              <h2 className="font-black text-lg tracking-tight leading-none">{t('pm_title')}</h2>
+              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">{t('pm_subtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
@@ -109,13 +111,13 @@ const MatchModal = ({ notification, onClose }) => {
               <Phone className="w-6 h-6" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">Contact Finder</p>
+              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('pm_contact_finder')}</p>
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <span className="text-sm font-bold text-emerald-900 truncate">
                   {notification.fromUserName}
                 </span>
                 <span className="text-base font-black text-emerald-600 bg-white px-3 py-1 rounded-lg border border-emerald-100 shadow-sm">
-                  {notification.fromUserPhone || foundReport?.creator?.phone || "No phone"}
+                  {notification.fromUserPhone || foundReport?.creator?.phone || t('no_phone')}
                 </span>
               </div>
             </div>
@@ -124,7 +126,7 @@ const MatchModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">The Found Pet</span>
+              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">{t('pm_found_pet')}</span>
             </div>
 
             <div className="bg-white border border-emerald-100/80 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -137,12 +139,12 @@ const MatchModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{foundReport?.description}</p>
+                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title || t('untitled')}</h3>
+                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{foundReport?.description || t('no_description_provided')}</p>
                   <div className="flex flex-wrap gap-2">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
                       <Calendar className="w-3 h-3" />
-                      {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : 'N/A'}
+                      {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : t('not_applicable')}
                     </div>
                   </div>
                 </div>
@@ -159,7 +161,7 @@ const MatchModal = ({ notification, onClose }) => {
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <Marker position={[foundReport.latitude, foundReport.longitude]}>
-                      <Popup>Found Here</Popup>
+                      <Popup>{t('found_here_popup')}</Popup>
                     </Marker>
                   </MapContainer>
                 </div>
@@ -170,7 +172,7 @@ const MatchModal = ({ notification, onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Your Lost Report</span>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('pm_your_report')}</span>
             </div>
 
             <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
@@ -183,9 +185,9 @@ const MatchModal = ({ notification, onClose }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{lostReport?.title}</h3>
+                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{lostReport?.title || t('untitled')}</h3>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-600 bg-orange-50 w-fit px-2.5 py-1 rounded-lg border border-orange-100">
-                    <Calendar className="w-3 h-3" /> Lost: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : 'N/A'}
+                    <Calendar className="w-3 h-3" /> {t('label_date_lost')}: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : t('not_applicable')}
                   </div>
                 </div>
               </div>
@@ -210,10 +212,10 @@ const MatchModal = ({ notification, onClose }) => {
 
         <div className="p-5 border-t border-gray-100 bg-white flex gap-4 shrink-0">
           <button onClick={handleReject} className="flex-1 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-gray-500 font-black text-xs uppercase tracking-widest hover:bg-gray-100 hover:text-gray-700 transition-all active:scale-95">
-            No, not mine
+            {t('pm_not_mine')}
           </button>
           <button onClick={handleConfirm} className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-200/50 transition-all active:scale-95 flex items-center justify-center gap-2">
-            <Check className="w-4 h-4" /> Yes, It's My Pet!
+            <Check className="w-4 h-4" /> {t('pm_is_mine')}
           </button>
         </div>
       </div>

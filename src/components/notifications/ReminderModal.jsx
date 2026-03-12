@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X, Check, HelpCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReportById, markLostReportAsFound } from "@/services/api";
 
 const ReminderModal = ({ notification, onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState(null);
   const [error, setError] = useState(null);
@@ -14,7 +16,7 @@ const ReminderModal = ({ notification, onClose }) => {
 
     if (!notification.lostReportId) {
       console.error("Notification is missing lostReportId:", notification);
-      setError("This notification is missing the Report ID reference.");
+      setError(t('reminder_modal_final_err_id'));
       setLoading(false);
       return;
     }
@@ -24,7 +26,7 @@ const ReminderModal = ({ notification, onClose }) => {
         const data = await fetchLostReportById(notification.lostReportId);
 
         if (data.found) {
-          toast.info("This report is already marked as found.");
+          toast.info(t('reminder_modal_final_err_found'));
           onClose(); 
           return;
         }
@@ -33,22 +35,22 @@ const ReminderModal = ({ notification, onClose }) => {
         setLoading(false); 
       } catch (error) {
         console.error("Failed to load report", error);
-        setError("Could not load report details.");
+        setError(t('reminder_modal_final_err_load'));
         setLoading(false);
       }
     };
     loadReport();
-  }, [notification, onClose]);
+  }, [notification, onClose, t]);
 
   const handleYes = async () => {
     if (!notification.lostReportId) return;
     try {
       await markLostReportAsFound(notification.lostReportId);
-      toast.success("Wonderful news! We've marked your report as found.");
+      toast.success(t('reminder_modal_final_success_msg'));
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update report status.");
+      toast.error(t('reminder_modal_final_err_update'));
     }
   };
 
@@ -69,8 +71,8 @@ const ReminderModal = ({ notification, onClose }) => {
               <HelpCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="font-black text-lg tracking-tight">Status Check</h2>
-              <p className="text-xs text-emerald-100 opacity-90">Checking in on your report</p>
+              <h2 className="font-black text-lg tracking-tight">{t('reminder_modal_final_title')}</h2>
+              <p className="text-xs text-emerald-100 opacity-90">{t('reminder_modal_final_subtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors">
@@ -96,10 +98,10 @@ const ReminderModal = ({ notification, onClose }) => {
 
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-gray-800 leading-tight">
-                  Did you find <span className="text-emerald-600">{report?.title || "your pet"}</span>?
+                  {t('reminder_modal_final_question', { name: report?.title || t('reminder_modal_final_default_pet') })}
                 </h3>
                 <p className="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">
-                  It's been a few days since you posted. We just wanted to check if you have been reunited.
+                  {t('reminder_modal_final_desc')}
                 </p>
               </div>
 
@@ -108,7 +110,7 @@ const ReminderModal = ({ notification, onClose }) => {
                   onClick={handleYes}
                   className="w-full py-4 rounded-2xl bg-emerald-600 text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                 >
-                  <Check className="w-5 h-5" /> Yes, I found them!
+                  <Check className="w-5 h-5" /> {t('reminder_modal_final_yes_btn')}
                 </button>
               </div>
             </>
