@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Navbar from "@/components/i18n/Navbar";
+import Navbar from "@/components/i18n/NavBar";
 import { Search, MapPin, Heart } from "lucide-react";
 import { fetchStatistics } from "@/services/api";
 
