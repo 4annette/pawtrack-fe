@@ -14,7 +14,7 @@ import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const [selectedDateStr, setSelectedDateStr] = useState("");
@@ -33,6 +33,9 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     const currentDay = now.getDate();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+
+    // Προσδιορισμός Locale βάσει της τρέχουσας γλώσσας
+    const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
 
     const isTodaySelected = () => {
         if (!selectedDateStr) return false;
@@ -154,7 +157,9 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                 <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-72 animate-in fade-in zoom-in-95">
                     <div className="flex justify-between items-center mb-4">
                         <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
-                        <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                        <span className="text-sm font-bold text-gray-800">
+                            {viewDate.toLocaleString(currentLocale, { month: 'long', year: 'numeric' })}
+                        </span>
                         <button
                             type="button"
                             onClick={() => changeMonth(1)}

@@ -16,10 +16,12 @@ import {
 } from "@/components/DashboardComponents";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date());
     const containerRef = useRef(null);
+
+    const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
 
     useEffect(() => {
         if (value) {
@@ -79,7 +81,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                 <div className="absolute top-full left-0 mt-2 z-[2500] bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-64 animate-in fade-in zoom-in-95">
                     <div className="flex justify-between items-center mb-4">
                         <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
-                        <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                        <span className="text-sm font-bold text-gray-800">{viewDate.toLocaleString(currentLocale, { month: 'long', year: 'numeric' })}</span>
                         <button
                             type="button"
                             onClick={() => changeMonth(1)}
@@ -172,7 +174,7 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 };
 
 const AddressDisplay = ({ lat, lng, onClick }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [address, setAddress] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -187,7 +189,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
             setLoading(true);
             try {
                 await new Promise(r => setTimeout(r, Math.random() * 1500));
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${i18n.language}`);
                 const data = await response.json();
                 if (isMounted && data.address) {
                     const city = data.address.city || data.address.town || data.address.village || "";
@@ -204,7 +206,7 @@ const AddressDisplay = ({ lat, lng, onClick }) => {
 
         fetchAddress();
         return () => { isMounted = false; };
-    }, [lat, lng, t]);
+    }, [lat, lng, t, i18n.language]);
 
     return (
         <button
@@ -267,7 +269,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
 };
 
 const LostReports = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -295,6 +297,8 @@ const LostReports = () => {
     const [sightingReportId, setSightingReportId] = useState(null);
     const [mapLocation, setMapLocation] = useState(null);
     const [detailReport, setDetailReport] = useState(null);
+
+    const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
 
     const parseDate = (dateInput) => {
         if (!dateInput) return null;
@@ -570,13 +574,12 @@ const LostReports = () => {
                                         <h3 className="font-bold text-gray-900 line-clamp-1 group-hover:text-emerald-700 transition-colors">{report.title}</h3>
                                         {dateValue && (
                                             <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md whitespace-nowrap ml-2">
-                                                {parseDate(dateValue)?.toLocaleDateString() || "Unknown"}
+                                                {parseDate(dateValue)?.toLocaleDateString(currentLocale) || "Unknown"}
                                             </span>
                                         )}
                                     </div>
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || t('no_description_provided')}</p>
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-
                                         <AddressDisplay
                                             lat={report.latitude}
                                             lng={report.longitude}
@@ -588,7 +591,6 @@ const LostReports = () => {
                                                 }
                                             }}
                                         />
-
                                         <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><Eye className="w-4 h-4" /> {t('i_found_this_pet_btn')}</button>
                                     </div>
                                 </div>
