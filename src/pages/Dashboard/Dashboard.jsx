@@ -10,12 +10,14 @@ import ReportsMap from "./ReportsMap";
 import { fetchMyLostReports, addLostReportToFoundReport } from "@/services/api";
 import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
+import AdminMenu from "@/components/admin/AdminMenu";
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("found");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [myLostReports, setMyLostReports] = useState([]);
@@ -26,6 +28,18 @@ const Dashboard = () => {
   const logoMenuRef = useRef(null);
 
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        if (user.role === "ADMIN") {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("Error parsing user data", error);
+      }
+    }
+
     const handleClickOutside = (event) => {
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
         setIsMobileMenuOpen(false);
@@ -147,6 +161,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4 relative z-[5000]">
+            {isAdmin && <AdminMenu />}
             <Notifications />
             <ProfileButton />
           </div>

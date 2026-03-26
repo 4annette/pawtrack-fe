@@ -364,4 +364,19 @@ export const fetchFoundReportsList = async (filters = {}) => {
   return response.data;
 };
 
+//ADMIN
+
+export const fetchAllUsersFiltered = async (page = 0, size = 10, filters = {}, sortBy = 'createdAt', sortDirection = 'DESC') => {
+  const response = await api.post('/admin/users/filter', filters || {}, {
+    params: { page, size, sortBy, sortDirection }
+  });
+  return response.data;
+};
+
+export const updateUserStatus = (userId, status) => {
+    return api.patch(`/admin/users/${userId}/account-status`, null, {
+        params: { accountStatus: status }
+    });
+};
+
 export default api;

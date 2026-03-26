@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe } from "lucide-react";
 import { toast } from "sonner";
-import { loginUser, registerUser, syncFcmToken, fetchStatistics } from "@/services/api";
+import { loginUser, registerUser, syncFcmToken, fetchStatistics, fetchCurrentUser } from "@/services/api";
 
 const Auth = () => {
   const { t, i18n } = useTranslation();
@@ -62,11 +62,15 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const data = await loginUser({
+        const authData = await loginUser({
           username: formData.username,
           password: formData.password
         });
-        localStorage.setItem('token', data.token);
+        
+        localStorage.setItem('token', authData.token);
+
+        const userDetails = await fetchCurrentUser();
+        localStorage.setItem('user', JSON.stringify(userDetails));
 
         try {
           await syncFcmToken();
@@ -75,7 +79,10 @@ const Auth = () => {
         }
 
         toast.success(t('auth_welcome_back'));
+        
+        // Changed: Always navigate to dashboard regardless of role
         navigate('/dashboard');
+        
       } else {
         await registerUser(formData);
         toast.success(t('auth_account_created'));
