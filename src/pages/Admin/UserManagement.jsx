@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
     Loader2, Trash2, Shield, Users, Mail, ChevronLeft,
     ChevronRight, Calendar, UserCheck, Edit3, FileSearch,
-    Search, Ban, AlertCircle, Building2, ChevronDown, X, Check, Clock
+    Search, Ban, AlertCircle, Building2, ChevronDown, X, Check, Clock, User
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
@@ -99,21 +99,63 @@ const CustomDatePicker = ({ label, value, onChange }) => {
     );
 };
 
-const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange, placeholder }) => {
-    const { t } = useTranslation();
-    if (!isOpen || !anchorRef.current) return null;
-    const rect = anchorRef.current.getBoundingClientRect();
-    const top = rect.bottom + window.scrollY;
-    const left = rect.left + window.scrollX;
+const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange }) => {
+    const [coords, setCoords] = useState(null);
+    const headerHeight = 64;
+
+    const updatePosition = () => {
+        if (anchorRef.current) {
+            const rect = anchorRef.current.getBoundingClientRect();
+            let finalTop = rect.bottom;
+            let finalOpacity = 1;
+
+            if (rect.bottom < headerHeight) {
+                finalTop = headerHeight;
+                finalOpacity = 0;
+            } else if (rect.top < headerHeight) {
+                finalTop = headerHeight;
+            }
+
+            setCoords({
+                top: finalTop,
+                left: rect.left,
+                width: rect.width,
+                opacity: finalOpacity
+            });
+        }
+    };
+
+    useLayoutEffect(() => {
+        if (isOpen) updatePosition();
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) {
+            window.addEventListener('scroll', updatePosition, true);
+            window.addEventListener('resize', updatePosition);
+        }
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
+    }, [isOpen]);
+
+    if (!isOpen || !coords) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999]" onClick={onClose}>
+        <div 
+            className="fixed inset-0 z-[10001]" 
+            style={{ pointerEvents: coords.opacity === 0 ? 'none' : 'auto' }}
+            onClick={onClose}
+        >
             <div
-                className="absolute bg-white border border-gray-100 shadow-xl rounded-xl p-1.5 animate-in fade-in zoom-in-95 duration-150"
+                className="fixed bg-white border border-gray-100 shadow-xl rounded-xl p-1.5 transition-opacity duration-150"
                 style={{
-                    top: `${top + 4}px`,
-                    left: `${left}px`,
-                    minWidth: `${rect.width}px`
+                    top: `${coords.top + 4}px`,
+                    left: `${coords.left}px`,
+                    width: `${coords.width}px`,
+                    opacity: coords.opacity,
+                    visibility: coords.opacity === 0 ? 'hidden' : 'visible'
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -164,15 +206,6 @@ const UserManagement = () => {
 
         return () => clearTimeout(delayDebounceFn);
     }, [page, filters]);
-
-    useEffect(() => {
-        const handleGlobalClick = () => {
-            setActiveDropdown({ id: null, type: null });
-            setFilterDropdown(null);
-        };
-        document.addEventListener("click", handleGlobalClick);
-        return () => document.removeEventListener("click", handleGlobalClick);
-    }, []);
 
     const loadUsers = async () => {
         try {
@@ -361,8 +394,8 @@ const UserManagement = () => {
                     />
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-visible min-h-[400px]">
-                    <div className="overflow-x-auto overflow-visible">
+                <div className="hidden lg:block bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-visible min-h-[400px]">
+                    <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-gray-50/50">
@@ -408,9 +441,9 @@ const UserManagement = () => {
                                                     {user.email}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 overflow-visible">
-                                                <div className="flex flex-col gap-2 relative">
-                                                    <div className="relative" ref={el => dropdownRefs.current[`role-${user.id}`] = el}>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col gap-2">
+                                                    <div ref={el => dropdownRefs.current[`role-${user.id}`] = el}>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setActiveDropdown({ id: user.id, type: 'role' }); }}
                                                             className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wide border transition-all w-32 ${getRoleStyle(user.role)} shadow-sm`}
@@ -428,7 +461,7 @@ const UserManagement = () => {
                                                         />
                                                     </div>
 
-                                                    <div className="relative" ref={el => dropdownRefs.current[`status-${user.id}`] = el}>
+                                                    <div ref={el => dropdownRefs.current[`status-${user.id}`] = el}>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setActiveDropdown({ id: user.id, type: 'status' }); }}
                                                             className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wide border transition-all w-32 ${getStatusStyle(user.accountStatus)} shadow-sm`}
@@ -468,27 +501,120 @@ const UserManagement = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
 
-                    <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                            {t('showing_users', { total: totalElements })} • {t('page_of', { current: page + 1, total: Math.max(1, totalPages) })}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                disabled={page <= 0}
-                                onClick={() => setPage(page - 1)}
-                                className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                disabled={page >= totalPages - 1 || totalPages === 0}
-                                onClick={() => setPage(page + 1)}
-                                className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                <div className="lg:hidden space-y-4">
+                    {!loading && users.length === 0 ? (
+                        <div className="bg-white rounded-[2rem] p-10 text-center border border-gray-100">
+                             <Search className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                             <p className="text-gray-400 font-bold">{t('no_results_found')}</p>
                         </div>
+                    ) : (
+                        users.map((user) => (
+                            <div key={user.id} className="bg-white rounded-[2rem] border border-gray-100 p-5 shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black border border-indigo-100 uppercase text-sm">
+                                            {user.firstName?.charAt(0) || user.username?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-gray-900 block truncate max-w-[200px]">
+                                                {user.firstName} {user.lastName}
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 font-bold block">@{user.username}</span>
+                                            <span className="text-[9px] text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                <Calendar className="w-3 h-3" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-300 hover:text-red-600 transition-colors">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="bg-gray-50/50 p-4 rounded-2xl">
+                                    <label className="text-[8px] font-black uppercase text-gray-400 mb-1.5 block">{t('email')}</label>
+                                    <div className="flex items-center gap-2 text-xs text-gray-600 font-bold truncate">
+                                        <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                        {user.email}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div ref={el => dropdownRefs.current[`role-mob-${user.id}`] = el}>
+                                        <label className="text-[8px] font-black uppercase text-gray-400 mb-1 block ml-1">{t('role')}</label>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setActiveDropdown({ id: user.id, type: 'role-mob' }); }}
+                                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wide border transition-all w-full ${getRoleStyle(user.role)} shadow-sm`}
+                                        >
+                                            {t(user.role)}
+                                            <ChevronDown className="w-3 h-3" />
+                                        </button>
+                                        <PortalDropdown
+                                            isOpen={activeDropdown.id === user.id && activeDropdown.type === 'role-mob'}
+                                            onClose={() => setActiveDropdown({ id: null, type: null })}
+                                            anchorRef={{ current: dropdownRefs.current[`role-mob-${user.id}`] }}
+                                            options={roles}
+                                            value={user.role}
+                                            onChange={(v) => handleUpdateRole(user.id, v)}
+                                        />
+                                    </div>
+
+                                    <div ref={el => dropdownRefs.current[`status-mob-${user.id}`] = el}>
+                                        <label className="text-[8px] font-black uppercase text-gray-400 mb-1 block ml-1">{t('status')}</label>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setActiveDropdown({ id: user.id, type: 'status-mob' }); }}
+                                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wide border transition-all w-full ${getStatusStyle(user.accountStatus)} shadow-sm`}
+                                        >
+                                            {t(user.accountStatus)}
+                                            <ChevronDown className="w-3 h-3" />
+                                        </button>
+                                        <PortalDropdown
+                                            isOpen={activeDropdown.id === user.id && activeDropdown.type === 'status-mob'}
+                                            onClose={() => setActiveDropdown({ id: null, type: null })}
+                                            anchorRef={{ current: dropdownRefs.current[`status-mob-${user.id}`] }}
+                                            options={statuses}
+                                            value={user.accountStatus}
+                                            onChange={(v) => handleUpdateStatus(user.id, v)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50/50 p-3 rounded-2xl">
+                                    <label className="text-[8px] font-black uppercase text-gray-400 mb-2 block text-center">{t('activity')}</label>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => navigate(`/admin/users/${user.id}/lost-reports`)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-orange-100 text-orange-600 rounded-xl text-[9px] font-black uppercase shadow-sm">
+                                            <FileSearch className="w-3.5 h-3.5" /> {t('lost')}
+                                        </button>
+                                        <button onClick={() => navigate(`/admin/users/${user.id}/found-reports`)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-emerald-100 text-emerald-600 rounded-xl text-[9px] font-black uppercase shadow-sm">
+                                            <Search className="w-3.5 h-3.5" /> {t('found')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                <div className="p-6 mt-8 bg-white lg:bg-gray-50/50 rounded-[2rem] border border-gray-100 flex items-center justify-between lg:rounded-t-none lg:rounded-b-[2.5rem] lg:border-t-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        {t('showing_users', { total: totalElements })} • {t('page_of', { current: page + 1, total: Math.max(1, totalPages) })}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={page <= 0}
+                            onClick={() => setPage(page - 1)}
+                            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            disabled={page >= totalPages - 1 || totalPages === 0}
+                            onClick={() => setPage(page + 1)}
+                            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
             </main>
