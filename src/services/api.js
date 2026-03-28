@@ -43,6 +43,11 @@ export const registerUser = async (userData) => {
   return response.data;
 };
 
+export const registerOrganization = async (orgData) => {
+  const response = await api.post('/auth/register/organization', orgData);
+  return response.data;
+};
+
 export const syncFcmToken = async () => {
   try {
     const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });

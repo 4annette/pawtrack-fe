@@ -274,7 +274,7 @@ const VerificationRequestsManagement = () => {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-4 py-8 relative">
                 <div className="mb-8 flex items-end justify-between">
                     <div>
                         <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
@@ -311,7 +311,7 @@ const VerificationRequestsManagement = () => {
                         </button>
 
                         {filterDropdown && (
-                            <div className="absolute top-full right-0 mt-3 w-screen max-w-[400px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-8 z-[1000] animate-in slide-in-from-top-2">
+                            <div className="absolute top-full right-0 mt-3 w-[calc(100vw-32px)] max-w-[400px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-8 z-[500] animate-in slide-in-from-top-2">
                                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-50">
                                     <h3 className="font-black text-gray-900 uppercase text-xs tracking-widest">{t('filter_options_title')}</h3>
                                     <button onClick={handleClearFilters} className="text-[10px] font-black uppercase text-red-500 hover:text-red-700">{t('clear_all')}</button>

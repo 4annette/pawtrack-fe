@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
     Loader2, Trash2, Shield, Users, Mail, ChevronLeft,
     ChevronRight, Calendar, UserCheck, Edit3, FileSearch,
-    Search, Ban, AlertCircle, Building2, ChevronDown, X, Check, Clock, User
+    Search, Ban, AlertCircle, Building2, ChevronDown, X, Check, Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
@@ -429,14 +429,14 @@ const UserManagement = () => {
                                                             {user.firstName} {user.lastName}
                                                         </span>
                                                         <span className="text-[10px] text-gray-400 font-bold block">@{user.username}</span>
-                                                        <span className="text-[9px] text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                        <span className="text-[9px] text-gray-500 font-medium flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                                             <Calendar className="w-3 h-3" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-xs text-gray-600 font-medium max-w-[150px] truncate">
+                                                <div className="flex items-center gap-2 text-xs text-gray-600 font-medium whitespace-nowrap">
                                                     <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                                                     {user.email}
                                                 </div>

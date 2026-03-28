@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe, Building2, Phone } from "lucide-react";
 import { toast } from "sonner";
-import { loginUser, registerUser, syncFcmToken, fetchStatistics, fetchCurrentUser } from "@/services/api";
+import { loginUser, registerUser, registerOrganization, syncFcmToken, fetchStatistics, fetchCurrentUser } from "@/services/api";
 
 const Auth = () => {
   const { t, i18n } = useTranslation();
@@ -17,7 +17,8 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(
     location.state?.mode === "register" ? false : true
   );
-
+  
+  const [isOrgRegistration, setIsOrgRegistration] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
@@ -32,6 +33,8 @@ const Auth = () => {
     email: "",
     firstName: "",
     lastName: "",
+    organizationName: "",
+    phone: ""
   });
 
   useEffect(() => {
@@ -68,7 +71,6 @@ const Auth = () => {
         });
         
         localStorage.setItem('token', authData.token);
-
         const userDetails = await fetchCurrentUser();
         localStorage.setItem('user', JSON.stringify(userDetails));
 
@@ -79,13 +81,28 @@ const Auth = () => {
         }
 
         toast.success(t('auth_welcome_back'));
-        
-        // Changed: Always navigate to dashboard regardless of role
         navigate('/dashboard');
         
       } else {
-        await registerUser(formData);
-        toast.success(t('auth_account_created'));
+        if (isOrgRegistration) {
+          await registerOrganization({
+            username: formData.username,
+            password: formData.password,
+            email: formData.email,
+            organizationName: formData.organizationName,
+            phone: formData.phone
+          });
+          toast.success(t('auth_org_request_sent'));
+        } else {
+          await registerUser({
+            username: formData.username,
+            password: formData.password,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName
+          });
+          toast.success(t('auth_account_created'));
+        }
         setIsLogin(true);
       }
     } catch (err) {
@@ -154,27 +171,46 @@ const Auth = () => {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">
-              {isLogin ? t('auth_welcome_title') : t('auth_register_title')}
+            <h1 className="text-3xl font-display font-bold text-gray-900 mb-2 transition-all duration-300">
+              {isLogin ? t('auth_welcome_title') : (isOrgRegistration ? t('auth_org_register_title') : t('auth_register_title'))}
             </h1>
             <p className="text-gray-500">
-              {isLogin ? t('auth_welcome_desc') : t('auth_register_desc')}
+              {isLogin ? t('auth_welcome_desc') : (isOrgRegistration ? t('auth_org_register_desc') : t('auth_register_desc'))}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">{t('auth_first_name')}</Label>
-                    <Input id="firstName" name="firstName" placeholder="Jane" value={formData.firstName} onChange={handleChange} required />
+                {!isOrgRegistration ? (
+                  <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">{t('auth_first_name')}</Label>
+                      <Input id="firstName" name="firstName" placeholder="Jane" value={formData.firstName} onChange={handleChange} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">{t('auth_last_name')}</Label>
+                      <Input id="lastName" name="lastName" placeholder="Doe" value={formData.lastName} onChange={handleChange} required />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">{t('auth_last_name')}</Label>
-                    <Input id="lastName" name="lastName" placeholder="Doe" value={formData.lastName} onChange={handleChange} required />
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <Label htmlFor="organizationName">{t('auth_org_name')}</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input id="organizationName" name="organizationName" placeholder="Clinic Name" value={formData.organizationName} onChange={handleChange} className="pl-11" required />
+                      </div>
+                    </div>
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <Label htmlFor="phone">{t('auth_phone')}</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input id="phone" name="phone" placeholder="69XXXXXXXX" value={formData.phone} onChange={handleChange} className="pl-11" required />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('auth_email')}</Label>
@@ -190,7 +226,7 @@ const Auth = () => {
               <Label htmlFor="username">{t('auth_username')}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input id="username" name="username" type="text" placeholder="coolcat123" value={formData.username} onChange={handleChange} className="pl-11" required />
+                <Input id="username" name="username" type="text" placeholder="username" value={formData.username} onChange={handleChange} className="pl-11" required />
               </div>
             </div>
 
@@ -218,22 +254,40 @@ const Auth = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-11 rounded-lg font-bold shadow-md transition-all hover:scale-[1.02]" disabled={loading}>
+            <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-11 rounded-lg font-bold shadow-md transition-all hover:scale-[1.01]" disabled={loading}>
               {loading ? t('auth_processing') : (isLogin ? t('login') : t('signup'))}
               {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
           </form>
 
-          <p className="text-center mt-8 text-gray-500">
-            {isLogin ? t('auth_no_account') : t('auth_has_account')}{" "}
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-emerald-600 hover:text-emerald-700 font-semibold"
-            >
-              {isLogin ? t('signup') : t('login')}
-            </button>
-          </p>
+          <div className="mt-8 text-center space-y-2">
+            {!isLogin && (
+              <p className="text-gray-500 text-sm">
+                {isOrgRegistration ? t('auth_is_user') || "Registering as organization?" : t('auth_is_org') || "Are you a professional?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsOrgRegistration(!isOrgRegistration)}
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold"
+                >
+                  {isOrgRegistration ? t('auth_switch_to_user') : t('auth_switch_to_org')}
+                </button>
+              </p>
+            )}
+
+            <p className="text-gray-500 text-sm">
+              {isLogin ? t('auth_no_account') : t('auth_has_account')}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setIsOrgRegistration(false);
+                }}
+                className="text-emerald-600 hover:text-emerald-700 font-semibold"
+              >
+                {isLogin ? t('signup') : t('login')}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
