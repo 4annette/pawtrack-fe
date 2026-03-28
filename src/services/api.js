@@ -3,8 +3,10 @@ import { messaging, auth } from '../firebase/firebaseInitialization';
 import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
-const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
-const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+// const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+// const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+
+const BASE_URL = 'http://localhost:8080/api/v1/';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -374,31 +376,53 @@ export const fetchAllUsersFiltered = async (page = 0, size = 10, filters = {}, s
 };
 
 export const updateUserStatus = (userId, status) => {
-    return api.patch(`/admin/users/${userId}/account-status`, null, {
-        params: { accountStatus: status }
-    });
+  return api.patch(`/admin/users/${userId}/account-status`, null, {
+    params: { accountStatus: status }
+  });
 };
 
 export const getUserFoundReports = (userId, page = 0, size = 10) => {
-    return api.get(`/admin/users/${Number(userId)}/found-reports`, {
-        params: {
-            page: page,
-            size: size,
-            sortBy: 'dateFound',
-            sortDirection: 'DESC'
-        }
-    });
+  return api.get(`/admin/users/${Number(userId)}/found-reports`, {
+    params: {
+      page: page,
+      size: size,
+      sortBy: 'dateFound',
+      sortDirection: 'DESC'
+    }
+  });
 };
 
 export const getUserLostReports = (userId, page = 0, size = 10) => {
-    return api.get(`/admin/users/${userId}/lost-reports`, {
-        params: {
-            page: page,
-            size: size,
-            sortBy: 'dateLost',
-            sortDirection: 'DESC'
-        }
-    });
+  return api.get(`/admin/users/${userId}/lost-reports`, {
+    params: {
+      page: page,
+      size: size,
+      sortBy: 'dateLost',
+      sortDirection: 'DESC'
+    }
+  });
+};
+
+export const fetchVerificationRequests = async (filters, params) => {
+  const response = await api.post('/admin/organizations/requests/filter', filters, { params });
+  return response.data;
+};
+
+export const fetchVerificationRequestById = async (requestId) => {
+  const response = await api.get(`/admin/organizations/requests/${requestId}`);
+  return response.data;
+};
+
+export const changeVerificationStatus = async (requestId, status) => {
+  const response = await api.patch(`/admin/organizations/requests/${requestId}/change-status`, null, {
+    params: { status }
+  });
+  return response.data;
+};
+
+export const deleteVerificationRequest = async (requestId) => {
+  const response = await api.delete(`/admin/organizations/requests/${requestId}`);
+  return response.data;
 };
 
 export default api;
