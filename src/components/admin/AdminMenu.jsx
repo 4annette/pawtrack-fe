@@ -40,11 +40,14 @@ const AdminMenu = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white border border-gray-100 shadow-2xl rounded-[2rem] z-[5000] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="p-3 border-b border-gray-50 bg-gray-50/50">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-3">Management</p>
+                <div className="fixed md:absolute top-20 md:top-full right-4 md:right-0 mt-0 md:mt-3 w-[calc(100vw-32px)] md:w-64 bg-white border border-gray-100 shadow-2xl rounded-[2rem] z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Management</p>
+                        <button onClick={() => setIsOpen(false)} className="md:hidden p-1 text-gray-400">
+                            <LayoutGrid className="w-4 h-4" />
+                        </button>
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 max-h-[70vh] overflow-y-auto">
                         {menuItems.map((item) => (
                             <button
                                 key={item.path}
@@ -52,9 +55,11 @@ const AdminMenu = () => {
                                     navigate(item.path);
                                     setIsOpen(false);
                                 }}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 transition-colors group text-left"
+                                className="w-full flex items-center gap-4 px-4 py-4 md:py-3 rounded-2xl hover:bg-gray-50 transition-colors group text-left"
                             >
-                                <item.icon className={`w-5 h-5 ${item.color}`} />
+                                <div className={`p-2 rounded-xl bg-white shadow-sm border border-gray-50 group-hover:scale-110 transition-transform`}>
+                                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                                </div>
                                 <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900">
                                     {t(item.label) || item.label.replace(/_/g, ' ')}
                                 </span>

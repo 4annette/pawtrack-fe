@@ -379,4 +379,26 @@ export const updateUserStatus = (userId, status) => {
     });
 };
 
+export const getUserFoundReports = (userId, page = 0, size = 10) => {
+    return api.get(`/admin/users/${Number(userId)}/found-reports`, {
+        params: {
+            page: page,
+            size: size,
+            sortBy: 'dateFound',
+            sortDirection: 'DESC'
+        }
+    });
+};
+
+export const getUserLostReports = (userId, page = 0, size = 10) => {
+    return api.get(`/admin/users/${userId}/lost-reports`, {
+        params: {
+            page: page,
+            size: size,
+            sortBy: 'dateLost',
+            sortDirection: 'DESC'
+        }
+    });
+};
+
 export default api;
