@@ -20,7 +20,8 @@ import {
   deleteFoundReport,
   uploadFoundReportImage,
   deleteFoundReportImage,
-  markFoundReportAsFound
+  markFoundReportAsFound,
+  translateText
 } from "../../services/api";
 import Header from "@/pages/Header";
 
@@ -212,6 +213,19 @@ const FoundReportDetails = () => {
     }
   };
 
+  const translateOrFallback = async (text, fromLang, toLang) => {
+    if (!text) return '';
+    try {
+      const translated = await translateText(text, fromLang, toLang);
+      return translated || text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  };
+
+  const containsGreek = (text) => /[\u0370-\u03FF]/.test(text);
+
   const handleToggleFound = async () => {
     if (!isEditing) return;
 
@@ -237,7 +251,35 @@ const FoundReportDetails = () => {
     try {
       const rawDate = report.foundDate || originalReport.foundDate;
       const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
-      const payload = { ...report, dateFound: formattedDate, chipNumber: parseInt(report.chipNumber) || 0 };
+
+      const title = (report.title || '').trim();
+      const description = (report.description || '').trim();
+      const titleIsGreek = containsGreek(title);
+      const descriptionIsGreek = containsGreek(description);
+
+      const titleEl = titleIsGreek
+        ? title
+        : await translateOrFallback(title, 'en', 'el');
+      const titleEn = titleIsGreek
+        ? await translateOrFallback(title, 'el', 'en')
+        : title;
+
+      const descriptionEl = descriptionIsGreek
+        ? description
+        : await translateOrFallback(description, 'en', 'el');
+      const descriptionEn = descriptionIsGreek
+        ? await translateOrFallback(description, 'el', 'en')
+        : description;
+
+      const payload = {
+        ...report,
+        title: titleEn,
+        titleEl,
+        description: descriptionEn,
+        descriptionEl,
+        dateFound: formattedDate,
+        chipNumber: parseInt(report.chipNumber) || 0
+      };
       delete payload.foundDate;
 
       await updateFoundReport(id, payload);
