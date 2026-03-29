@@ -271,7 +271,7 @@ const ReportsMap = () => {
                                             </div>
                                             <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <MapPin className="w-3 h-3" />
-                                                {report.species}
+                                                {t(report.species) || report.species}
                                             </div>
                                         </div>
                                     </div>
@@ -307,7 +307,7 @@ const ReportsMap = () => {
                                             </div>
                                             <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                                                 <MapPin className="w-3 h-3" />
-                                                {report.species}
+                                                {t(report.species) || report.species}
                                             </div>
                                         </div>
                                     </div>

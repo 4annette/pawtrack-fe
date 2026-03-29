@@ -227,7 +227,7 @@ const AdminViewFoundReport = () => {
                                 <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Calendar className="w-4 h-4" /></div>
                                 <div>
                                     <p className="text-[8px] font-black text-gray-400 uppercase leading-none">{t('date_found') || "DATE"}</p>
-                                    <p className="text-xs font-bold text-gray-700">{report.foundDate ? report.foundDate.replace('T', ' ').substring(0, 16) : 'N/A'}</p>
+                                    <p className="text-xs font-bold text-gray-700">{report.foundDate ? report.foundDate.replace('T', ' ').substring(0, 16) : t('not_set')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ const AdminViewFoundReport = () => {
                                 <div>
                                     <p className="text-[8px] font-black text-gray-400 uppercase leading-none">{t('condition') || "CONDITION"}</p>
                                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg border uppercase ${getConditionStyle(report.condition)}`}>
-                                        {report.condition || "N/A"}
+                                        {t(report.condition) || report.condition || t('not_set')}
                                     </span>
                                 </div>
                             </div>
@@ -252,7 +252,7 @@ const AdminViewFoundReport = () => {
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('species') || "SPECIES"}</label>
                                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg w-fit capitalize">
-                                        <Dog className="w-3 h-3" /> {report.species || "N/A"}
+                                        <Dog className="w-3 h-3" /> {t(report.species) || report.species || t('not_set')}
                                     </div>
                                 </div>
                             </div>
@@ -280,7 +280,7 @@ const AdminViewFoundReport = () => {
                                     <MapContainer center={[report.latitude, report.longitude]} zoom={15} style={{ height: "100%", width: "100%" }}>
                                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                         <Marker position={[report.latitude, report.longitude]}>
-                                            <Popup>{getLocalizedTitle(report) || "Found Pet"}</Popup>
+                                            <Popup>{getLocalizedTitle(report) || t('found_report_popup_title')}</Popup>
                                         </Marker>
                                         <RecenterMap lat={report.latitude} lng={report.longitude} />
                                     </MapContainer>

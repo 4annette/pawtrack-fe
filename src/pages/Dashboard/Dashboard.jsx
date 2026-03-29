@@ -163,8 +163,8 @@ const Dashboard = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-gray-900 truncate group-hover:text-emerald-700">{getLocalizedTitle(report)}</h4>
-                      <p className="text-xs text-gray-500 mt-1 truncate">{report.species} • {report.breed || "Unknown Breed"}</p>
-                      <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-wide">LOST: {report.lostDate ? report.lostDate.substring(0, 10) : 'Unknown'}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{t(report.species) || report.species} • {report.breed || t('unknown_breed')}</p>
+                      <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-wide">{t('lost_badge')}: {report.lostDate ? report.lostDate.substring(0, 10) : t('unknown')}</p>
                     </div>
                     {submittingClaim && (
                       <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />

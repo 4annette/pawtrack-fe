@@ -217,7 +217,7 @@ const AdminViewLostReport = () => {
                                 <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Calendar className="w-4 h-4" /></div>
                                 <div>
                                     <p className="text-[8px] font-black text-gray-400 uppercase leading-none">{t('date_lost') || "DATE"}</p>
-                                    <p className="text-xs font-bold text-gray-700">{report.lostDate ? report.lostDate.replace('T', ' ').substring(0, 16) : 'N/A'}</p>
+                                    <p className="text-xs font-bold text-gray-700">{report.lostDate ? report.lostDate.replace('T', ' ').substring(0, 16) : t('not_set')}</p>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +233,7 @@ const AdminViewLostReport = () => {
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('species') || "SPECIES"}</label>
                                     <div className="flex items-center gap-2 text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-lg w-fit capitalize">
-                                        <Dog className="w-3 h-3" /> {report.species || "N/A"}
+                                        <Dog className="w-3 h-3" /> {t(report.species) || report.species || t('not_set')}
                                     </div>
                                 </div>
                             </div>
