@@ -32,6 +32,23 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const getCurrentLanguageFromI18n = (i18n) => {
+    const preferred = i18n?.language || i18n?.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+    return String(preferred).toLowerCase();
+};
+
+const getLocalizedTitle = (item, i18n) => {
+    if (!item) return '';
+    const isGreek = getCurrentLanguageFromI18n(i18n).startsWith('el');
+    return isGreek ? item.titleEl || item.title || '' : item.title || item.titleEl || '';
+};
+
+const getLocalizedDescription = (item, i18n) => {
+    if (!item) return '';
+    const isGreek = getCurrentLanguageFromI18n(i18n).startsWith('el');
+    return isGreek ? item.descriptionEl || item.description || '' : item.description || item.descriptionEl || '';
+};
+
 const RecenterMap = ({ lat, lng }) => {
     const map = useMap();
     useEffect(() => {
@@ -339,7 +356,7 @@ export const CustomFileInput = ({ label, onChange, selectedFile }) => {
 };
 
 export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSighting, onClaim }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     if (!isOpen || !report) return null;
     const isLostReport = report.isLost ?? !!(report.lostDate || report.dateLost);
     const dateLabel = isLostReport ? t('label_date_lost') : t('label_date_found');
@@ -365,7 +382,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
             <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                 <div className="relative h-64 sm:h-80 bg-gray-100 shrink-0">
-                    {report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50"><Dog className="w-16 h-16 opacity-30 mb-2" /><span className="text-sm font-medium">{t('no_image_text')}</span></div>}
+                    {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report, i18n)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50"><Dog className="w-16 h-16 opacity-30 mb-2" /><span className="text-sm font-medium">{t('no_image_text')}</span></div>}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black hover:bg-gray-800 rounded-full text-white shadow-lg"><X className="w-5 h-5" /></button>
                     <div className="absolute bottom-0 left-0 p-6 text-white w-full">
@@ -374,13 +391,13 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
                                 {getTranslatedSpecies(report.species)}
                             </span>
                         </div>
-                        <h2 className="text-2xl font-bold leading-tight">{report.title}</h2>
+                        <h2 className="text-2xl font-bold leading-tight">{getLocalizedTitle(report, i18n)}</h2>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                         <h4 className="text-sm font-bold text-emerald-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {t('label_description', { format: 'uppercase' })}</h4>
-                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{report.description || t('no_description_provided')}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{getLocalizedDescription(report, i18n) || t('no_description_provided')}</p>
                     </div>
                     {isLostReport && report.statusSentence && (
                         <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
@@ -443,7 +460,7 @@ export const ReportDetailsModal = ({ isOpen, onClose, report, onViewMap, onAddSi
 };
 
 export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundReport }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [myLostReports, setMyLostReports] = useState([]);
     const [loading, setLoading] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -503,7 +520,7 @@ export const ClaimModal = ({ isOpen, onClose, foundReport, addLostReportToFoundR
                     ) : (
                         myLostReports.map(r => (
                             <div key={r.id} className="border border-gray-100 p-3 rounded-lg flex justify-between items-center hover:bg-gray-50 cursor-pointer">
-                                <span className="font-bold text-sm">{r.title}</span>
+                                <span className="font-bold text-sm">{getLocalizedTitle(r, i18n)}</span>
                                 <button onClick={() => handleClaim(r.id)} disabled={loading} className="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-md hover:bg-emerald-700 transition-colors">{t('select_btn_text')}</button>
                             </div>
                         ))
@@ -623,7 +640,7 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
                         <div className="space-y-3">
                             {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">{t('no_matching_reports')}</p> : myReports.map(r => (
                                 <div key={r.id} onClick={() => setSelectedExistingId(r.id)} className={`p-3 border rounded-lg cursor-pointer ${selectedExistingId === r.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'}`}>
-                                    <p className="font-bold text-sm">{r.title}</p>
+                                    <p className="font-bold text-sm">{getLocalizedTitle(r, i18n)}</p>
                                     <p className="text-xs text-gray-500">{new Date(r.foundDate || r.lostDate).toLocaleDateString(currentLocale)}</p>
                                 </div>
                             ))}

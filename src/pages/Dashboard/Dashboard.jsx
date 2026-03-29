@@ -10,8 +10,17 @@ import ReportsMap from "./ReportsMap";
 import { fetchMyLostReports, addLostReportToFoundReport } from "@/services/api";
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const getCurrentLanguage = () => {
+    const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+    return String(preferred).toLowerCase();
+  };
+  const isGreekLanguage = getCurrentLanguage().startsWith('el');
+  const getLocalizedTitle = (item) => {
+    if (!item) return '';
+    return isGreekLanguage ? item.titleEl || item.title || '' : item.title || item.titleEl || '';
+  };
   const [activeTab, setActiveTab] = useState("found");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -145,7 +154,7 @@ const Dashboard = () => {
                   >
                     <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
                       {report.imageUrl ? (
-                        <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
+                        <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <User className="w-6 h-6" />
@@ -153,7 +162,7 @@ const Dashboard = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 truncate group-hover:text-emerald-700">{report.title}</h4>
+                      <h4 className="font-bold text-gray-900 truncate group-hover:text-emerald-700">{getLocalizedTitle(report)}</h4>
                       <p className="text-xs text-gray-500 mt-1 truncate">{report.species} • {report.breed || "Unknown Breed"}</p>
                       <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-wide">LOST: {report.lostDate ? report.lostDate.substring(0, 10) : 'Unknown'}</p>
                     </div>

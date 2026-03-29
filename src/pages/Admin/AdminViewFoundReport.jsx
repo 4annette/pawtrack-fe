@@ -46,9 +46,22 @@ const RecenterMap = ({ lat, lng }) => {
 };
 
 const AdminViewFoundReport = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
+    const getCurrentLanguage = () => {
+        const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+        return String(preferred).toLowerCase();
+    };
+    const isGreekLanguage = getCurrentLanguage().startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.titleEl || item.title || item.titleEl || '' : item.title || item.titleEl || item.title || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.descriptionEl || item.description || item.descriptionEl || '' : item.description || item.descriptionEl || item.description || '';
+    };
     
     const [loading, setLoading] = useState(true);
     const [imageLoading, setImageLoading] = useState(false);
@@ -234,7 +247,7 @@ const AdminViewFoundReport = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('title') || "TITLE"}</label>
-                                    <div className="text-lg font-black text-gray-800">{report.title || "Untitled"}</div>
+                                    <div className="text-lg font-black text-gray-800">{getLocalizedTitle(report) || "Untitled"}</div>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('species') || "SPECIES"}</label>
@@ -247,7 +260,7 @@ const AdminViewFoundReport = () => {
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('description') || "DESCRIPTION"}</label>
                                 <div className="text-sm font-medium text-gray-600 bg-gray-50/50 p-4 rounded-2xl border border-gray-100 leading-relaxed italic">
-                                    "{report.description || "No description provided."}"
+                                    "{getLocalizedDescription(report) || "No description provided."}"
                                 </div>
                             </div>
                         </div>
@@ -267,7 +280,7 @@ const AdminViewFoundReport = () => {
                                     <MapContainer center={[report.latitude, report.longitude]} zoom={15} style={{ height: "100%", width: "100%" }}>
                                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                         <Marker position={[report.latitude, report.longitude]}>
-                                            <Popup>{report.title || "Found Pet"}</Popup>
+                                            <Popup>{getLocalizedTitle(report) || "Found Pet"}</Popup>
                                         </Marker>
                                         <RecenterMap lat={report.latitude} lng={report.longitude} />
                                     </MapContainer>
@@ -299,10 +312,10 @@ const AdminViewFoundReport = () => {
                                 <div className="w-2/3 p-5 flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-start mb-1">
-                                            <h3 className="text-xs font-black text-gray-800 uppercase truncate pr-4">{report.lostReport.title}</h3>
+                                            <h3 className="text-xs font-black text-gray-800 uppercase truncate pr-4">{getLocalizedTitle(report.lostReport)}</h3>
                                             <span className="text-[8px] font-black text-gray-300">ID: #{report.lostReport.id}</span>
                                         </div>
-                                        <p className="text-[10px] text-gray-500 line-clamp-2 italic mb-3">"{report.lostReport.description}"</p>
+                                        <p className="text-[10px] text-gray-500 line-clamp-2 italic mb-3">"{getLocalizedDescription(report.lostReport)}"</p>
                                     </div>
                                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-orange-600 border-t border-gray-50 pt-3">
                                         <Calendar className="w-3 h-3" />

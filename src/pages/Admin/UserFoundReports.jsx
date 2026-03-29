@@ -111,8 +111,25 @@ const MapModal = ({ isOpen, onClose, lat, lng, title }) => {
 
 const UserFoundReports = () => {
     const { userId } = useParams();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const getCurrentLanguage = () => {
+        const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+        return String(preferred).toLowerCase();
+    };
+    const isGreekLanguage = getCurrentLanguage().startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return isGreekLanguage
+            ? item.titleEl || item.title || item.titleEl || ''
+            : item.title || item.titleEl || item.title || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return isGreekLanguage
+            ? item.descriptionEl || item.description || item.descriptionEl || ''
+            : item.description || item.descriptionEl || item.description || '';
+    };
     
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -219,7 +236,7 @@ const UserFoundReports = () => {
                             >
                                 <div className="aspect-video bg-gray-100 relative overflow-hidden rounded-t-[2.5rem]">
                                     {report.imageUrl ? (
-                                        <img src={report.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center"><Dog className="w-12 h-12 text-gray-200" /></div>
                                     )}
@@ -239,7 +256,7 @@ const UserFoundReports = () => {
 
                                 <div className="p-6 flex flex-col flex-1">
                                     <div className="flex items-start justify-between gap-4 mb-1">
-                                        <h3 className="text-lg font-black text-gray-900 truncate uppercase tracking-tight">{report.title || "Untitled"}</h3>
+                                        <h3 className="text-lg font-black text-gray-900 truncate uppercase tracking-tight">{getLocalizedTitle(report) || "Untitled"}</h3>
                                         <span className="text-[9px] font-black uppercase text-gray-300 tracking-tight shrink-0 mt-1.5">ID: #{report.id}</span>
                                     </div>
 
@@ -250,7 +267,7 @@ const UserFoundReports = () => {
                                     <div className="mb-4 flex-1">
                                         <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1.5">{t('description')}</p>
                                         <p className="text-xs text-gray-600 line-clamp-3 italic bg-gray-50/50 p-3 rounded-xl border border-gray-100 min-h-[3rem]">
-                                            {report.description || t('no_description')}
+                                            {getLocalizedDescription(report) || t('no_description')}
                                         </p>
                                     </div>
 
@@ -311,7 +328,7 @@ const UserFoundReports = () => {
                 onClose={() => setSelectedMap(null)} 
                 lat={selectedMap?.latitude} 
                 lng={selectedMap?.longitude} 
-                title={selectedMap?.title} 
+                title={getLocalizedTitle(selectedMap)} 
             />
         </div>
     );

@@ -336,6 +336,19 @@ const FoundReports = () => {
     const [detailReport, setDetailReport] = useState(null);
 
     const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
+    const getCurrentLanguage = () => {
+        const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+        return String(preferred).toLowerCase();
+    };
+    const isGreekLanguage = getCurrentLanguage().startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.titleEl || item.title || '' : item.title || item.titleEl || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.descriptionEl || item.description || '' : item.description || item.descriptionEl || '';
+    };
 
     useEffect(() => {
         if ("geolocation" in navigator) {
@@ -500,15 +513,15 @@ const FoundReports = () => {
                         reports.map((report) => (
                             <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1">
                                 <div className="relative h-64 bg-emerald-100 overflow-hidden">
-                                    {report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
+                                    {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
                                     <div className="absolute top-3 right-3"><span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${getConditionColor(report.condition)}`}>{report.species}</span></div>
                                 </div>
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-900 line-clamp-1">{report.title}</h3>
+                                        <h3 className="font-bold text-gray-900 line-clamp-1">{getLocalizedTitle(report)}</h3>
                                         <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">{new Date(report.foundDate).toLocaleDateString(currentLocale)}</span>
                                     </div>
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{report.description || t('no_description_provided')}</p>
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{getLocalizedDescription(report) || t('no_description_provided')}</p>
 
                                     <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
                                         <AddressDisplay

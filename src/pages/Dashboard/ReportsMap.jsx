@@ -40,8 +40,21 @@ const MapController = ({ coords }) => {
 };
 
 const ReportsMap = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [reports, setReports] = useState({ lost: [], found: [] });
+    const getCurrentLanguage = () => {
+        const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+        return String(preferred).toLowerCase();
+    };
+    const isGreekLanguage = getCurrentLanguage().startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.titleEl || item.title || '' : item.title || item.titleEl || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.descriptionEl || item.description || '' : item.description || item.descriptionEl || '';
+    };
     const [loading, setLoading] = useState(true);
     const [flyToCoords, setFlyToCoords] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
@@ -237,7 +250,7 @@ const ReportsMap = () => {
                                 <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'lost')}>
                                     <div className="h-28 bg-orange-50 relative overflow-hidden">
                                         {report.imageUrl ? (
-                                            <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
+                                            <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-orange-200">
                                                 <Camera className="w-10 h-10" />
@@ -249,7 +262,7 @@ const ReportsMap = () => {
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
-                                            {report.title}
+                                            {getLocalizedTitle(report)}
                                         </h3>
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             <div className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
@@ -273,7 +286,7 @@ const ReportsMap = () => {
                                 <div className="flex flex-col font-sans overflow-hidden rounded-[1.3rem] cursor-pointer" onClick={() => handleOpenDetails(report.id, 'found')}>
                                     <div className="h-28 bg-emerald-50 relative overflow-hidden">
                                         {report.imageUrl ? (
-                                            <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" />
+                                            <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-emerald-200">
                                                 <Camera className="w-10 h-10" />
@@ -285,7 +298,7 @@ const ReportsMap = () => {
                                     </div>
                                     <div className="p-4 bg-white text-center">
                                         <h3 className="font-black text-gray-800 text-sm leading-tight mb-3 italic whitespace-normal break-words">
-                                            {report.title}
+                                            {getLocalizedTitle(report)}
                                         </h3>
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">

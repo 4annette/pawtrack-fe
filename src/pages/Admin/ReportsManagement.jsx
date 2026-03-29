@@ -278,7 +278,7 @@ const AddressDisplay = ({ lat, lng, activeTab, onClick }) => {
 };
 
 const ReportsManagement = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [activeTab, setActiveTab] = useState("lost");
@@ -291,6 +291,16 @@ const ReportsManagement = () => {
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [searchLocation, setSearchLocation] = useState(null);
     const [viewerMapData, setViewerMapData] = useState({ isOpen: false, pos: null, title: "" });
+
+    const isGreekLanguage = i18n.language?.startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return (isGreekLanguage ? item.titleEl : item.title) || item.title || item.titleEl || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return (isGreekLanguage ? item.descriptionEl : item.description) || item.description || item.descriptionEl || '';
+    };
 
     const [filters, setFilters] = useState({ 
         search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null 
@@ -460,19 +470,19 @@ const ReportsManagement = () => {
                             <div key={report.id} onClick={() => handleCardClick(report.id)} className="bg-white rounded-[2.5rem] border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group overflow-hidden relative cursor-pointer">
                                 <div className={`absolute top-0 left-0 w-1.5 h-full ${activeTab === 'lost' ? 'bg-orange-500' : 'bg-emerald-500'}`} />
                                 <div className="flex flex-col md:flex-row gap-6">
-                                    <div className="w-full md:w-40 h-40 rounded-[1.5rem] bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-50">{report.imageUrl ? <img src={report.imageUrl} alt={report.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-10 h-10" /></div>}</div>
+                                    <div className="w-full md:w-40 h-40 rounded-[1.5rem] bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-50">{report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-10 h-10" /></div>}</div>
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                                         <div>
                                             <div className="flex justify-between items-start mb-2">
-                                                <h3 className={`text-xl font-bold text-gray-900 truncate pr-4 group-hover:text-${activeTab === 'lost' ? 'orange' : 'emerald'}-600 transition-colors`}>{report.title}</h3>
+                                                <h3 className={`text-xl font-bold text-gray-900 truncate pr-4 group-hover:text-${activeTab === 'lost' ? 'orange' : 'emerald'}-600 transition-colors`}>{getLocalizedTitle(report)}</h3>
                                                 <div className="flex items-center gap-2">
                                                     <button onClick={(e) => handleDelete(report.id, e)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
                                                         <Trash2 className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-wrap gap-y-2 gap-x-4 mb-4"><span className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase"><Calendar className="w-3.5 h-3.5" /> {formatDate(report, t)}</span><AddressDisplay activeTab={activeTab} lat={report.latitude} lng={report.longitude} onClick={() => setViewerMapData({ isOpen: true, pos: { lat: report.latitude, lng: report.longitude }, title: report.title })} /><span className={`px-4 py-1.5 rounded-xl text-[13px] font-black uppercase tracking-widest border shadow-sm transition-all ${getSpeciesStyle(report.species)}`}>{report.species || 'N/A'}</span>{activeTab === 'found' && report.condition && <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border shadow-sm transition-all ${getConditionStyle(report.condition)}`}>{t(report.condition)}</span>}</div>
-                                            <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-4">{report.description || t('no_description_provided')}</p>
+                                            <div className="flex flex-wrap gap-y-2 gap-x-4 mb-4"><span className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase"><Calendar className="w-3.5 h-3.5" /> {formatDate(report, t)}</span><AddressDisplay activeTab={activeTab} lat={report.latitude} lng={report.longitude} onClick={() => setViewerMapData({ isOpen: true, pos: { lat: report.latitude, lng: report.longitude }, title: getLocalizedTitle(report) })} /><span className={`px-4 py-1.5 rounded-xl text-[13px] font-black uppercase tracking-widest border shadow-sm transition-all ${getSpeciesStyle(report.species)}`}>{report.species || 'N/A'}</span>{activeTab === 'found' && report.condition && <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border shadow-sm transition-all ${getConditionStyle(report.condition)}`}>{t(report.condition)}</span>}</div>
+                                            <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-4">{getLocalizedDescription(report) || t('no_description_provided')}</p>
                                         </div>
                                         <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between"><div className="flex items-center gap-3"><div className={`w-9 h-9 rounded-full bg-${activeTab === 'lost' ? 'orange' : 'emerald'}-50 flex items-center justify-center text-${activeTab === 'lost' ? 'orange' : 'emerald'}-600 font-bold text-xs uppercase border border-${activeTab === 'lost' ? 'orange' : 'emerald'}-100 shadow-sm`}>{report.creator?.firstName?.charAt(0) || <User className="w-4 h-4" />}</div><div className="flex flex-col"><span className="text-xs font-bold text-gray-900 leading-none">{report.creator?.firstName} {report.creator?.lastName}</span><span className="text-[10px] text-gray-400 font-medium flex items-center gap-1 mt-1"><Mail className="w-3 h-3" /> {report.creator?.email}</span></div></div><span className="text-[10px] font-black text-gray-300 uppercase tracking-tighter">ID: #{report.id}</span></div>
                                     </div>

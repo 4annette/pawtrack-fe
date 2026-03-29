@@ -128,9 +128,20 @@ const AestheticDropdown = ({ label, value, options, onChange, type }) => {
 };
 
 const MyReports = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const isGreekLanguage = i18n.language?.startsWith('el');
+
+  const getLocalizedTitle = (item) => {
+    if (!item) return '';
+    return (isGreekLanguage ? item.titleEl : item.title) || item.title || item.titleEl || '';
+  };
+
+  const getLocalizedDescription = (item) => {
+    if (!item) return '';
+    return (isGreekLanguage ? item.descriptionEl : item.description) || item.description || item.descriptionEl || '';
+  };
   const [reports, setReports] = useState([]);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "lost");
   const [loading, setLoading] = useState(true);
@@ -187,7 +198,7 @@ const MyReports = () => {
         const dateB = new Date(b.dateFound || b.foundDate || b.dateLost || b.lostDate || 0);
 
         if (sortBy === 'title_asc') {
-          return (a.title || "").localeCompare(b.title || "");
+          return getLocalizedTitle(a).localeCompare(getLocalizedTitle(b));
         }
         if (sortBy === 'date_asc') {
           return dateA - dateB;
@@ -305,7 +316,7 @@ const MyReports = () => {
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{report.title}</h3>
+                        <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{getLocalizedTitle(report)}</h3>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
                           <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate, t)}</span>
                           <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>

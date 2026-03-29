@@ -55,8 +55,21 @@ const MapModal = ({ isOpen, onClose, lat, lng, title }) => {
 
 const UserLostReports = () => {
     const { userId } = useParams();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const getCurrentLanguage = () => {
+        const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
+        return String(preferred).toLowerCase();
+    };
+    const isGreekLanguage = getCurrentLanguage().startsWith('el');
+    const getLocalizedTitle = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.titleEl || item.title || '' : item.title || item.titleEl || '';
+    };
+    const getLocalizedDescription = (item) => {
+        if (!item) return '';
+        return isGreekLanguage ? item.descriptionEl || item.description || '' : item.description || item.descriptionEl || '';
+    };
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
@@ -122,11 +135,11 @@ const UserLostReports = () => {
                                 </div>
                                 <div className="p-6 flex flex-col flex-1">
                                     <div className="flex items-start justify-between gap-4 mb-1">
-                                        <h3 className="text-lg font-black text-gray-900 truncate uppercase tracking-tight">{report.title || "Untitled"}</h3>
+                                        <h3 className="text-lg font-black text-gray-900 truncate uppercase tracking-tight">{getLocalizedTitle(report) || "Untitled"}</h3>
                                         <span className="text-[9px] font-black uppercase text-gray-300 tracking-tight shrink-0 mt-1.5">ID: #{report.id}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-4"><Dog className="w-3 h-3" /> {t(report.species)}</div>
-                                    <div className="mb-4 flex-1"><p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1.5">{t('description')}</p><p className="text-xs text-gray-600 line-clamp-3 italic bg-gray-50/50 p-3 rounded-xl border border-gray-100 min-h-[3rem]">{report.description || t('no_description')}</p></div>
+                                    <div className="mb-4 flex-1"><p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1.5">{t('description')}</p><p className="text-xs text-gray-600 line-clamp-3 italic bg-gray-50/50 p-3 rounded-xl border border-gray-100 min-h-[3rem]">{getLocalizedDescription(report) || t('no_description')}</p></div>
                                     <div className="grid grid-cols-2 gap-4 mt-auto">
                                         <div className="flex items-start gap-2"><Calendar className="w-3.5 h-3.5 text-gray-400 mt-0.5" /><div><p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1">{t('date_lost')}</p><p className="text-[10px] font-bold text-gray-700">{report.lostDate ? new Date(report.lostDate).toLocaleDateString() : t('not_set')}</p></div></div>
                                         <button onClick={(e) => { e.stopPropagation(); setSelectedMap(report); }} className="flex items-start gap-2 group/loc text-left hover:opacity-80 transition-opacity"><MapPin className="w-3.5 h-3.5 text-orange-500 mt-0.5 group-hover/loc:scale-110 transition-transform" /><div className="overflow-hidden"><p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1">{t('location')}</p><LocationName lat={report.latitude} lng={report.longitude} /></div></button>
@@ -147,7 +160,7 @@ const UserLostReports = () => {
                     </div>
                 )}
             </main>
-            <MapModal isOpen={!!selectedMap} onClose={() => setSelectedMap(null)} lat={selectedMap?.latitude} lng={selectedMap?.longitude} title={selectedMap?.title} />
+            <MapModal isOpen={!!selectedMap} onClose={() => setSelectedMap(null)} lat={selectedMap?.latitude} lng={selectedMap?.longitude} title={getLocalizedTitle(selectedMap)} />
         </div>
     );
 };

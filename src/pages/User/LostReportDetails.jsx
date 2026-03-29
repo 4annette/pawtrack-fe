@@ -123,6 +123,12 @@ const LostReportDetails = () => {
     { label: t('species_other'), value: "OTHER" }
   ];
 
+  const isGreekLanguage = i18n.language?.startsWith('el');
+  const titleField = isGreekLanguage ? 'titleEl' : 'title';
+  const descriptionField = isGreekLanguage ? 'descriptionEl' : 'description';
+  const displayedTitle = report ? (report[titleField] || report.title || report.titleEl || '') : '';
+  const displayedDescription = report ? (report[descriptionField] || report.description || report.descriptionEl || '') : '';
+
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (userString) {
@@ -212,8 +218,10 @@ const LostReportDetails = () => {
       const rawDate = report.lostDate || originalReport.lostDate || originalReport.createdAt;
       const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
 
-      const title = (report.title || '').trim();
-      const description = (report.description || '').trim();
+      const titleInput = (isGreekLanguage ? report.titleEl : report.title) || report.title || report.titleEl || '';
+      const descriptionInput = (isGreekLanguage ? report.descriptionEl : report.description) || report.description || report.descriptionEl || '';
+      const title = titleInput.trim();
+      const description = descriptionInput.trim();
       const titleIsGreek = containsGreek(title);
       const descriptionIsGreek = containsGreek(description);
 
@@ -358,12 +366,12 @@ const LostReportDetails = () => {
             <div className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest block">{t('label_report_title', { format: 'uppercase' })}</label>
-                {isEditing ? <input type="text" className="w-full p-3.5 rounded-2xl border border-orange-100 text-sm font-bold outline-none bg-white shadow-sm focus:ring-4 focus:ring-orange-500/5 transition-all" value={report.title || ""} onChange={e => setReport({ ...report, title: e.target.value })} /> : <div className="w-full p-3.5 rounded-2xl border border-orange-50 bg-orange-50/10 text-sm font-bold text-gray-700 truncate">{report.title || t('untitled')}</div>}
+                {isEditing ? <input type="text" className="w-full p-3.5 rounded-2xl border border-orange-100 text-sm font-bold outline-none bg-white shadow-sm focus:ring-4 focus:ring-orange-500/5 transition-all" value={displayedTitle} onChange={e => setReport({ ...report, [titleField]: e.target.value })} /> : <div className="w-full p-3.5 rounded-2xl border border-orange-50 bg-orange-50/10 text-sm font-bold text-gray-700 truncate">{displayedTitle || t('untitled')}</div>}
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest block">{t('label_description', { format: 'uppercase' })}</label>
-                {isEditing ? <textarea className="w-full p-3.5 rounded-2xl border border-orange-100 text-sm font-bold h-24 resize-none outline-none bg-white shadow-sm" value={report.description || ""} onChange={e => setReport({ ...report, description: e.target.value })} /> : <div className="w-full p-3.5 rounded-2xl border border-orange-50 bg-orange-50/10 text-sm font-bold text-gray-700 min-h-[60px] whitespace-pre-wrap">{report.description || t('no_description_provided')}</div>}
+                {isEditing ? <textarea className="w-full p-3.5 rounded-2xl border border-orange-100 text-sm font-bold h-24 resize-none outline-none bg-white shadow-sm" value={displayedDescription} onChange={e => setReport({ ...report, [descriptionField]: e.target.value })} /> : <div className="w-full p-3.5 rounded-2xl border border-orange-50 bg-orange-50/10 text-sm font-bold text-gray-700 min-h-[60px] whitespace-pre-wrap">{displayedDescription || t('no_description_provided')}</div>}
               </div>
 
               <div className="space-y-1.5">
