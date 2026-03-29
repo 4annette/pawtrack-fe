@@ -15,6 +15,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import {
   fetchLostReportById,
+  translateText,
   updateLostReport,
   deleteLostReport,
   uploadLostReportImage,
@@ -191,13 +192,53 @@ const LostReportDetails = () => {
     return () => clearTimeout(timerId);
   }, [report?.latitude, report?.longitude, t, i18n.language]);
 
+  const translateOrFallback = async (text, fromLang, toLang) => {
+    if (!text) return '';
+    try {
+      const translated = await translateText(text, fromLang, toLang);
+      return translated || text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  };
+
+  const containsGreek = (text) => /[\u0370-\u03FF]/.test(text);
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const rawDate = report.lostDate || originalReport.lostDate || originalReport.createdAt;
       const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 19) : null;
-      const updateData = { ...report, date: formattedDate };
+
+      const title = (report.title || '').trim();
+      const description = (report.description || '').trim();
+      const titleIsGreek = containsGreek(title);
+      const descriptionIsGreek = containsGreek(description);
+
+      const titleEl = titleIsGreek
+        ? title
+        : await translateOrFallback(title, 'en', 'el');
+      const titleEn = titleIsGreek
+        ? await translateOrFallback(title, 'el', 'en')
+        : title;
+
+      const descriptionEl = descriptionIsGreek
+        ? description
+        : await translateOrFallback(description, 'en', 'el');
+      const descriptionEn = descriptionIsGreek
+        ? await translateOrFallback(description, 'el', 'en')
+        : description;
+
+      const updateData = {
+        ...report,
+        title: titleEn,
+        titleEl,
+        description: descriptionEn,
+        descriptionEl,
+        date: formattedDate,
+      };
       delete updateData.lostDate;
 
       await updateLostReport(id, updateData);

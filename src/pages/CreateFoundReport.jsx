@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/pages/Header";
-import { createFoundReport, uploadFoundReportImage } from "@/services/api";
+import { createFoundReport, translateText, uploadFoundReportImage } from "@/services/api";
 import LocationPicker from "@/components/LocationPicker";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
@@ -420,6 +420,19 @@ const CreateFoundReport = () => {
         { label: t('condition_bad'), value: "BAD" }
     ];
 
+    const translateOrFallback = async (text, fromLang, toLang) => {
+        if (!text) return '';
+        try {
+            const translated = await translateText(text, fromLang, toLang);
+            return translated || text;
+        } catch (error) {
+            console.error('Translation error:', error);
+            return text;
+        }
+    };
+
+    const containsGreek = (text) => /[\u0370-\u03FF]/.test(text);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.latitude || !formData.longitude) {
@@ -428,19 +441,55 @@ const CreateFoundReport = () => {
         }
         setLoading(true);
         try {
+            const title = formData.title.trim();
+            const description = formData.description.trim();
+            const titleIsGreek = containsGreek(title);
+            const descriptionIsGreek = containsGreek(description);
+
+            const titleEl = titleIsGreek
+                ? title
+                : await translateOrFallback(title, 'en', 'el');
+            const titleEn = titleIsGreek
+                ? await translateOrFallback(title, 'el', 'en')
+                : title;
+
+            const descriptionEl = descriptionIsGreek
+                ? description
+                : await translateOrFallback(description, 'en', 'el');
+            const descriptionEn = descriptionIsGreek
+                ? await translateOrFallback(description, 'el', 'en')
+                : description;
+
             let formattedDate = formData.dateFound;
             if (!formattedDate) {
                 const now = new Date();
                 formattedDate = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:00`;
             }
-            const newReport = await createFoundReport({ ...formData, dateFound: formattedDate });
+
+            const newReport = await createFoundReport({
+                ...formData,
+                title: titleEn,
+                titleEl,
+                description: descriptionEn,
+                descriptionEl,
+                dateFound: formattedDate,
+            });
             if (imageFile && newReport?.id) {
-                try { await uploadFoundReportImage(newReport.id, imageFile); toast.success(t('success_report_created')); }
-                catch { toast.warning(t('warning_image_failed')); }
-            } else { toast.success(t('success_report_created')); }
+                try {
+                    await uploadFoundReportImage(newReport.id, imageFile);
+                    toast.success(t('success_report_created'));
+                } catch {
+                    toast.warning(t('warning_image_failed'));
+                }
+            } else {
+                toast.success(t('success_report_created'));
+            }
             navigate("/dashboard");
-        } catch { toast.error(t('error_report_failed')); }
-        finally { setLoading(false); }
+        } catch {
+            toast.error(t('error_report_failed'));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

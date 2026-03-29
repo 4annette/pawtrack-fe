@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/pages/Header";
-import { createLostReport, uploadLostReportImage } from "@/services/api";
+import { createLostReport, translateText, uploadLostReportImage } from "@/services/api";
 import LocationPicker from "@/components/LocationPicker";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
@@ -403,6 +403,19 @@ const CreateLostReport = () => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const translateOrFallback = async (text, fromLang, toLang) => {
+        if (!text) return '';
+        try {
+            const translated = await translateText(text, fromLang, toLang);
+            return translated || text;
+        } catch (error) {
+            console.error('Translation error:', error);
+            return text;
+        }
+    };
+
+    const containsGreek = (text) => /[\u0370-\u03FF]/.test(text);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -425,9 +438,30 @@ const CreateLostReport = () => {
                 finalDateTime = `${localYear}-${localMonth}-${localDay} ${localHours}:${localMinutes}:00`;
             }
 
+            const title = formData.title.trim();
+            const description = formData.description.trim();
+            const titleIsGreek = containsGreek(title);
+            const descriptionIsGreek = containsGreek(description);
+
+            const titleEl = titleIsGreek
+                ? title
+                : await translateOrFallback(title, 'en', 'el');
+            const titleEn = titleIsGreek
+                ? await translateOrFallback(title, 'el', 'en')
+                : title;
+
+            const descriptionEl = descriptionIsGreek
+                ? description
+                : await translateOrFallback(description, 'en', 'el');
+            const descriptionEn = descriptionIsGreek
+                ? await translateOrFallback(description, 'el', 'en')
+                : description;
+
             const payload = {
-                title: formData.title,
-                description: formData.description,
+                title: titleEn,
+                titleEl,
+                description: descriptionEn,
+                descriptionEl,
                 species: formData.species,
                 chipNumber: formData.chipNumber,
                 date: finalDateTime,

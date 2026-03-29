@@ -3,8 +3,10 @@ import { messaging, auth } from '../firebase/firebaseInitialization';
 import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
-const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
-const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+// const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+// const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+
+const BASE_URL = "http://localhost:8080/api/v1";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -146,10 +148,23 @@ export const markFoundReportAsFound = async (reportId, lostReportId = null) => {
   return response.data;
 };
 
+export const translateText = async (text, fromLang = 'en', toLang = 'el') => {
+  if (!text) return '';
+  const response = await axios.get('https://api.mymemory.translated.net/get', {
+    params: {
+      q: text,
+      langpair: `${fromLang}|${toLang}`,
+    },
+  });
+  return response?.data?.responseData?.translatedText || text;
+};
+
 export const createFoundReport = async (reportData) => {
   const payload = {
     title: reportData.title,
     description: reportData.description,
+    ...(reportData.titleEl ? { titleEl: reportData.titleEl } : {}),
+    ...(reportData.descriptionEl ? { descriptionEl: reportData.descriptionEl } : {}),
     dateFound: reportData.dateFound,
     chipNumber: parseInt(reportData.chipNumber) || 0,
     species: reportData.species,
@@ -214,6 +229,8 @@ export const createLostReport = async (reportData) => {
   const payload = {
     title: reportData.title,
     description: reportData.description,
+    titleEl: reportData.titleEl || '',
+    descriptionEl: reportData.descriptionEl || '',
     species: reportData.species,
     chipNumber: parseInt(reportData.chipNumber) || 0,
     date: reportData.date,
