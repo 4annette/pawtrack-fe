@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, User, Lock, Save, Loader2, Eye, EyeOff, BellRing, ShieldCheck, Search, PawPrint, ArrowLeft, Globe } from "lucide-react";
@@ -14,15 +14,17 @@ import {
   toggleNotifyLostReport,
   toggleNotifyUserAccount
 } from "@/services/api";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
+import Header from "@/pages/Header";
 
 const AccountSettings = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState("menu");
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const logoMenuRef = useRef(null);
+
   const [settings, setSettings] = useState({
     lostReportNotify: false,
     foundReportNotifyFound: false,
@@ -31,6 +33,27 @@ const AccountSettings = () => {
   });
 
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        if (user.role === "ADMIN") {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("Error parsing user data", error);
+      }
+    }
+
+    const handleClickOutside = (event) => {
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
     const loadSettings = async () => {
       try {
         const user = await fetchUserDetails();
@@ -47,6 +70,11 @@ const AccountSettings = () => {
       }
     };
     loadSettings();
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const handleToggle = async (key, apiFn) => {
@@ -276,15 +304,14 @@ const AccountSettings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <PawTrackLogo size="sm" />
-          <div className="flex items-center gap-4">
-            <Notifications />
-            <ProfileButton />
-          </div>
-        </div>
-      </header>
+      <Header
+        activeTab=""
+        setActiveTab={() => {}}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        isAdmin={isAdmin}
+        logoMenuRef={logoMenuRef}
+      />
 
       <div className="container mx-auto p-4 md:p-8">
         <div className="max-w-lg mx-auto">

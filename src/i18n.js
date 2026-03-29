@@ -248,7 +248,7 @@ const resources = {
             "found_filter": "Found",
             //found report details page translation
             "edit_report_title": "Edit Report",
-            "report_details_title": "Report Details",
+            "report_details_title": "Found Report Details",
             "not_set": "Not set",
             "edit_btn": "Edit",
             "delete_btn": "Delete",
@@ -883,7 +883,7 @@ const resources = {
             "found_filter": "Βρέθηκαν",
             //found report details page translation
             "edit_report_title": "Επεξεργασία Αγγελίας",
-            "report_details_title": "Λεπτομέρειες",
+            "report_details_title": "Λεπτομέρειες Εύρεσης",
             "not_set": "Δεν ορίστηκε",
             "edit_btn": "Επεξεργασία",
             "delete_btn": "Διαγραφή",

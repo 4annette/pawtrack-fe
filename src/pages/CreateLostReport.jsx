@@ -2,16 +2,14 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-    ArrowLeft, Dog, Cat, Hash, AlertTriangle,
+    ArrowLeft, Dog, Hash, AlertTriangle,
     Loader2, CheckCircle, Upload, ImageIcon, X,
     Calendar, Clock, ChevronLeft, ChevronRight, ChevronDown, Check, MapPin
 } from "lucide-react";
 import { toast } from "sonner";
-import PawTrackLogo from "@/components/PawTrackLogo";
+import Header from "@/pages/Header";
 import { createLostReport, uploadLostReportImage } from "@/services/api";
 import LocationPicker from "@/components/LocationPicker";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
     const { t, i18n } = useTranslation();
@@ -34,7 +32,6 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    // Προσδιορισμός Locale βάσει της τρέχουσας γλώσσας
     const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
 
     const isTodaySelected = () => {
@@ -147,16 +144,16 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
 
     return (
         <div className="relative space-y-1.5" ref={containerRef}>
-            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {label}</label>
-            <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-4 ring-emerald-500/5' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm`}>
+            <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {label}</label>
+            <div onClick={() => setIsOpen(!isOpen)} className={`w-full p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all duration-200 ${isOpen ? 'border-orange-500 ring-4 ring-orange-500/5' : 'border-orange-100 hover:border-orange-300'} bg-white shadow-sm`}>
                 <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || t('dtp_placeholder')}</span>
-                <div className="flex gap-1"><Clock className="w-4 h-4 text-emerald-300" /><Calendar className="w-4 h-4 text-emerald-500" /></div>
+                <div className="flex gap-1"><Clock className="w-4 h-4 text-orange-300" /><Calendar className="w-4 h-4 text-orange-500" /></div>
             </div>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-emerald-100 p-4 w-72 animate-in fade-in zoom-in-95">
+                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-orange-100 p-4 w-72 animate-in fade-in zoom-in-95">
                     <div className="flex justify-between items-center mb-4">
-                        <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-emerald-50 rounded-full text-emerald-600"><ChevronLeft className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-orange-50 rounded-full text-orange-600"><ChevronLeft className="w-4 h-4" /></button>
                         <span className="text-sm font-bold text-gray-800">
                             {viewDate.toLocaleString(currentLocale, { month: 'long', year: 'numeric' })}
                         </span>
@@ -164,17 +161,17 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                             type="button"
                             onClick={() => changeMonth(1)}
                             disabled={isNextMonthDisabled()}
-                            className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-emerald-600'}`}
+                            className={`p-1 rounded-full ${isNextMonthDisabled() ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-orange-50 text-orange-600'}`}
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
 
                     <div className="grid grid-cols-7 mb-2 text-center">
-                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-[10px] font-bold text-emerald-300">{d}</span>))}
+                        {[t('S'), t('M'), t('T'), t('W'), t('T_short'), t('F'), t('S_short')].map((d, i) => (<span key={i} className="text-[10px] font-bold text-orange-300">{d}</span>))}
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-gray-100 pb-4">
+                    <div className="grid grid-cols-7 gap-1 place-items-center mb-4 border-b border-orange-100 pb-4">
                         {(() => {
                             const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
                             const startDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
@@ -197,7 +194,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                                         type="button"
                                         disabled={isFuture}
                                         className={`h-8 w-8 rounded-full text-xs font-black flex items-center justify-center transition-all 
-                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-700 hover:bg-emerald-100'}`}
+                                        ${isFuture ? 'text-gray-300 cursor-not-allowed' : isSelected ? 'bg-orange-600 text-white shadow-md' : 'text-gray-700 hover:bg-orange-100'}`}
                                     >
                                         {d}
                                     </button>
@@ -208,15 +205,15 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                     </div>
 
                     <div className="flex items-center gap-2 relative">
-                        <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <Clock className="w-4 h-4 text-orange-600 shrink-0" />
 
                         <div className="flex-1 flex gap-1 items-center">
                             <div className="relative flex-1" ref={hourRef}>
-                                <button type="button" onClick={() => { setIsHourOpen(!isHourOpen); setIsMinOpen(false); }} className="w-full p-2 text-sm font-black bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
-                                    {selectedHour} <ChevronDown className="w-3 h-3 text-emerald-400" />
+                                <button type="button" onClick={() => { setIsHourOpen(!isHourOpen); setIsMinOpen(false); }} className="w-full p-2 text-sm font-black bg-orange-50 border border-orange-100 rounded-lg text-orange-900 flex justify-between items-center">
+                                    {selectedHour} <ChevronDown className="w-3 h-3 text-orange-400" />
                                 </button>
                                 {isHourOpen && (
-                                    <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-emerald-100 rounded-xl shadow-xl z-[60]">
+                                    <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-orange-100 rounded-xl shadow-xl z-[60]">
                                         {hours.map(h => {
                                             const isDisabled = isTodaySelected() && parseInt(h) > currentHour;
                                             return (
@@ -224,8 +221,8 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                                                     key={h}
                                                     onClick={() => !isDisabled && handleHourSelect(h)}
                                                     className={`p-2 text-center text-xs font-bold cursor-pointer 
-                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-gray-700'}
-                                                    ${selectedHour === h && !isDisabled ? 'bg-emerald-600 text-white' : ''}`}
+                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-orange-50 text-gray-700'}
+                                                    ${selectedHour === h && !isDisabled ? 'bg-orange-600 text-white' : ''}`}
                                                 >
                                                     {h}
                                                 </div>
@@ -235,14 +232,14 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                                 )}
                             </div>
 
-                            <span className="text-emerald-300 font-bold">:</span>
+                            <span className="text-orange-300 font-bold">:</span>
 
                             <div className="relative flex-1" ref={minRef}>
-                                <button type="button" onClick={() => { setIsMinOpen(!isMinOpen); setIsHourOpen(false); }} className="w-full p-2 text-sm font-black bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-900 flex justify-between items-center">
-                                    {selectedMinute} <ChevronDown className="w-3 h-3 text-emerald-400" />
+                                <button type="button" onClick={() => { setIsMinOpen(!isMinOpen); setIsHourOpen(false); }} className="w-full p-2 text-sm font-black bg-orange-50 border border-orange-100 rounded-lg text-orange-900 flex justify-between items-center">
+                                    {selectedMinute} <ChevronDown className="w-3 h-3 text-orange-400" />
                                 </button>
                                 {isMinOpen && (
-                                    <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-emerald-100 rounded-xl shadow-xl z-[60]">
+                                    <div className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-y-auto bg-white border border-orange-100 rounded-xl shadow-xl z-[60]">
                                         {minutes.map(m => {
                                             const isDisabled = isTodaySelected() &&
                                                 parseInt(selectedHour) === currentHour &&
@@ -258,8 +255,8 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                                                         }
                                                     }}
                                                     className={`p-2 text-center text-xs font-bold cursor-pointer 
-                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-emerald-50 text-gray-700'}
-                                                    ${selectedMinute === m && !isDisabled ? 'bg-emerald-600 text-white' : ''}`}
+                                                    ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-orange-50 text-gray-700'}
+                                                    ${selectedMinute === m && !isDisabled ? 'bg-orange-600 text-white' : ''}`}
                                                 >
                                                     {m}
                                                 </div>
@@ -270,7 +267,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
                             </div>
                         </div>
 
-                        <button type="button" onClick={() => setIsOpen(false)} className="bg-emerald-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-emerald-700 uppercase tracking-tighter">OK</button>
+                        <button type="button" onClick={() => setIsOpen(false)} className="bg-orange-600 text-white text-[10px] font-black px-3 py-2 rounded-lg hover:bg-orange-700 uppercase tracking-tighter">OK</button>
                     </div>
                 </div>
             )}
@@ -294,18 +291,18 @@ const StyledDropdown = ({ label, icon: Icon, value, options, onChange }) => {
 
     return (
         <div className="relative space-y-1.5" ref={containerRef}>
-            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">{Icon && <Icon className="w-3 h-3" />} {label}</label>
-            <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-200 ${isOpen ? 'border-emerald-500 ring-4 ring-emerald-500/5' : 'border-emerald-100 hover:border-emerald-300'} bg-white shadow-sm text-sm font-bold text-gray-700`}>
+            <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest flex items-center gap-1.5">{Icon && <Icon className="w-3 h-3" />} {label}</label>
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-200 ${isOpen ? 'border-orange-500 ring-4 ring-orange-500/5' : 'border-orange-100 hover:border-orange-300'} bg-white shadow-sm text-sm font-bold text-gray-700`}>
                 <span className="truncate">{selectedOption.label}</span>
-                <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-orange-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
+                <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50 animate-in fade-in zoom-in-95">
                     <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
                         {options.map((option) => {
                             const isSelected = option.value === value;
                             return (
-                                <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-bold'}`}>
+                                <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-orange-600 text-white' : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700 font-bold'}`}>
                                     <span>{option.label}</span>
                                     {isSelected && <Check className="w-3.5 h-3.5" />}
                                 </div>
@@ -323,21 +320,21 @@ const SimpleFileInput = ({ label, onChange, selectedFile }) => {
     const fileInputRef = useRef(null);
     return (
         <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+            <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest flex items-center gap-1.5">
                 <ImageIcon className="w-3 h-3" /> {label}
             </label>
             <input type="file" ref={fileInputRef} onChange={(e) => { const f = e.target.files[0]; if (f) onChange(f); }} accept="image/*" className="hidden" />
-            <div onClick={() => fileInputRef.current.click()} className={`w-full p-6 rounded-[24px] border-2 border-dashed cursor-pointer flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50/50' : 'border-emerald-100 hover:border-emerald-300 bg-white shadow-sm'}`}>
+            <div onClick={() => fileInputRef.current.click()} className={`w-full p-6 rounded-[24px] border-2 border-dashed cursor-pointer flex flex-col items-center justify-center transition-all duration-200 ${selectedFile ? 'border-orange-500 bg-orange-50/50' : 'border-orange-100 hover:border-orange-300 bg-white shadow-sm'}`}>
                 {selectedFile ? (
-                    <div className="flex items-center gap-3 text-emerald-700 font-black text-sm">
+                    <div className="flex items-center gap-3 text-orange-700 font-black text-sm">
                         <CheckCircle className="w-5 h-5" />
                         <span className="truncate max-w-[200px]">{selectedFile.name}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); onChange(null); }} className="p-2 hover:bg-red-50 rounded-full ml-2 transition-colors"><X className="w-4 h-4 text-red-500" /></button>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center">
-                        <div className="p-3 bg-emerald-100 rounded-full mb-3">
-                            <Upload className="w-6 h-6 text-emerald-600" />
+                        <div className="p-3 bg-orange-100 rounded-full mb-3">
+                            <Upload className="w-6 h-6 text-orange-600" />
                         </div>
                         <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{t('photo_upload_prompt')}</span>
                     </div>
@@ -352,6 +349,9 @@ const CreateLostReport = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [imageFile, setImageFile] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const logoMenuRef = useRef(null);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -362,6 +362,32 @@ const CreateLostReport = () => {
         latitude: null,
         longitude: null
     });
+
+    useEffect(() => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            try {
+                const user = JSON.parse(userString);
+                if (user.role === "ADMIN") setIsAdmin(true);
+            } catch (error) {
+                console.error("Error parsing user data", error);
+            }
+        }
+
+        const handleClickOutside = (event) => {
+            if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("touchstart", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("touchstart", handleClickOutside);
+        };
+    }, []);
 
     const speciesOptions = [
         { label: t('species_dog'), value: "DOG" },
@@ -431,44 +457,40 @@ const CreateLostReport = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-            <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-                        <PawTrackLogo size="sm" />
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header 
+                activeTab=""
+                setActiveTab={() => {}}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                isAdmin={isAdmin}
+                logoMenuRef={logoMenuRef}
+            />
 
             <div className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
-                <div className="bg-white rounded-[40px] shadow-2xl shadow-emerald-900/5 border border-emerald-100/50 p-6 md:p-10">
-                    <h1 className="text-3xl font-black text-emerald-900 mb-2 flex items-center gap-3 tracking-tight">
-                        <AlertTriangle className="w-8 h-8 text-emerald-600" /> {t('report_lost_title')}
+                <div className="bg-white rounded-[40px] shadow-2xl shadow-orange-900/5 border border-orange-100/50 p-6 md:p-10">
+                    <h1 className="text-3xl font-black text-orange-900 mb-2 flex items-center gap-3 tracking-tight">
+                        <AlertTriangle className="w-8 h-8 text-orange-600" /> {t('report_lost_title')}
                     </h1>
-                    <p className="text-emerald-700 mb-10 font-bold text-sm">{t('report_lost_subtitle')}</p>
+                    <p className="text-orange-700 mb-10 font-bold text-sm">{t('report_lost_subtitle')}</p>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_report_title')}</label>
-                            <input type="text" required placeholder={t('placeholder_report_title')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.title} onChange={e => updateField('title', e.target.value)} />
+                            <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest block">{t('label_report_title')}</label>
+                            <input type="text" required placeholder={t('placeholder_report_title')} className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-orange-500/10 transition-all" value={formData.title} onChange={e => updateField('title', e.target.value)} />
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">{t('label_description')}</label>
-                            <textarea required placeholder={t('placeholder_description')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.description} onChange={e => updateField('description', e.target.value)} />
+                            <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest block">{t('label_description')}</label>
+                            <textarea required placeholder={t('placeholder_description')} className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-bold h-32 resize-none outline-none shadow-sm focus:ring-4 focus:ring-orange-500/10 transition-all" value={formData.description} onChange={e => updateField('description', e.target.value)} />
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-end">
-                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                                <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest flex items-center gap-1.5">
                                     <MapPin className="w-3 h-3" /> {t('label_location_lost')}
                                 </label>
                                 {formData.latitude && (
-                                    <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                                    <span className="text-[10px] font-mono text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
                                         {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
                                     </span>
                                 )}
@@ -486,8 +508,8 @@ const CreateLostReport = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <StyledDropdown label={t('label_species')} icon={Dog} value={formData.species} options={speciesOptions} onChange={val => updateField('species', val)} />
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> {t('label_chip_number')}</label>
-                                <input type="number" placeholder={t('placeholder_optional')} className="w-full p-4 rounded-2xl border border-emerald-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all" value={formData.chipNumber} onChange={e => updateField('chipNumber', e.target.value)} />
+                                <label className="text-[10px] font-black text-orange-800 uppercase tracking-widest flex items-center gap-1.5"><Hash className="w-3 h-3" /> {t('label_chip_number')}</label>
+                                <input type="number" placeholder={t('placeholder_optional')} className="w-full p-4 rounded-2xl border border-orange-100 text-sm font-bold outline-none shadow-sm focus:ring-4 focus:ring-orange-500/10 transition-all" value={formData.chipNumber} onChange={e => updateField('chipNumber', e.target.value)} />
                             </div>
                         </div>
 
@@ -496,7 +518,7 @@ const CreateLostReport = () => {
                         <SimpleFileInput label={t('label_pet_photo')} selectedFile={imageFile} onChange={setImageFile} />
 
                         <div className="pt-6">
-                            <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-5 rounded-[24px] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em]">
+                            <button type="submit" disabled={loading} className="w-full bg-orange-600 text-white font-black py-5 rounded-[24px] hover:bg-orange-700 transition-all shadow-xl shadow-orange-200 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em]">
                                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('btn_save_lost_report')}
                             </button>
                         </div>

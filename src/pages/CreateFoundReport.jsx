@@ -2,16 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-    ArrowLeft, Dog, Cat, CheckCircle, Calendar, Hash,
+    Dog, CheckCircle, Calendar, Hash,
     ChevronDown, Check, ChevronLeft, ChevronRight, Clock,
     Upload, Camera, Image as ImageIcon, Loader2, MapPin
 } from "lucide-react";
 import { toast } from "sonner";
-import PawTrackLogo from "@/components/PawTrackLogo";
+import Header from "@/pages/Header";
 import { createFoundReport, uploadFoundReportImage } from "@/services/api";
 import LocationPicker from "@/components/LocationPicker";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
 
 const CustomDateTimePicker = ({ label, value, onChange }) => {
     const { t, i18n } = useTranslation();
@@ -35,7 +33,7 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
+    const currentLocale = i18n.language?.startsWith('el') ? 'el-GR' : 'en-US';
 
     const isTodaySelected = () => {
         if (!selectedDateStr) return false;
@@ -76,7 +74,8 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     const changeMonth = (inc) => {
         const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + inc, 1);
         const today = new Date();
-        if (newDate > today && inc > 0) return;
+        const firstOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        if (newDate > firstOfCurrentMonth && inc > 0) return;
         setViewDate(newDate);
     };
 
@@ -138,9 +137,9 @@ const CustomDateTimePicker = ({ label, value, onChange }) => {
     }
 
     const isNextMonthDisabled = () => {
-        const nextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
         const today = new Date();
-        return nextMonth > today;
+        const firstOfNextMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+        return firstOfNextMonth > today;
     };
 
     const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -368,6 +367,9 @@ const CreateFoundReport = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [imageFile, setImageFile] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const logoMenuRef = useRef(null);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -379,6 +381,32 @@ const CreateFoundReport = () => {
         latitude: null,
         longitude: null
     });
+
+    useEffect(() => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            try {
+                const user = JSON.parse(userString);
+                if (user.role === "ADMIN") setIsAdmin(true);
+            } catch (error) {
+                console.error("Error parsing user data", error);
+            }
+        }
+
+        const handleClickOutside = (event) => {
+            if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("touchstart", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("touchstart", handleClickOutside);
+        };
+    }, []);
 
     const speciesOptions = [
         { label: t('species_dog'), value: "DOG" },
@@ -417,18 +445,15 @@ const CreateFoundReport = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-            <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-                        <PawTrackLogo size="sm" />
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header 
+                showNav={false}
+                activeTab=""
+                setActiveTab={() => {}}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                isAdmin={isAdmin}
+                logoMenuRef={logoMenuRef}
+            />
 
             <div className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
                 <div className="bg-white rounded-[32px] shadow-xl border border-emerald-100 p-6 md:p-8">

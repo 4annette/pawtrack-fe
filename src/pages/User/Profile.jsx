@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Save, Trash2, Edit3, X } from "lucide-react";
 import { updateUserProfile, deleteUserAccount, fetchCurrentUser } from "../../services/api.js";
-import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
+import Header from "@/pages/Header";
 
 const Profile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const logoMenuRef = useRef(null);
 
   const [formData, setFormData] = useState({
     editedUserId: 0,
@@ -24,6 +25,27 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        if (user.role === "ADMIN") {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("Error parsing user data", error);
+      }
+    }
+
+    const handleClickOutside = (event) => {
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
     const getUserData = async () => {
       try {
         setLoading(true);
@@ -42,7 +64,13 @@ const Profile = () => {
         setLoading(false);
       }
     };
+
     getUserData();
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [t]);
 
   const handleChange = (e) => {
@@ -86,19 +114,14 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <PawTrackLogo size="sm" />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Notifications />
-            <ProfileButton />
-          </div>
-        </div>
-      </header>
+      <Header
+        activeTab=""
+        setActiveTab={() => {}}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        isAdmin={isAdmin}
+        logoMenuRef={logoMenuRef}
+      />
 
       <main className="container mx-auto px-4 py-8 max-w-xl">
         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
@@ -121,7 +144,6 @@ const Profile = () => {
               <div className="w-8 h-8 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
             </div>
           ) : !isEditing ? (
-
             <div className="space-y-2">
               <div className="flex flex-col items-center mb-8">
                 <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-2xl font-black mb-2">
@@ -141,7 +163,6 @@ const Profile = () => {
               </button>
             </div>
           ) : (
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">

@@ -13,10 +13,8 @@ import {
   deleteLostReport,
   deleteFoundReport
 } from "../../services/api.js";
-import PawTrackLogo from "@/components/PawTrackLogo";
 import { toast } from "sonner";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
+import Header from "@/pages/Header";
 
 const formatDate = (dateString, t) => {
   if (!dateString) return t('date_not_set');
@@ -29,7 +27,7 @@ const formatDate = (dateString, t) => {
   }
 };
 
-const AddressDisplay = ({ lat, lng }) => {
+const AddressDisplay = ({ lat, lng, activeTab }) => {
   const { t } = useTranslation();
   const [address, setAddress] = useState(t('loading_dots'));
 
@@ -72,7 +70,7 @@ const AddressDisplay = ({ lat, lng }) => {
   }, [lat, lng, t]);
 
   return (
-    <span className="flex items-center gap-1.5 truncate text-emerald-600 font-medium">
+    <span className={`flex items-center gap-1.5 truncate font-medium ${activeTab === 'lost' ? 'text-orange-600' : 'text-emerald-600'}`}>
       <MapPin className="w-4 h-4" /> {address}
     </span>
   );
@@ -137,6 +135,7 @@ const MyReports = () => {
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "lost");
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -147,6 +146,16 @@ const MyReports = () => {
   const logoMenuRef = useRef(null);
 
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        if (user.role === "ADMIN") setIsAdmin(true);
+      } catch (error) {
+        console.error("Error parsing user data", error);
+      }
+    }
+
     const handleClickOutside = (event) => {
       if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false);
     };
@@ -243,63 +252,16 @@ const MyReports = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 flex flex-col">
-
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-
-          <div className="flex items-center gap-4 md:gap-6" ref={logoMenuRef}>
-            <div className="relative flex items-center gap-1">
-              <button onClick={() => {
-                setIsMobileMenuOpen(!isMobileMenuOpen);
-              }}
-                className="flex items-center gap-1 focus:outline-none active:scale-95 transition-transform"
-              >
-                <PawTrackLogo size="sm" />
-                <div className={`md:hidden transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-180' : ''}`}>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </div>
-              </button>
-
-              {isMobileMenuOpen && (
-                <div className="md:hidden absolute top-12 left-0 w-56 bg-white border border-gray-100 shadow-xl z-[100] rounded-2xl mt-2 overflow-hidden animate-in fade-in zoom-in-95">
-                  <div className="flex flex-col p-2 gap-1">
-                    <button onClick={() => { handleTabChange("lost"); setIsMobileMenuOpen(false); }}
-                      className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'}`}
-                    >
-                      {t('my_lost_reports')}
-                    </button>
-                    <button onClick={() => { handleTabChange("found"); setIsMobileMenuOpen(false); }}
-                      className={`w-full px-4 py-3 text-sm font-bold rounded-xl text-left ${activeTab === 'found' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600'}`}
-                    >
-                      {t('my_found_reports')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <nav className="hidden md:flex items-center p-1 bg-gray-100 rounded-xl">
-              <button
-                onClick={() => handleTabChange("lost")}
-                className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'lost' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {t('lost_tab')}
-              </button>
-              <button
-                onClick={() => handleTabChange("found")}
-                className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'found' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {t('found_tab')}
-              </button>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Notifications />
-            <ProfileButton />
-          </div>
-        </div>
-      </header>
+      <Header
+        showNav={false}
+        showMyReportsToggle={true}
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        isAdmin={isAdmin}
+        logoMenuRef={logoMenuRef}
+      />
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
         <div className={`rounded-2xl border p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm ${activeTab === 'lost' ? 'from-orange-50 via-white to-orange-50 bg-gradient-to-br border-orange-100' : 'from-emerald-50 via-white to-emerald-50 bg-gradient-to-br border-emerald-100'}`}>
@@ -325,7 +287,7 @@ const MyReports = () => {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-300">
-            <Loader2 className="w-10 h-10 animate-spin" />
+            <Loader2 className={`w-10 h-10 animate-spin ${activeTab === 'lost' ? 'text-orange-500' : 'text-emerald-500'}`} />
             <p className="text-xs font-black uppercase tracking-widest">{t('updating_list_status', { format: 'uppercase' })}</p>
           </div>
         ) : (
@@ -347,7 +309,7 @@ const MyReports = () => {
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
                           <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate, t)}</span>
                           <span className="hidden md:block flex items-center gap-1.5 text-gray-300">|</span>
-                          <AddressDisplay lat={report.latitude} lng={report.longitude} />
+                          <AddressDisplay lat={report.latitude} lng={report.longitude} activeTab={activeTab} />
                         </div>
 
                         <div className="flex md:hidden items-center gap-3 mt-4">

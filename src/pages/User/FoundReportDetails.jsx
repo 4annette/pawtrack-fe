@@ -3,9 +3,9 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
-  Camera, FileText, LogOut, Calendar, Hash, Dog,
+  Camera, Calendar, Hash, Dog,
   CheckCircle, MapPin, Link as LinkIcon, AlertCircle, Clock,
-  ChevronDown, Info, Save, ExternalLink
+  ChevronDown, Save
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -22,9 +22,7 @@ import {
   deleteFoundReportImage,
   markFoundReportAsFound
 } from "../../services/api";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
+import Header from "@/pages/Header";
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -115,6 +113,9 @@ const FoundReportDetails = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showFoundModal, setShowFoundModal] = useState(false);
   const [tempSelectedLostId, setTempSelectedLostId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const logoMenuRef = useRef(null);
 
   const hasFetched = useRef(false);
 
@@ -130,6 +131,25 @@ const FoundReportDetails = () => {
   ];
 
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        if (user.role === "ADMIN") setIsAdmin(true);
+      } catch (error) {
+        console.error("Error parsing user data", error);
+      }
+    }
+
+    const handleClickOutside = (event) => {
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
     if (hasFetched.current) return;
     const getReport = async () => {
       try {
@@ -143,6 +163,11 @@ const FoundReportDetails = () => {
       } finally { setLoading(false); }
     };
     getReport();
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [id, navigate, t]);
 
   useEffect(() => {
@@ -254,29 +279,22 @@ const FoundReportDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-
-      <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-        <div className="w-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/my-reports", { state: { activeTab: 'found' } })} className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-90">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div className="hidden xs:block">
-              <PawTrackLogo size="sm" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Notifications />
-            <ProfileButton />
-          </div>
-        </div>
-      </header>
+      <Header
+        activeTab=""
+        setActiveTab={() => {}}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        isAdmin={isAdmin}
+        logoMenuRef={logoMenuRef}
+      />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 sm:py-8">
         <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 rounded-[32px] sm:rounded-[40px] shadow-xl border border-emerald-100 p-5 sm:p-10 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-            <div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => navigate("/my-reports", { state: { activeTab: 'found' } })} className="p-2 hover:bg-white/50 rounded-full transition-colors active:scale-90 text-emerald-700">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <h1 className="text-xl sm:text-2xl font-black text-emerald-900 tracking-tight">
                 {isEditing ? t('edit_report_title') : t('report_details_title')}
               </h1>
