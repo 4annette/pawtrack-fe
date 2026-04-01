@@ -236,10 +236,10 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
     const selectedLabel = options.find(opt => opt.value === value)?.label || value;
 
     return (
-        <div className="relative" ref={containerRef} style={{ zIndex: isOpen ? 2500 : 20 }}>
+        <div className="relative w-full sm:w-auto" ref={containerRef} style={{ zIndex: isOpen ? 2500 : 20 }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
+                className={`w-full sm:w-auto flex items-center gap-3 bg-white border px-4 py-2.5 rounded-xl transition-all shadow-sm ${isOpen ? 'border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
             >
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
                 <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ const ToolbarDropdown = ({ label, value, options, onChange, align = "right" }) =
             </button>
 
             {isOpen && (
-                <div className={`absolute top-full ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-48 bg-white rounded-xl shadow-xl border border-emerald-100 z-50 animate-in fade-in zoom-in-95`}>
+                <div className={`absolute top-full ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-full sm:w-48 bg-white rounded-xl shadow-xl border border-emerald-100 z-50 animate-in fade-in zoom-in-95`}>
                     <div className="p-1.5">
                         {options.map((option) => (
                             <div
@@ -508,7 +508,7 @@ const LostReports = () => {
                     <p className="text-gray-500 mt-1">{loading ? t('searching_status') : `${totalElements} ${t('reports_found_count')}`}</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                     <ToolbarDropdown
                         label={t('show_label')}
                         value={pageSize}
