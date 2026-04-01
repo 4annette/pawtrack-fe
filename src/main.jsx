@@ -18,7 +18,7 @@ import AccountSettings from "./pages/User/AccountSettings";
 import ReportsManagement from "./pages/Admin/ReportsManagement";
 import UserManagement from "./pages/Admin/UserManagement";
 import VerificationRequestsManagement from "./pages/Admin/VerificationRequestsManagement";
-// import Statistics from "./pages/Admin/Statistics";
+import Statistics from "./pages/Admin/Statistics";
 
 import UserFoundReports from "./pages/Admin/UserFoundReports";
 import AdminViewFoundReport from "./pages/Admin/AdminViewFoundReport";
@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/reports" element={<AdminRoute><ReportsManagement /></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
         <Route path="/admin/verifications" element={<AdminRoute><VerificationRequestsManagement /></AdminRoute>} />
-        {/* <Route path="/admin/statistics" element={<AdminRoute><Statistics /></AdminRoute>} /> */}
+        <Route path="/admin/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
 
         <Route path="/admin/users/:userId/found-reports" element={<AdminRoute><UserFoundReports /></AdminRoute>} />
         <Route path="/admin/reports/found/:id" element={<AdminRoute><AdminViewFoundReport /></AdminRoute>} />

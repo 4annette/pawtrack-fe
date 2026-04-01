@@ -443,4 +443,9 @@ export const deleteVerificationRequest = async (requestId) => {
   return response.data;
 };
 
+export const fetchAdminStatistics = async (payload) => {
+    const response = await api.post("/statistics/admin", payload);
+    return response.data;
+};
+
 export default api;
