@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
     Plus, Search, Filter, Dog, CheckCircle, Eye, MapPin,
     Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Check,
-    Navigation, Map as MapIcon, X, Calendar, Clock
+    Navigation, Map as MapIcon, X, Calendar, Clock, BadgeCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
@@ -450,7 +450,6 @@ const FoundReports = () => {
 
             <div className="relative z-20 space-y-3">
                 <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                    {/* Contained Box with two lines on mobile, single line on desktop */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 overflow-hidden">
                         <div className="flex items-center gap-2 text-sm text-gray-700 min-w-0">
                             <MapIcon className="w-4 h-4 text-emerald-500 flex-shrink-0" />
@@ -461,7 +460,7 @@ const FoundReports = () => {
                                 </span>
                             ) : <span className="text-gray-400 italic text-xs whitespace-nowrap">{t('getting_location_status')}</span>}
                         </div>
-                        
+
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button onClick={() => setIsPickerOpen(true)} className="flex-1 sm:flex-none text-[11px] flex items-center justify-center gap-1 bg-white border border-gray-300 hover:border-emerald-500 hover:text-emerald-600 px-2.5 py-1.5 rounded-lg transition-colors font-bold whitespace-nowrap">
                                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {t('pick_on_map_btn')}
@@ -517,6 +516,13 @@ const FoundReports = () => {
                             <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1">
                                 <div className="relative h-64 bg-emerald-100 overflow-hidden">
                                     {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
+                                    <div className="absolute top-3 left-3">
+                                        {report.verified && (
+                                            <div className="p-1 animate-in zoom-in duration-300 drop-shadow-sm">
+                                                <BadgeCheck className="w-7 h-7 text-blue-500" />
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="absolute top-3 right-3"><span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${getConditionColor(report.condition)}`}>{t(report.species) || report.species}</span></div>
                                 </div>
                                 <div className="p-5 flex-1 flex flex-col">

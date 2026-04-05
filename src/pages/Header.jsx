@@ -5,13 +5,15 @@ import PawTrackLogo from "@/components/PawTrackLogo";
 import Notifications from "@/components/notifications/Notifications";
 import ProfileButton from "@/components/topBar/ProfileButton";
 import AdminMenu from "@/components/admin/AdminMenu";
+import OrganizationMenu from "@/components/organization/OrganizationMenu";
 
-const Header = ({ 
-  activeTab, 
-  setActiveTab, 
-  isMobileMenuOpen, 
-  setIsMobileMenuOpen, 
-  isAdmin, 
+const Header = ({
+  activeTab,
+  setActiveTab,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  isAdmin,
+  isOrganization,
   logoMenuRef,
   showNav = false,
   showMyReportsToggle = false
@@ -111,6 +113,7 @@ const Header = ({
 
         <div className="flex items-center gap-4 relative z-[5000]">
           {isAdmin && <AdminMenu />}
+          {isOrganization && <OrganizationMenu />}
           <Notifications />
           <ProfileButton />
         </div>

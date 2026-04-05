@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("found");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOrganization, setIsOrganization] = useState(false);
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [myLostReports, setMyLostReports] = useState([]);
@@ -40,6 +41,9 @@ const Dashboard = () => {
         const user = JSON.parse(userString);
         if (user.role === "ADMIN") {
           setIsAdmin(true);
+        }
+        if (user.role === "ORGANIZATIONS") {
+          setIsOrganization(true);
         }
       } catch (error) {
         console.error("Error parsing user data", error);
@@ -101,13 +105,14 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-      <Header 
+      <Header
         showNav={true}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
+        isOrganization={isOrganization}
         logoMenuRef={logoMenuRef}
       />
 

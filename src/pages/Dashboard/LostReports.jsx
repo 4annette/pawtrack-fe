@@ -6,7 +6,7 @@ import {
     Plus, Search, Filter, Dog, Eye, MapPin,
     Loader2, Clock, ChevronLeft, ChevronRight,
     ChevronsLeft, ChevronsRight, ChevronDown, Check,
-    Navigation, Calendar
+    Navigation, Calendar, BadgeCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchLostReports } from "@/services/api";
@@ -358,8 +358,8 @@ const LostReports = () => {
             case "LESS_THAN_10_HOURS": return "bg-orange-500 text-white border-orange-600";
             case "LESS_THAN_1_DAY": return "bg-amber-400 text-black border-amber-500";
             case "LESS_THAN_1_WEEK": return "bg-blue-500 text-white border-blue-600";
-            case "LESS_THAN_1_MONTH": return "bg-gray-400 text-white border-gray-500";
-            case "MORE_THAN_1_MONTH": return "bg-slate-600 text-white border-slate-700";
+            case "LESS_THAN_1_MONTH": return "bg-cyan-500 text-white border-cyan-600";
+            case "MORE_THAN_1_MONTH": return "bg-indigo-600 text-white border-indigo-700";
             default: return "bg-emerald-500 text-white border-emerald-600";
         }
     }
@@ -576,6 +576,13 @@ const LostReports = () => {
                             >
                                 <div className="relative h-64 bg-emerald-100 overflow-hidden">
                                     {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
+                                    <div className="absolute top-3 left-3">
+                                        {report.verified && (
+                                            <div className="p-1 animate-in zoom-in duration-300 drop-shadow-sm">
+                                                <BadgeCheck className="w-7 h-7 text-blue-500" />
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="absolute top-3 right-3">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border uppercase ${getStatusColor(currentStatus)}`}>
                                             {t(report.species) || report.species}

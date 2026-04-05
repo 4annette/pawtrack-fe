@@ -62,13 +62,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/users/:userId/lost-reports" element={<AdminRoute><UserLostReports /></AdminRoute>} />
         <Route path="/admin/reports/lost/:id" element={<AdminRoute><AdminViewLostReport /></AdminRoute>} />
         <Route path="/admin/verifications/:id" element={<AdminRoute><AdminViewVerification /></AdminRoute>} />
-        <Route path="/admin/profile" element={<AdminRoute><Profile /></AdminRoute>} />
-        <Route path="/admin/my-reports" element={<AdminRoute><MyReports /></AdminRoute>} />
-        <Route path="/admin/found-report-details/:id" element={<AdminRoute><FoundReportDetails /></AdminRoute>} />
-        <Route path="/admin/lost-report-details/:id" element={<AdminRoute><LostReportDetails /></AdminRoute>} />
-        <Route path="/admin/create-found-report" element={<AdminRoute><CreateFoundReport /></AdminRoute>} />
-        <Route path="/admin/create-lost-report" element={<AdminRoute><CreateLostReport /></AdminRoute>} />
-        <Route path="/admin/account-settings" element={<AdminRoute><AccountSettings /></AdminRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
