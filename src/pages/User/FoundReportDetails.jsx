@@ -5,7 +5,7 @@ import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, Calendar, Hash, Dog,
   CheckCircle, MapPin, Link as LinkIcon, AlertCircle, Clock,
-  ChevronDown, Save
+  ChevronDown, Save, Briefcase
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -21,7 +21,8 @@ import {
   uploadFoundReportImage,
   deleteFoundReportImage,
   markFoundReportAsFound,
-  translateText
+  translateText,
+  updateFoundReportStatus
 } from "../../services/api";
 import Header from "@/pages/Header";
 
@@ -115,6 +116,7 @@ const FoundReportDetails = () => {
   const [showFoundModal, setShowFoundModal] = useState(false);
   const [tempSelectedLostId, setTempSelectedLostId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOrganization, setIsOrganization] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const logoMenuRef = useRef(null);
 
@@ -143,6 +145,7 @@ const FoundReportDetails = () => {
       try {
         const user = JSON.parse(userString);
         if (user.role === "ADMIN") setIsAdmin(true);
+        if (user.role === "ORGANIZATIONS") setIsOrganization(true);
       } catch (error) {
         console.error("Error parsing user data", error);
       }
@@ -325,6 +328,41 @@ const FoundReportDetails = () => {
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    setSaving(true);
+    try {
+      await updateFoundReportStatus(id, newStatus);
+      const updated = await fetchFoundReportById(id);
+      setReport(updated);
+      setOriginalReport(updated);
+      toast.success(t('status_updated_toast'));
+    } catch (err) {
+      toast.error(t('error_saving_toast'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const canBeReadyForAdoption = () => {
+    const dateStr = report?.foundDate || report?.dateFound;
+    if (!dateStr) return false;
+    const foundDate = new Date(dateStr);
+    const eightMonthsAgo = new Date();
+    eightMonthsAgo.setMonth(eightMonthsAgo.getMonth() - 8);
+    return foundDate <= eightMonthsAgo;
+  };
+
+  const shouldShowOrgActions = () => {
+    if (!isOrganization || !report) return false;
+    // Εμφανίζεται αν είναι READY_FOR_ADOPTION (για επιστροφή ή υιοθεσία)
+    // ή αν είναι FOUND και μπορεί να πάει READY_FOR_ADOPTION
+    // ή αν είναι ήδη ADOPTED (για να βλέπουμε το badge)
+    if (report.status === 'FOUND' && canBeReadyForAdoption()) return true;
+    if (report.status === 'READY_FOR_ADOPTION') return true;
+    if (report.status === 'ADOPTED') return true;
+    return false;
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-emerald-500 w-10 h-10" /></div>;
 
   return (
@@ -398,14 +436,61 @@ const FoundReportDetails = () => {
                 </div>
               )}
 
-              <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> {t('label_found_question', { format: 'uppercase' })}
-                </span>
-                <button type="button" disabled={!isEditing} onClick={handleToggleFound} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}>
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
-                </button>
-              </div>
+              {report.status !== 'ADOPTED' && (
+                <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm">
+                  <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" /> {t('label_found_question', { format: 'uppercase' })}
+                  </span>
+                  <button type="button" disabled={!isEditing} onClick={handleToggleFound} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}>
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+              )}
+
+              {shouldShowOrgActions() && (
+                <div className="p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm space-y-4 animate-in slide-in-from-top-2">
+                  <span className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" /> {t('organization_actions', { format: 'uppercase' })}
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {report.status === 'FOUND' && canBeReadyForAdoption() && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange('READY_FOR_ADOPTION')}
+                        disabled={saving}
+                        className="w-full bg-emerald-600 text-white text-[10px] font-black uppercase py-3 rounded-xl hover:bg-emerald-700 transition-all shadow-sm"
+                      >
+                        {t('mark_ready_for_adoption')}
+                      </button>
+                    )}
+                    {report.status === 'READY_FOR_ADOPTION' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange('ADOPTED')}
+                          disabled={saving}
+                          className="bg-emerald-600 text-white text-[10px] font-black uppercase py-3 rounded-xl hover:bg-emerald-700 transition-all shadow-sm"
+                        >
+                          {t('mark_adopted')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange('FOUND')}
+                          disabled={saving}
+                          className="bg-gray-100 text-gray-600 text-[10px] font-black uppercase py-3 rounded-xl hover:bg-gray-200 transition-all"
+                        >
+                          {t('back_to_found')}
+                        </button>
+                      </div>
+                    )}
+                    {report.status === 'ADOPTED' && (
+                       <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-center font-black text-[10px] uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5" /> {t('status_adopted')}
+                       </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-5">

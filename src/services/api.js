@@ -448,4 +448,9 @@ export const fetchAdminStatistics = async (payload) => {
     return response.data;
 };
 
+export const updateFoundReportStatus = async (foundId, status) => {
+    const response = await api.patch(`/organizations/found-reports/${foundId}/change-status?status=${status}`);
+    return response.data;
+};
+
 export default api;
