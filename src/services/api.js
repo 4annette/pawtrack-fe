@@ -493,4 +493,24 @@ export const updateClaimVerificationStatus = async (id, status) => {
     return response.data;
 };
 
+export const filterAnnouncements = async (filters, page = 0, size = 10) => {
+    const response = await api.post(`/organizations/announcements/filter?page=${page}&size=${size}`, filters);
+    return response.data;
+};
+
+export const createAnnouncement = async (announcementData) => {
+    const response = await api.post('/organizations/announcements', announcementData);
+    return response.data;
+};
+
+export const updateAnnouncement = async (id, announcementData) => {
+    const response = await api.put(`/organizations/announcements/${id}`, announcementData);
+    return response.data;
+};
+
+export const deleteAnnouncement = async (id) => {
+    const response = await api.delete(`/organizations/announcements/${id}`);
+    return response.data;
+};
+
 export default api;

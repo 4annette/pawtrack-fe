@@ -28,6 +28,7 @@ import AdminViewVerification from "./pages/Admin/AdminViewVerification";
 
 import OrganizationClaims from "./pages/Organization/OrganizationClaims";
 import OrgViewFoundReport from "./pages/Organization/OrgViewFoundReport";
+import AnnouncementsManagement from "./pages/Organization/AnnouncementsManagement";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -68,6 +69,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
         <Route path="/organization/claims" element={<OrganizationRoute><OrganizationClaims /></OrganizationRoute>} />
         <Route path="/organization/reports/found/:id" element={<OrganizationRoute><OrgViewFoundReport /></OrganizationRoute>} />
+        <Route path="/organization/announcements" element={<OrganizationRoute><AnnouncementsManagement /></OrganizationRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
