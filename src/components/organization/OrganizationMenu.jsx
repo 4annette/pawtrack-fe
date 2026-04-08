@@ -2,9 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Building2,
-    LayoutDashboard,
-    Users,
-    Settings,
+    ShieldCheck,
+    Megaphone,
     X
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -27,16 +26,16 @@ const OrganizationMenu = () => {
 
     const menuItems = [
         {
-            label: t('org_dashboard') || "Control Center",
-            icon: LayoutDashboard,
-            path: "/organization/dashboard",
-            desc: "Overview & Analytics"
+            label: t('manage_verifications_title') || "Verifications",
+            icon: ShieldCheck,
+            path: "/organization/claims",
+            desc: t('manage_verifications_subtitle') || "Verify found pets"
         },
         {
-            label: t('staff_management') || "Staff & Members",
-            icon: Users,
-            path: "/organization/staff",
-            desc: "Manage team access"
+            label: t('announcements_management') || "Announcements",
+            icon: Megaphone,
+            path: "/organization/announcements",
+            desc: t('announcements_management_subtitle') || "Manage pet broadcasts"
         },
     ];
 

@@ -3,8 +3,9 @@ import { messaging, auth } from '../firebase/firebaseInitialization';
 import { getToken } from 'firebase/messaging';
 import { signOut } from 'firebase/auth';
 
-const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
-const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+// const BASE_URL = import.meta.env.VITE_SPRING_BOOT_API_URL;
+// const VAPID_KEY = "BItYFdZE3jbFMTOsNkDtLBYy5c4Y7CzPxR8khsBeVgJ1883Hj5XCf8zZoaQ6oyEB-BLiyOOGN6IjNiC727kHSi4";
+const BASE_URL = "http://localhost:8080/api/v1";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -450,6 +451,46 @@ export const fetchAdminStatistics = async (payload) => {
 
 export const updateFoundReportStatus = async (foundId, status) => {
     const response = await api.patch(`/organizations/found-reports/${foundId}/change-status?status=${status}`);
+    return response.data;
+};
+
+export const fetchNearbyOrganizations = async (latitude, longitude) => {
+    const payload = {
+        latitude: latitude,
+        longitude: longitude,
+        radius: 15
+    };
+    const response = await api.post("/users/organizations/filter", payload);
+    return response.data;
+};
+
+export const createClaimVerification = async (reportId, organizationId) => {
+    const response = await api.post(`/found-reports/${reportId}/claim-verifications?organizationid=${organizationId}`);
+    return response.data;
+};
+
+export const fetchClaimVerificationDetails = async (reportId) => {
+    const response = await api.get(`/found-reports/${reportId}/claim-verifications`);
+    return response.data;
+};
+
+export const deleteClaimVerification = async (reportId) => {
+    const response = await api.delete(`/found-reports/${reportId}/claim-verifications`);
+    return response.data;
+};
+
+export const fetchOrgClaimVerifications = async () => {
+    const response = await api.get("/organizations/claim-verifications");
+    return response.data;
+};
+
+export const fetchOrgClaimVerificationById = async (id) => {
+    const response = await api.get(`/organizations/claim-verifications/${id}`);
+    return response.data;
+};
+
+export const updateClaimVerificationStatus = async (id, status) => {
+    const response = await api.patch(`/organizations/claim-verifications/${id}/change-status?status=${status}`);
     return response.data;
 };
 

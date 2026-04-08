@@ -368,6 +368,7 @@ const CreateFoundReport = () => {
     const [loading, setLoading] = useState(false);
     const [imageFile, setImageFile] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isOrganization, setIsOrganization] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const logoMenuRef = useRef(null);
 
@@ -388,6 +389,7 @@ const CreateFoundReport = () => {
             try {
                 const user = JSON.parse(userString);
                 if (user.role === "ADMIN") setIsAdmin(true);
+                if (user.role === "ORGANIZATIONS") setIsOrganization(true);
             } catch (error) {
                 console.error("Error parsing user data", error);
             }
@@ -501,6 +503,7 @@ const CreateFoundReport = () => {
                 isMobileMenuOpen={isMobileMenuOpen}
                 setIsMobileMenuOpen={setIsMobileMenuOpen}
                 isAdmin={isAdmin}
+                isOrganization={isOrganization}
                 logoMenuRef={logoMenuRef}
             />
 

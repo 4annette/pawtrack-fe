@@ -22,6 +22,7 @@ const AccountSettings = () => {
   const [currentView, setCurrentView] = useState("menu");
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOrganization, setIsOrganization] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const logoMenuRef = useRef(null);
 
@@ -39,6 +40,9 @@ const AccountSettings = () => {
         const user = JSON.parse(userString);
         if (user.role === "ADMIN") {
           setIsAdmin(true);
+        }
+        if (user.role === "ORGANIZATIONS") {
+          setIsOrganization(true);
         }
       } catch (error) {
         console.error("Error parsing user data", error);
@@ -310,6 +314,7 @@ const AccountSettings = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
+        isOrganization={isOrganization}
         logoMenuRef={logoMenuRef}
       />
 

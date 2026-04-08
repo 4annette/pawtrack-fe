@@ -147,6 +147,7 @@ const MyReports = () => {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOrganization, setIsOrganization] = useState(false);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -162,6 +163,7 @@ const MyReports = () => {
       try {
         const user = JSON.parse(userString);
         if (user.role === "ADMIN") setIsAdmin(true);
+        if (user.role === "ORGANIZATIONS") setIsOrganization(true);
       } catch (error) {
         console.error("Error parsing user data", error);
       }
@@ -271,6 +273,7 @@ const MyReports = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
+        isOrganization={isOrganization}
         logoMenuRef={logoMenuRef}
       />
 

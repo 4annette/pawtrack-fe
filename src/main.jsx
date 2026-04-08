@@ -26,9 +26,12 @@ import UserLostReports from "./pages/Admin/UserLostReports";
 import AdminViewLostReport from "./pages/Admin/AdminViewLostReport";
 import AdminViewVerification from "./pages/Admin/AdminViewVerification";
 
+import OrganizationClaims from "./pages/Organization/OrganizationClaims";
+import OrgViewFoundReport from "./pages/Organization/OrgViewFoundReport";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/admin/AdminRoute";
+import OrganizationRoute from "./components/organization/OrganizationRoute";
 
 import "./index.css";
 import './i18n';
@@ -62,6 +65,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/users/:userId/lost-reports" element={<AdminRoute><UserLostReports /></AdminRoute>} />
         <Route path="/admin/reports/lost/:id" element={<AdminRoute><AdminViewLostReport /></AdminRoute>} />
         <Route path="/admin/verifications/:id" element={<AdminRoute><AdminViewVerification /></AdminRoute>} />
+
+        <Route path="/organization/claims" element={<OrganizationRoute><OrganizationClaims /></OrganizationRoute>} />
+        <Route path="/organization/reports/found/:id" element={<OrganizationRoute><OrgViewFoundReport /></OrganizationRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

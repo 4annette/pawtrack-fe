@@ -5,7 +5,7 @@ import {
   ArrowLeft, Trash2, Loader2, Image as ImageIcon, Edit3, X,
   Camera, Calendar, Hash, Dog,
   CheckCircle, MapPin, Link as LinkIcon, AlertCircle, Clock,
-  ChevronDown, Save, Briefcase
+  ChevronDown, Save, Briefcase, Building2, Send, ShieldCheck, Timer
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -22,7 +22,11 @@ import {
   deleteFoundReportImage,
   markFoundReportAsFound,
   translateText,
-  updateFoundReportStatus
+  updateFoundReportStatus,
+  fetchNearbyOrganizations,
+  createClaimVerification,
+  fetchClaimVerificationDetails,
+  deleteClaimVerification
 } from "../../services/api";
 import Header from "@/pages/Header";
 
@@ -63,11 +67,11 @@ const CustomDateTimePicker = ({ label, value }) => {
   );
 };
 
-const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled }) => {
+const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled, placeholder }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-  const selectedOption = options.find(opt => opt.value === value) || { label: t('not_set'), value: "" };
+  const selectedOption = options.find(opt => opt.value === value) || { label: placeholder || t('not_set'), value: "" };
 
   useEffect(() => {
     const handleClickOutside = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); };
@@ -90,10 +94,10 @@ const CustomDropdown = ({ label, icon: Icon, value, options, onChange, disabled 
         <ChevronDown className={`w-4 h-4 text-emerald-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-50 p-1 space-y-1">
-          {options.map((option) => (
+        <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-emerald-100 overflow-hidden z-50 p-1 space-y-1 max-h-60 overflow-y-auto">
+          {options.length > 0 ? options.map((option) => (
             <div key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`px-3 py-2 rounded-lg text-sm cursor-pointer font-bold ${option.value === value ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-50'}`}>{option.label}</div>
-          ))}
+          )) : <div className="px-3 py-2 text-xs text-gray-400 italic">{t('no_options_found')}</div>}
         </div>
       )}
     </div>
@@ -117,7 +121,11 @@ const FoundReportDetails = () => {
   const [tempSelectedLostId, setTempSelectedLostId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOrganization, setIsOrganization] = useState(false);
+  const [isUser, setIsUser] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [nearbyOrgs, setNearbyOrgs] = useState([]);
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [claimDetails, setClaimDetails] = useState(null);
   const logoMenuRef = useRef(null);
 
   const hasFetched = useRef(false);
@@ -146,6 +154,7 @@ const FoundReportDetails = () => {
         const user = JSON.parse(userString);
         if (user.role === "ADMIN") setIsAdmin(true);
         if (user.role === "ORGANIZATIONS") setIsOrganization(true);
+        if (user.role === "USER" || user.role === "ADMIN") setIsUser(true);
       } catch (error) {
         console.error("Error parsing user data", error);
       }
@@ -167,6 +176,27 @@ const FoundReportDetails = () => {
         setReport(data);
         setOriginalReport(data);
         hasFetched.current = true;
+        
+        if (data.claimVerificationStatus === "PENDING" || data.claimVerificationStatus === "ACCEPTED") {
+            try {
+                const claimData = await fetchClaimVerificationDetails(id);
+                setClaimDetails(claimData);
+            } catch (err) { console.error(err); }
+        } else {
+            const loadOrgs = async (lat, lng) => {
+                const orgsData = await fetchNearbyOrganizations(lat, lng);
+                setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
+            };
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => loadOrgs(pos.coords.latitude, pos.coords.longitude),
+                    () => data.latitude && data.longitude && loadOrgs(data.latitude, data.longitude)
+                );
+            } else if (data.latitude && data.longitude) {
+                loadOrgs(data.latitude, data.longitude);
+            }
+        }
       } catch (err) {
         toast.error(t('report_not_found_toast'));
         navigate("/my-reports");
@@ -291,9 +321,10 @@ const FoundReportDetails = () => {
         dateFound: formattedDate,
         chipNumber: parseInt(report.chipNumber) || 0
       };
-      delete payload.foundDate;
+      const reportWithoutFoundDate = { ...payload };
+      delete reportWithoutFoundDate.foundDate;
 
-      await updateFoundReport(id, payload);
+      await updateFoundReport(id, reportWithoutFoundDate);
       if (newImage) {
         const updatedData = await uploadFoundReportImage(id, newImage);
         setReport(prev => ({ ...prev, imageUrl: updatedData.imageUrl || updatedData }));
@@ -343,6 +374,51 @@ const FoundReportDetails = () => {
     }
   };
 
+  const handleClaimVerification = async () => {
+    if (!selectedOrgId) {
+      toast.error(t('please_select_organization_error'));
+      return;
+    }
+    setSaving(true);
+    try {
+      await createClaimVerification(id, selectedOrgId);
+      toast.success(t('claim_verification_sent_toast'));
+      const updated = await fetchFoundReportById(id);
+      setReport(updated);
+      if (updated.claimVerificationStatus === "PENDING" || updated.claimVerificationStatus === "ACCEPTED") {
+          const claimData = await fetchClaimVerificationDetails(id);
+          setClaimDetails(claimData);
+      }
+      setSelectedOrgId("");
+    } catch (err) {
+      toast.error(t('claim_verification_failed_toast'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteClaim = async () => {
+    if (window.confirm(t('confirm_delete_claim'))) {
+        setSaving(true);
+        try {
+            await deleteClaimVerification(id);
+            toast.success(t('claim_deleted_toast'));
+            const updated = await fetchFoundReportById(id);
+            setReport(updated);
+            setClaimDetails(null);
+            
+            if (updated.latitude && updated.longitude) {
+                const orgsData = await fetchNearbyOrganizations(updated.latitude, updated.longitude);
+                setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
+            }
+        } catch (err) {
+            toast.error(t('claim_delete_failed_toast'));
+        } finally {
+            setSaving(false);
+        }
+    }
+  };
+
   const canBeReadyForAdoption = () => {
     const dateStr = report?.foundDate || report?.dateFound;
     if (!dateStr) return false;
@@ -353,10 +429,7 @@ const FoundReportDetails = () => {
   };
 
   const shouldShowOrgActions = () => {
-    if (!isOrganization || !report) return false;
-    // Εμφανίζεται αν είναι READY_FOR_ADOPTION (για επιστροφή ή υιοθεσία)
-    // ή αν είναι FOUND και μπορεί να πάει READY_FOR_ADOPTION
-    // ή αν είναι ήδη ADOPTED (για να βλέπουμε το badge)
+    if ((!isOrganization && !isAdmin) || !report) return false;
     if (report.status === 'FOUND' && canBeReadyForAdoption()) return true;
     if (report.status === 'READY_FOR_ADOPTION') return true;
     if (report.status === 'ADOPTED') return true;
@@ -373,6 +446,7 @@ const FoundReportDetails = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
+        isOrganization={isOrganization}
         logoMenuRef={logoMenuRef}
       />
 
@@ -484,11 +558,76 @@ const FoundReportDetails = () => {
                       </div>
                     )}
                     {report.status === 'ADOPTED' && (
-                       <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-center font-black text-[10px] uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-2">
+                        <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-center font-black text-[10px] uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-2">
                           <CheckCircle className="w-3.5 h-3.5" /> {t('status_adopted')}
-                       </div>
+                        </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {isUser && !isEditing && report.claimVerificationStatus !== "REJECTED" && (
+                <div className="p-4 bg-white rounded-2xl border border-blue-100 shadow-sm space-y-4 animate-in slide-in-from-top-2 relative overflow-hidden">
+                    <div className="flex justify-between items-center pr-2">
+                      <span className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4" /> {t('claim_verification_title', { format: 'uppercase' })}
+                      </span>
+                      {report.claimVerificationStatus === 'PENDING' && (
+                        <button 
+                            onClick={handleDeleteClaim}
+                            disabled={saving}
+                            className="p-1.5 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-full transition-all active:scale-90"
+                            title={t('delete_request')}
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      )}
+                    </div>
+                  
+                  {(!report.claimVerificationStatus && !claimDetails) ? (
+                    <div className="space-y-4">
+                        <CustomDropdown 
+                            label={t('select_organization')} 
+                            icon={Building2} 
+                            value={selectedOrgId} 
+                            options={nearbyOrgs} 
+                            onChange={setSelectedOrgId} 
+                            placeholder={t('choose_nearby_org')}
+                        />
+                        <button 
+                            type="button" 
+                            onClick={handleClaimVerification} 
+                            disabled={saving || !selectedOrgId}
+                            className="w-full bg-blue-600 text-white text-[10px] font-black uppercase py-3.5 rounded-xl hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                            {t('send_claim_btn', { format: 'uppercase' })}
+                        </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${report.claimVerificationStatus === 'ACCEPTED' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                            {report.claimVerificationStatus === 'ACCEPTED' ? <ShieldCheck className="w-5 h-5" /> : <Timer className="w-5 h-5" />}
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-wider leading-none mb-1">{t('claim_status_label')}</p>
+                                <p className="text-sm font-bold">{t(`status_${report.claimVerificationStatus.toLowerCase()}`)}</p>
+                            </div>
+                        </div>
+                        
+                        {claimDetails && (
+                            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+                                <div className="flex items-center gap-2 text-gray-600">
+                                    <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                                    <p className="text-xs font-bold">{claimDetails.organization?.firstName || claimDetails.organizationName || t('unknown_org')}</p>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-500">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <p className="text-[10px] font-bold">{claimDetails.updatedAt ? new Date(claimDetails.updatedAt).toLocaleString() : new Date(claimDetails.createdAt).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
