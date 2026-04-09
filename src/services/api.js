@@ -444,73 +444,83 @@ export const deleteVerificationRequest = async (requestId) => {
 };
 
 export const fetchAdminStatistics = async (payload) => {
-    const response = await api.post("/statistics/admin", payload);
-    return response.data;
+  const response = await api.post("/statistics/admin", payload);
+  return response.data;
 };
 
 export const updateFoundReportStatus = async (foundId, status) => {
-    const response = await api.patch(`/organizations/found-reports/${foundId}/change-status?status=${status}`);
-    return response.data;
+  const response = await api.patch(`/organizations/found-reports/${foundId}/change-status?status=${status}`);
+  return response.data;
 };
 
 export const fetchNearbyOrganizations = async (latitude, longitude) => {
-    const payload = {
-        latitude: latitude,
-        longitude: longitude,
-        radius: 15
-    };
-    const response = await api.post("/users/organizations/filter", payload);
-    return response.data;
+  const payload = {
+    latitude: latitude,
+    longitude: longitude,
+    radius: 15
+  };
+  const response = await api.post("/users/organizations/filter", payload);
+  return response.data;
 };
 
 export const createClaimVerification = async (reportId, organizationId) => {
-    const response = await api.post(`/found-reports/${reportId}/claim-verifications?organizationid=${organizationId}`);
-    return response.data;
+  const response = await api.post(`/found-reports/${reportId}/claim-verifications?organizationid=${organizationId}`);
+  return response.data;
 };
 
 export const fetchClaimVerificationDetails = async (reportId) => {
-    const response = await api.get(`/found-reports/${reportId}/claim-verifications`);
-    return response.data;
+  const response = await api.get(`/found-reports/${reportId}/claim-verifications`);
+  return response.data;
 };
 
 export const deleteClaimVerification = async (reportId) => {
-    const response = await api.delete(`/found-reports/${reportId}/claim-verifications`);
-    return response.data;
+  const response = await api.delete(`/found-reports/${reportId}/claim-verifications`);
+  return response.data;
 };
 
 export const fetchOrgClaimVerifications = async () => {
-    const response = await api.get("/organizations/claim-verifications");
-    return response.data;
+  const response = await api.get("/organizations/claim-verifications");
+  return response.data;
 };
 
 export const fetchOrgClaimVerificationById = async (id) => {
-    const response = await api.get(`/organizations/claim-verifications/${id}`);
-    return response.data;
+  const response = await api.get(`/organizations/claim-verifications/${id}`);
+  return response.data;
 };
 
 export const updateClaimVerificationStatus = async (id, status) => {
-    const response = await api.patch(`/organizations/claim-verifications/${id}/change-status?status=${status}`);
-    return response.data;
+  const response = await api.patch(`/organizations/claim-verifications/${id}/change-status?status=${status}`);
+  return response.data;
 };
 
 export const filterAnnouncements = async (filters, page = 0, size = 10) => {
-    const response = await api.post(`/organizations/announcements/filter?page=${page}&size=${size}`, filters);
-    return response.data;
+  const response = await api.post(`/organizations/announcements/filter?page=${page}&size=${size}`, filters);
+  return response.data;
 };
 
 export const createAnnouncement = async (announcementData) => {
-    const response = await api.post('/organizations/announcements', announcementData);
-    return response.data;
+  const response = await api.post('/organizations/announcements', announcementData);
+  return response.data;
 };
 
 export const updateAnnouncement = async (id, announcementData) => {
-    const response = await api.put(`/organizations/announcements/${id}`, announcementData);
-    return response.data;
+  const response = await api.put(`/organizations/announcements/${id}`, announcementData);
+  return response.data;
 };
 
 export const deleteAnnouncement = async (id) => {
-    const response = await api.delete(`/organizations/announcements/${id}`);
-    return response.data;
+  const response = await api.delete(`/organizations/announcements/${id}`);
+  return response.data;
+};
+
+export const fetchPublicAnnouncements = async (filters, page = 0, size = 10, sortBy = 'createdAt', sortDirection = 'DESC') => {
+  const response = await api.post(`/announcements/filter?page=${page}&size=${size}&sortBy=${sortBy}&sortDirection=${sortDirection}`, filters);
+  return response.data;
+};
+
+export const fetchAnnouncementById = async (id) => {
+  const response = await api.get(`/announcements/${id}`);
+  return response.data;
 };
 
 export default api;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
     Building2,
     ShieldCheck,
@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 const OrganizationMenu = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -50,8 +51,8 @@ const OrganizationMenu = () => {
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 title={t('organization') || "Organization"}
                 className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                        : 'text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                    : 'text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600'
                     }`}
             >
                 <Building2 className="w-5 h-5" />
@@ -79,21 +80,33 @@ const OrganizationMenu = () => {
                         </div>
 
                         <div className="space-y-1">
-                            {menuItems.map((item) => (
-                                <button
-                                    key={item.path}
-                                    onClick={(e) => { e.stopPropagation(); handleNavigate(item.path); }}
-                                    className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-indigo-50 active:bg-indigo-100 group"
-                                >
-                                    <div className="p-2 bg-indigo-50 rounded-lg group-hover:bg-white transition-colors flex-shrink-0">
-                                        <item.icon className="w-4 h-4 text-indigo-600" />
-                                    </div>
-                                    <div className="flex flex-col text-left overflow-hidden">
-                                        <span className="text-xs font-black text-gray-800 uppercase tracking-tight truncate">{item.label}</span>
-                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter truncate">{item.desc}</span>
-                                    </div>
-                                </button>
-                            ))}
+                            {menuItems.map((item) => {
+                                const isActive = location.pathname === item.path;
+                                return (
+                                    <button
+                                        key={item.path}
+                                        disabled={isActive}
+                                        onClick={(e) => { e.stopPropagation(); handleNavigate(item.path); }}
+                                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${isActive
+                                            ? 'bg-indigo-50/50 cursor-default pointer-events-none opacity-80'
+                                            : 'hover:bg-indigo-50 active:bg-indigo-100'
+                                            }`}
+                                    >
+                                        <div className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-white'
+                                            }`}>
+                                            <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-600'}`} />
+                                        </div>
+                                        <div className="flex flex-col text-left overflow-hidden">
+                                            <span className={`text-xs font-black uppercase tracking-tight truncate ${isActive ? 'text-indigo-900' : 'text-gray-800'}`}>
+                                                {item.label}
+                                            </span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-tighter truncate ${isActive ? 'text-indigo-400' : 'text-gray-400'}`}>
+                                                {item.desc}
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </>

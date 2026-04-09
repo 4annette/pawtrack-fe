@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-    Loader2, ChevronLeft, FileSearch, Calendar, MapPin, 
+import {
+    Loader2, ChevronLeft, FileSearch, Calendar, MapPin,
     Dog, AlertCircle, ChevronRight, Trash2, X, Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const LocationName = ({ lat, lng }) => {
     const [address, setAddress] = useState("Loading...");
@@ -57,6 +54,9 @@ const UserLostReports = () => {
     const { userId } = useParams();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const logoMenuRef = useRef(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const getCurrentLanguage = () => {
         const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
         return String(preferred).toLowerCase();
@@ -105,12 +105,13 @@ const UserLostReports = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/dashboard')}><PawTrackLogo size="sm" /><span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span></div>
-                    <div className="flex items-center gap-4"><AdminMenu /><Notifications /><ProfileButton /></div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8 flex items-end justify-between">
@@ -131,7 +132,11 @@ const UserLostReports = () => {
                             <div key={report.id} onClick={() => navigate(`/admin/reports/lost/${report.id}`)} className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group h-full cursor-pointer active:scale-[0.98]">
                                 <div className="aspect-video bg-gray-100 relative overflow-hidden rounded-t-[2.5rem]">
                                     {report.imageUrl ? <img src={report.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><Dog className="w-12 h-12 text-gray-200" /></div>}
-                                    <div className="absolute top-4 right-4"><button onClick={(e) => handleDelete(e, report.id)} className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 className="w-4 h-4" /></button></div>
+                                    <div className="absolute top-4 right-4">
+                                        <button onClick={(e) => handleDelete(e, report.id)} className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="p-6 flex flex-col flex-1">
                                     <div className="flex items-start justify-between gap-4 mb-1">

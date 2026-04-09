@@ -14,6 +14,8 @@ import LostReportDetails from "./pages/User/LostReportDetails";
 import CreateFoundReport from './pages/CreateFoundReport';
 import CreateLostReport from './pages/CreateLostReport';
 import AccountSettings from "./pages/User/AccountSettings";
+import Announcements from "./pages/Announcements";
+import AnnouncementDetails from "./pages/AnnouncementDetails";
 
 import ReportsManagement from "./pages/Admin/ReportsManagement";
 import UserManagement from "./pages/Admin/UserManagement";
@@ -29,6 +31,8 @@ import AdminViewVerification from "./pages/Admin/AdminViewVerification";
 import OrganizationClaims from "./pages/Organization/OrganizationClaims";
 import OrgViewFoundReport from "./pages/Organization/OrgViewFoundReport";
 import AnnouncementsManagement from "./pages/Organization/AnnouncementsManagement";
+import CreateAnnouncement from "./pages/Organization/CreateAnnouncement";
+import OrgAnnouncementDetails from "./pages/Organization/OrgAnnouncementDetails";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -55,6 +59,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/create-found-report" element={<ProtectedRoute><CreateFoundReport /></ProtectedRoute>} />
         <Route path="/create-lost-report" element={<ProtectedRoute><CreateLostReport /></ProtectedRoute>} />
         <Route path="/account-settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
+        <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+        <Route path="/announcements/:id" element={<ProtectedRoute><AnnouncementDetails /></ProtectedRoute>} />
 
         <Route path="/admin/reports" element={<AdminRoute><ReportsManagement /></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
@@ -70,6 +76,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/organization/claims" element={<OrganizationRoute><OrganizationClaims /></OrganizationRoute>} />
         <Route path="/organization/reports/found/:id" element={<OrganizationRoute><OrgViewFoundReport /></OrganizationRoute>} />
         <Route path="/organization/announcements" element={<OrganizationRoute><AnnouncementsManagement /></OrganizationRoute>} />
+        <Route path="/organization/announcements/:id" element={<OrganizationRoute><OrgAnnouncementDetails /></OrganizationRoute>} />
+        <Route path="/organization/announcements/create" element={<OrganizationRoute><CreateAnnouncement /></OrganizationRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

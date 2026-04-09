@@ -318,7 +318,7 @@ const MyReports = () => {
                       <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
                         <FileText className="w-5 h-5" />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 pr-4">
                         <h3 className={`font-bold text-gray-900 text-lg transition-colors truncate ${activeTab === 'lost' ? 'group-hover:text-orange-700' : 'group-hover:text-emerald-700'}`}>{getLocalizedTitle(report)}</h3>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm font-medium text-gray-400">
                           <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-4 h-4" /> {formatDate(report.dateFound || report.foundDate || report.dateLost || report.lostDate, t)}</span>
@@ -326,16 +326,16 @@ const MyReports = () => {
                           <AddressDisplay lat={report.latitude} lng={report.longitude} activeTab={activeTab} />
                         </div>
 
-                        <div className="flex md:hidden items-center gap-3 mt-4">
+                        <div className="flex md:hidden items-center gap-2 mt-4">
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(activeTab === 'lost' ? `/lost-report-details/${report.id}?edit=true` : `/found-report-details/${report.id}?edit=true`); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${activeTab === 'lost' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}
                           >
                             <Settings2 className="w-3.5 h-3.5" /> {t('edit_btn_inline')}
                           </button>
                           <button
                             onClick={(e) => handleDelete(e, report.id)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600"
                           >
                             <Trash2 className="w-3.5 h-3.5" /> {t('delete_btn_inline')}
                           </button>

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
     MapPin, Calendar, FileText, ChevronDown, Check,
     Loader2, Trash2, ChevronLeft, ChevronRight,
-    Search, Mail, User, X, Filter, Dog, 
+    Search, Mail, User, X, Filter, Dog,
     CheckCircle, Hash, Map as MapIcon, Navigation
 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,10 +18,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { deleteLostReport, deleteFoundReport } from "@/services/api";
 import api from "@/services/api";
 
-import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 let DefaultIcon = L.icon({
     iconUrl: icon,
@@ -166,8 +163,8 @@ const CustomDatePicker = ({ label, value, onChange, activeTab }) => {
             <label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-1 ml-1">
                 <Calendar className="w-3 h-3" /> {label}
             </label>
-            <div 
-                onClick={() => setIsOpen(!isOpen)} 
+            <div
+                onClick={() => setIsOpen(!isOpen)}
                 className={`w-full h-11 px-3 bg-gray-50 border-none rounded-xl flex items-center justify-between cursor-pointer transition-all ${isOpen ? `ring-2 ring-${accentColor}-500` : ''}`}
             >
                 <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || "YYYY-MM-DD"}</span>
@@ -288,6 +285,8 @@ const ReportsManagement = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
+    const logoMenuRef = useRef(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [searchLocation, setSearchLocation] = useState(null);
     const [viewerMapData, setViewerMapData] = useState({ isOpen: false, pos: null, title: "" });
@@ -302,8 +301,8 @@ const ReportsManagement = () => {
         return (isGreekLanguage ? item.descriptionEl : item.description) || item.description || item.descriptionEl || '';
     };
 
-    const [filters, setFilters] = useState({ 
-        search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null 
+    const [filters, setFilters] = useState({
+        search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null
     });
 
     const speciesOptions = [{ value: "", label: t('all') }, { value: "DOG", label: t('DOG') }, { value: "CAT", label: t('CAT') }, { value: "OTHER", label: t('OTHER') }];
@@ -373,8 +372,8 @@ const ReportsManagement = () => {
             }
             toast.success(t('report_deleted_success'));
             loadReports();
-        } catch (error) { 
-            toast.error(t('delete_failed')); 
+        } catch (error) {
+            toast.error(t('delete_failed'));
             console.error(error);
         }
     };
@@ -391,12 +390,13 @@ const ReportsManagement = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/dashboard')}><PawTrackLogo size="sm" /><span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span></div>
-                    <div className="flex items-center gap-4"><AdminMenu /><Notifications /><ProfileButton /></div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8 max-w-5xl">
                 <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -410,18 +410,18 @@ const ReportsManagement = () => {
 
                     <div className="w-full md:w-auto">
                         <div className="bg-white p-1 rounded-2xl border border-gray-100 shadow-sm flex relative h-12 w-full md:w-64">
-                            <div 
+                            <div
                                 className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-out z-0 ${activeTab === 'lost' ? 'left-1 bg-orange-600 shadow-orange-200' : 'left-[50%] bg-emerald-600 shadow-emerald-200'} shadow-lg`}
                             />
-                            
-                            <button 
-                                onClick={() => { setActiveTab("lost"); setPage(0); setSearchLocation(null); setFilters({ search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null }); }} 
+
+                            <button
+                                onClick={() => { setActiveTab("lost"); setPage(0); setSearchLocation(null); setFilters({ search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null }); }}
                                 className={`relative flex-1 text-center text-xs font-black uppercase tracking-widest transition-colors duration-200 z-10 ${activeTab === 'lost' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
                             >
                                 {t('lost')}
                             </button>
-                            <button 
-                                onClick={() => { setActiveTab("found"); setPage(0); setSearchLocation(null); setFilters({ search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null }); }} 
+                            <button
+                                onClick={() => { setActiveTab("found"); setPage(0); setSearchLocation(null); setFilters({ search: "", species: "", condition: "", dateAfter: "", dateBefore: "", chipNumber: "", foundStatus: null }); }}
                                 className={`relative flex-1 text-center text-xs font-black uppercase tracking-widest transition-colors duration-200 z-10 ${activeTab === 'found' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
                             >
                                 {t('found')}
@@ -444,7 +444,7 @@ const ReportsManagement = () => {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input type="text" placeholder={t('search_placeholder')} className={`w-full pl-11 pr-4 h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-${activeTab === 'lost' ? 'orange' : 'emerald'}-50 text-sm font-bold`} value={filters.search} onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(0); }} />
                         </div>
-                        <button onClick={() => setShowFilterPanel(!showFilterPanel)} className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? (activeTab === 'lost' ? 'bg-orange-600 border-orange-600' : 'bg-emerald-600 border-emerald-600') + ' text-white' : 'bg-white border-gray-200 text-gray-600'}`}><Filter className="w-5 h-5" /> <span className="hidden sm:inline font-bold text-sm">{t('filters_btn')}</span></button>
+                        <button onClick={() => setShowFilterPanel(!showFilterPanel)} className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? (activeTab === 'lost' ? 'bg-orange-600 border-orange-600' : 'bg-emerald-600 border-emerald-600') + ' text-white' : 'bg-white border-gray-100 text-gray-600'}`}><Filter className="w-5 h-5" /> <span className="hidden sm:inline font-bold text-sm">{t('filters_btn')}</span></button>
                     </div>
                     {showFilterPanel && (
                         <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-[600px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-8 z-50 animate-in slide-in-from-top-2">

@@ -176,26 +176,26 @@ const FoundReportDetails = () => {
         setReport(data);
         setOriginalReport(data);
         hasFetched.current = true;
-        
-        if (data.claimVerificationStatus === "PENDING" || data.claimVerificationStatus === "ACCEPTED") {
-            try {
-                const claimData = await fetchClaimVerificationDetails(id);
-                setClaimDetails(claimData);
-            } catch (err) { console.error(err); }
-        } else {
-            const loadOrgs = async (lat, lng) => {
-                const orgsData = await fetchNearbyOrganizations(lat, lng);
-                setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
-            };
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => loadOrgs(pos.coords.latitude, pos.coords.longitude),
-                    () => data.latitude && data.longitude && loadOrgs(data.latitude, data.longitude)
-                );
-            } else if (data.latitude && data.longitude) {
-                loadOrgs(data.latitude, data.longitude);
-            }
+        if (data.claimVerificationStatus === "PENDING" || data.claimVerificationStatus === "ACCEPTED") {
+          try {
+            const claimData = await fetchClaimVerificationDetails(id);
+            setClaimDetails(claimData);
+          } catch (err) { console.error(err); }
+        } else {
+          const loadOrgs = async (lat, lng) => {
+            const orgsData = await fetchNearbyOrganizations(lat, lng);
+            setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
+          };
+
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => loadOrgs(pos.coords.latitude, pos.coords.longitude),
+              () => data.latitude && data.longitude && loadOrgs(data.latitude, data.longitude)
+            );
+          } else if (data.latitude && data.longitude) {
+            loadOrgs(data.latitude, data.longitude);
+          }
         }
       } catch (err) {
         toast.error(t('report_not_found_toast'));
@@ -386,8 +386,8 @@ const FoundReportDetails = () => {
       const updated = await fetchFoundReportById(id);
       setReport(updated);
       if (updated.claimVerificationStatus === "PENDING" || updated.claimVerificationStatus === "ACCEPTED") {
-          const claimData = await fetchClaimVerificationDetails(id);
-          setClaimDetails(claimData);
+        const claimData = await fetchClaimVerificationDetails(id);
+        setClaimDetails(claimData);
       }
       setSelectedOrgId("");
     } catch (err) {
@@ -399,23 +399,23 @@ const FoundReportDetails = () => {
 
   const handleDeleteClaim = async () => {
     if (window.confirm(t('confirm_delete_claim'))) {
-        setSaving(true);
-        try {
-            await deleteClaimVerification(id);
-            toast.success(t('claim_deleted_toast'));
-            const updated = await fetchFoundReportById(id);
-            setReport(updated);
-            setClaimDetails(null);
-            
-            if (updated.latitude && updated.longitude) {
-                const orgsData = await fetchNearbyOrganizations(updated.latitude, updated.longitude);
-                setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
-            }
-        } catch (err) {
-            toast.error(t('claim_delete_failed_toast'));
-        } finally {
-            setSaving(false);
+      setSaving(true);
+      try {
+        await deleteClaimVerification(id);
+        toast.success(t('claim_deleted_toast'));
+        const updated = await fetchFoundReportById(id);
+        setReport(updated);
+        setClaimDetails(null);
+
+        if (updated.latitude && updated.longitude) {
+          const orgsData = await fetchNearbyOrganizations(updated.latitude, updated.longitude);
+          setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
         }
+      } catch (err) {
+        toast.error(t('claim_delete_failed_toast'));
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -442,7 +442,7 @@ const FoundReportDetails = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
       <Header
         activeTab=""
-        setActiveTab={() => {}}
+        setActiveTab={() => { }}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
@@ -467,8 +467,8 @@ const FoundReportDetails = () => {
                   <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm active:scale-95">
                     <Edit3 className="w-4 h-4" /> {t('edit_btn', { format: 'uppercase' })}
                   </button>
-                  <button onClick={async () => { if (window.confirm(t('confirm_delete_report'))) { await deleteFoundReport(id); navigate("/my-reports", { state: { activeTab: 'found' } }); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-2">
-                    <Trash2 className="w-4 h-4" /> {t('delete_btn', { format: 'uppercase' })}
+                  <button onClick={async () => { if (window.confirm(t('confirm_delete_report'))) { await deleteFoundReport(id); navigate("/my-reports", { state: { activeTab: 'found' } }); } }} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-3 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-1.5 sm:gap-2">
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 h-4" /> {t('delete_btn', { format: 'uppercase' })}
                   </button>
                 </>
               ) : (
@@ -558,9 +558,9 @@ const FoundReportDetails = () => {
                       </div>
                     )}
                     {report.status === 'ADOPTED' && (
-                        <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-center font-black text-[10px] uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5" /> {t('status_adopted')}
-                        </div>
+                      <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-center font-black text-[10px] uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-2">
+                        <CheckCircle className="w-3.5 h-3.5" /> {t('status_adopted')}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -568,64 +568,64 @@ const FoundReportDetails = () => {
 
               {isUser && !isEditing && report.claimVerificationStatus !== "REJECTED" && (
                 <div className="p-4 bg-white rounded-2xl border border-blue-100 shadow-sm space-y-4 animate-in slide-in-from-top-2 relative overflow-hidden">
-                    <div className="flex justify-between items-center pr-2">
-                      <span className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4" /> {t('claim_verification_title', { format: 'uppercase' })}
-                      </span>
-                      {report.claimVerificationStatus === 'PENDING' && (
-                        <button 
-                            onClick={handleDeleteClaim}
-                            disabled={saving}
-                            className="p-1.5 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-full transition-all active:scale-90"
-                            title={t('delete_request')}
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        </button>
-                      )}
-                    </div>
-                  
+                  <div className="flex justify-between items-center pr-2">
+                    <span className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4" /> {t('claim_verification_title', { format: 'uppercase' })}
+                    </span>
+                    {report.claimVerificationStatus === 'PENDING' && (
+                      <button
+                        onClick={handleDeleteClaim}
+                        disabled={saving}
+                        className="p-1.5 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-full transition-all active:scale-90"
+                        title={t('delete_request')}
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+
                   {(!report.claimVerificationStatus && !claimDetails) ? (
                     <div className="space-y-4">
-                        <CustomDropdown 
-                            label={t('select_organization')} 
-                            icon={Building2} 
-                            value={selectedOrgId} 
-                            options={nearbyOrgs} 
-                            onChange={setSelectedOrgId} 
-                            placeholder={t('choose_nearby_org')}
-                        />
-                        <button 
-                            type="button" 
-                            onClick={handleClaimVerification} 
-                            disabled={saving || !selectedOrgId}
-                            className="w-full bg-blue-600 text-white text-[10px] font-black uppercase py-3.5 rounded-xl hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                            {t('send_claim_btn', { format: 'uppercase' })}
-                        </button>
+                      <CustomDropdown
+                        label={t('select_organization')}
+                        icon={Building2}
+                        value={selectedOrgId}
+                        options={nearbyOrgs}
+                        onChange={setSelectedOrgId}
+                        placeholder={t('choose_nearby_org')}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleClaimVerification}
+                        disabled={saving || !selectedOrgId}
+                        className="w-full bg-blue-600 text-white text-[10px] font-black uppercase py-3.5 rounded-xl hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {t('send_claim_btn', { format: 'uppercase' })}
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${report.claimVerificationStatus === 'ACCEPTED' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
-                            {report.claimVerificationStatus === 'ACCEPTED' ? <ShieldCheck className="w-5 h-5" /> : <Timer className="w-5 h-5" />}
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-wider leading-none mb-1">{t('claim_status_label')}</p>
-                                <p className="text-sm font-bold">{t(`status_${report.claimVerificationStatus.toLowerCase()}`)}</p>
-                            </div>
+                      <div className={`flex items-center gap-3 p-3 rounded-xl border ${report.claimVerificationStatus === 'ACCEPTED' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                        {report.claimVerificationStatus === 'ACCEPTED' ? <ShieldCheck className="w-5 h-5" /> : <Timer className="w-5 h-5" />}
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-wider leading-none mb-1">{t('claim_status_label')}</p>
+                          <p className="text-sm font-bold">{t(`status_${report.claimVerificationStatus.toLowerCase()}`)}</p>
                         </div>
-                        
-                        {claimDetails && (
-                            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                    <Building2 className="w-3.5 h-3.5 text-blue-500" />
-                                    <p className="text-xs font-bold">{claimDetails.organization?.firstName || claimDetails.organizationName || t('unknown_org')}</p>
-                                </div>
-                                <div className="flex items-center gap-2 text-gray-500">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <p className="text-[10px] font-bold">{claimDetails.updatedAt ? new Date(claimDetails.updatedAt).toLocaleString() : new Date(claimDetails.createdAt).toLocaleString()}</p>
-                                </div>
-                            </div>
-                        )}
+                      </div>
+
+                      {claimDetails && (
+                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                            <p className="text-xs font-bold">{claimDetails.organization?.firstName || claimDetails.organizationName || t('unknown_org')}</p>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Clock className="w-3.5 h-3.5" />
+                            <p className="text-[10px] font-bold">{claimDetails.updatedAt ? new Date(claimDetails.updatedAt).toLocaleString() : new Date(claimDetails.createdAt).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

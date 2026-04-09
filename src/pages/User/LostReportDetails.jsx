@@ -304,7 +304,7 @@ const LostReportDetails = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
       <Header
         activeTab=""
-        setActiveTab={() => {}}
+        setActiveTab={() => { }}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isAdmin={isAdmin}
@@ -329,12 +329,12 @@ const LostReportDetails = () => {
                   <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none justify-center bg-white border border-orange-200 text-orange-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase flex items-center gap-2 hover:bg-orange-50 transition-all shadow-sm active:scale-95">
                     <Edit3 className="w-4 h-4" /> {t('edit_btn', { format: 'uppercase' })}
                   </button>
-                  <button onClick={handleDeleteReport} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-xs font-black uppercase flex items-center gap-2 hover:bg-red-100 transition-colors shadow-sm active:scale-95">
-                    <Trash2 className="w-4 h-4" /> {t('delete_btn', { format: 'uppercase' })}
+                  <button onClick={handleDeleteReport} className="flex-1 sm:flex-none justify-center bg-red-50 text-red-500 px-3 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm active:scale-95 flex items-center gap-1.5 sm:gap-2">
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 h-4" /> {t('delete_btn', { format: 'uppercase' })}
                   </button>
                 </>
               ) : (
-                <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
+                <button onClick={handleCancel} className="w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-500 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
                   <X className="w-4 h-4" /> {t('cancel', { format: 'uppercase' })}
                 </button>
               )}
@@ -352,7 +352,7 @@ const LostReportDetails = () => {
 
               {isEditing && (
                 <div className="space-y-3">
-                  <label className="w-full bg-white border border-orange-200 py-3.5 rounded-2xl flex items-center justify-center gap-3 text-xs font-black text-orange-600 cursor-pointer hover:bg-orange-50 shadow-sm transition-all">
+                  <label className="w-full bg-white border border-orange-200 py-3.5 rounded-2xl flex items-center justify-center gap-3 text-xs font-black text-orange-600 cursor-pointer hover:bg-emerald-50 shadow-sm transition-all">
                     <Camera className="w-4 h-4" /> {report.imageUrl ? t('change_photo_btn', { format: 'uppercase' }) : t('add_photo_btn', { format: 'uppercase' })}
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => setNewImage(e.target.files[0])} />
                   </label>
@@ -362,7 +362,7 @@ const LostReportDetails = () => {
 
               <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-orange-100 shadow-sm">
                 <span className="text-xs font-black text-orange-800 uppercase tracking-widest flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {t('label_found_question', { format: 'uppercase' })}</span>
-                <button type="button" disabled={!isEditing} onClick={() => setReport({ ...report, found: !report.found })} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-orange-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} /></button>
+                <button type="button" disabled={!isEditing} onClick={() => setReport({ ...report, found: !report.found })} className={`w-12 h-6 rounded-full transition-colors relative ${report.found ? 'bg-emerald-500' : 'bg-gray-300'} ${!isEditing && 'opacity-60 cursor-not-allowed'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${report.found ? 'right-1' : 'left-1'}`} /></button>
               </div>
             </div>
 

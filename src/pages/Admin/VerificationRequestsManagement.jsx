@@ -4,18 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
     Loader2, Trash2, ShieldCheck, Mail, ChevronLeft,
-    ChevronRight, Calendar, Building2, ChevronDown, Check, User, Search, X, Filter, Clock
+    ChevronRight, Calendar, Building2, ChevronDown, Check, Search, X, Filter, Clock
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-    fetchVerificationRequests, 
-    changeVerificationStatus, 
-    deleteVerificationRequest 
+import {
+    fetchVerificationRequests,
+    changeVerificationStatus,
+    deleteVerificationRequest
 } from "@/services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
     const { t, i18n } = useTranslation();
@@ -55,8 +52,8 @@ const CustomDatePicker = ({ label, value, onChange }) => {
     return (
         <div className="relative space-y-1" ref={containerRef}>
             <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{label}</label>
-            <div 
-                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }} 
+            <div
+                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 className={`w-full h-10 px-3 bg-gray-50 border-none rounded-xl flex items-center justify-between cursor-pointer transition-all ${isOpen ? 'ring-2 ring-indigo-500' : ''}`}
             >
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${value ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -80,10 +77,10 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                             for (let d = 1; d <= totalDays; d++) {
                                 const thisDateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 days.push(
-                                    <button 
-                                        key={d} 
-                                        onClick={(e) => { e.stopPropagation(); handleDateClick(d); }} 
-                                        type="button" 
+                                    <button
+                                        key={d}
+                                        onClick={(e) => { e.stopPropagation(); handleDateClick(d); }}
+                                        type="button"
                                         className={`h-7 w-7 rounded-full text-xs font-medium flex items-center justify-center transition-colors ${value === thisDateStr ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'}`}
                                     >
                                         {d}
@@ -176,6 +173,8 @@ const VerificationRequestsManagement = () => {
 
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [filterDropdown, setFilterDropdown] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const logoMenuRef = useRef(null);
     const dropdownRefs = useRef({});
     const filterStatusRef = useRef(null);
     const filterPanelRef = useRef(null);
@@ -205,7 +204,7 @@ const VerificationRequestsManagement = () => {
                 afterDate: filters.afterDate || null
             };
             const response = await fetchVerificationRequests(payload, { page, size: 10, sortBy: 'createdAt', sortDirection: 'DESC' });
-            
+
             setRequests(response.content || []);
             if (response.page) {
                 setTotalPages(response.page.totalPages || 0);
@@ -260,19 +259,13 @@ const VerificationRequestsManagement = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8 relative">
                 <div className="mb-8 flex items-end justify-between">
@@ -289,8 +282,8 @@ const VerificationRequestsManagement = () => {
                 <div className="relative mb-8 flex gap-3">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             placeholder={t('org_name_email_placeholder')}
                             className="w-full pl-11 pr-4 h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-indigo-50 text-sm font-bold"
                             value={filters.search}
@@ -298,13 +291,12 @@ const VerificationRequestsManagement = () => {
                         />
                     </div>
                     <div className="relative" ref={filterPanelRef}>
-                        <button 
+                        <button
                             onClick={() => setFilterDropdown(!filterDropdown)}
-                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${
-                                filterDropdown || filters.beforeDate || filters.afterDate || filters.status !== null
-                                ? 'bg-indigo-600 border-indigo-600 text-white' 
-                                : 'bg-white border-gray-200 text-gray-600'
-                            }`}
+                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${filterDropdown || filters.beforeDate || filters.afterDate || filters.status !== null
+                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                    : 'bg-white border-gray-100 text-gray-600'
+                                }`}
                         >
                             <Filter className="w-5 h-5" />
                             <span className="hidden sm:inline font-bold text-sm">{t('filters_btn')}</span>
@@ -319,14 +311,14 @@ const VerificationRequestsManagement = () => {
                                 <div className="space-y-6">
                                     <div className="space-y-1" ref={filterStatusRef}>
                                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t('status')}</label>
-                                        <button 
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); setActiveDropdown('filter-status'); }}
                                             className="w-full h-10 px-3 bg-gray-50 rounded-xl flex items-center justify-between text-[10px] font-black uppercase text-gray-900 shadow-sm"
                                         >
                                             {filters.status ? t(filters.status.toLowerCase()) : t('all')}
                                             <ChevronDown className="w-4 h-4 text-gray-400" />
                                         </button>
-                                        <PortalDropdown 
+                                        <PortalDropdown
                                             isOpen={activeDropdown === 'filter-status'}
                                             onClose={() => setActiveDropdown(null)}
                                             anchorRef={filterStatusRef}
@@ -336,8 +328,8 @@ const VerificationRequestsManagement = () => {
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <CustomDatePicker label={t('after_date')} value={filters.afterDate} onChange={(v) => setFilters({...filters, afterDate: v, page: 0})} />
-                                        <CustomDatePicker label={t('before_date')} value={filters.beforeDate} onChange={(v) => setFilters({...filters, beforeDate: v, page: 0})} />
+                                        <CustomDatePicker label={t('after_date')} value={filters.afterDate} onChange={(v) => setFilters({ ...filters, afterDate: v, page: 0 })} />
+                                        <CustomDatePicker label={t('before_date')} value={filters.beforeDate} onChange={(v) => setFilters({ ...filters, beforeDate: v, page: 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -387,14 +379,14 @@ const VerificationRequestsManagement = () => {
                                             <td className="px-6 py-4">
                                                 {req.requestStatus === 'PENDING' ? (
                                                     <div ref={el => dropdownRefs.current[req.id] = el} onClick={(e) => e.stopPropagation()}>
-                                                        <button 
+                                                        <button
                                                             onClick={() => setActiveDropdown(req.id)}
                                                             className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase border w-32 ${getStatusStyle(req.requestStatus)} shadow-sm`}
                                                         >
                                                             {t(req.requestStatus.toLowerCase())}
                                                             <ChevronDown className="w-3 h-3" />
                                                         </button>
-                                                        <PortalDropdown 
+                                                        <PortalDropdown
                                                             isOpen={activeDropdown === req.id}
                                                             onClose={() => setActiveDropdown(null)}
                                                             anchorRef={{ current: dropdownRefs.current[req.id] }}

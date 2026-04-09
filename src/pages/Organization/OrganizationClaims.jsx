@@ -3,16 +3,12 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-    Loader2, ChevronLeft, ChevronRight, Calendar, Search, 
-    Building2, ChevronDown, X, Check, Clock, Filter, 
-    ShieldCheck, Info, XCircle, CheckCircle, Dog, User
+    Loader2, Calendar, Search, Building2, ChevronDown, Check, Clock, Filter,
+    ShieldCheck, Info, Dog
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchOrgClaimVerifications, updateClaimVerificationStatus } from "../../services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import OrganizationMenu from "@/components/organization/OrganizationMenu";
+import Header from "@/pages/Header";
 
 const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange }) => {
     const [coords, setCoords] = useState(null);
@@ -58,8 +54,8 @@ const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange }
     if (!isOpen || !coords) return null;
 
     return createPortal(
-        <div 
-            className="fixed inset-0 z-[10001]" 
+        <div
+            className="fixed inset-0 z-[10001]"
             style={{ pointerEvents: coords.opacity === 0 ? 'none' : 'auto' }}
             onClick={onClose}
         >
@@ -138,8 +134,10 @@ const OrganizationClaims = () => {
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const [filters, setFilters] = useState({ search: "", status: "" });
     const [activeDropdown, setActiveDropdown] = useState({ id: null, type: null });
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dropdownRefs = useRef({});
     const filterPanelRef = useRef(null);
+    const logoMenuRef = useRef(null);
 
     useEffect(() => {
         loadClaims();
@@ -161,8 +159,8 @@ const OrganizationClaims = () => {
             if (filters.status) filtered = data.filter(c => c.status === filters.status);
             if (filters.search) {
                 const s = filters.search.toLowerCase();
-                filtered = filtered.filter(c => 
-                    c.foundReport.title.toLowerCase().includes(s) || 
+                filtered = filtered.filter(c =>
+                    c.foundReport.title.toLowerCase().includes(s) ||
                     c.foundReport.titleEl.toLowerCase().includes(s) ||
                     c.foundReport.creator.firstName.toLowerCase().includes(s)
                 );
@@ -203,19 +201,13 @@ const OrganizationClaims = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('organization')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <OrganizationMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isOrganization={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8 flex items-end justify-between">
@@ -233,20 +225,20 @@ const OrganizationClaims = () => {
                     <div className="flex gap-3 items-center">
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder={t('name_email_placeholder')} 
-                                className="w-full h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-indigo-50 text-sm font-bold pl-11 pr-4" 
-                                value={filters.search} 
-                                onChange={(e) => { setFilters(prev => ({...prev, search: e.target.value})); if(!e.target.value) loadClaims(); }}
+                            <input
+                                type="text"
+                                placeholder={t('name_email_placeholder')}
+                                className="w-full h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-indigo-50 text-sm font-bold pl-11 pr-4"
+                                value={filters.search}
+                                onChange={(e) => { setFilters(prev => ({ ...prev, search: e.target.value })); if (!e.target.value) loadClaims(); }}
                                 onKeyDown={(e) => e.key === 'Enter' && loadClaims()}
                             />
                         </div>
-                        <button 
-                            onClick={() => setShowFilterPanel(!showFilterPanel)} 
-                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
+                        <button
+                            onClick={() => setShowFilterPanel(!showFilterPanel)}
+                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-100 text-gray-600'}`}
                         >
-                            <Filter className="w-5 h-5" /> 
+                            <Filter className="w-5 h-5" />
                             <span className="hidden sm:inline font-bold text-sm">{t('filters_btn')}</span>
                         </button>
                     </div>
@@ -255,9 +247,9 @@ const OrganizationClaims = () => {
                         <div ref={filterPanelRef} className="absolute top-full right-0 mt-3 w-full md:w-80 bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-6 z-50 animate-in slide-in-from-top-2">
                             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-50">
                                 <h3 className="font-black text-gray-900 uppercase text-xs tracking-widest">{t('filter_options_title')}</h3>
-                                <button onClick={() => {setFilters({search:"", status:""}); loadClaims();}} className="text-[10px] font-black uppercase text-red-500">{t('clear_all_btn')}</button>
+                                <button onClick={() => { setFilters({ search: "", status: "" }); loadClaims(); }} className="text-[10px] font-black uppercase text-red-500">{t('clear_all_btn')}</button>
                             </div>
-                            <CustomDropdown label={t('status')} icon={Clock} value={filters.status} options={[{ value: "", label: t('all') }, ...statusOptions]} onChange={(v) => setFilters(prev => ({...prev, status: v}))} />
+                            <CustomDropdown label={t('status')} icon={Clock} value={filters.status} options={[{ value: "", label: t('all') }, ...statusOptions]} onChange={(v) => setFilters(prev => ({ ...prev, status: v }))} />
                         </div>
                     )}
                 </div>
@@ -286,14 +278,14 @@ const OrganizationClaims = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                                        {claim.foundReport.imageUrl ? <img src={claim.foundReport.imageUrl} className="w-full h-full object-cover" /> : <Dog className="w-full h-full p-3 text-gray-300"/>}
+                                                        {claim.foundReport.imageUrl ? <img src={claim.foundReport.imageUrl} className="w-full h-full object-cover" /> : <Dog className="w-full h-full p-3 text-gray-300" />}
                                                     </div>
                                                     <div>
                                                         <span className="font-bold text-gray-900 block truncate max-w-[200px]">
                                                             {i18n.language.startsWith('el') ? claim.foundReport.titleEl : claim.foundReport.title}
                                                         </span>
                                                         <span className="text-[10px] text-emerald-600 font-black uppercase tracking-tighter flex items-center gap-1">
-                                                            <Calendar className="w-3 h-3"/> {new Date(claim.foundReport.foundDate).toLocaleDateString()}
+                                                            <Calendar className="w-3 h-3" /> {new Date(claim.foundReport.foundDate).toLocaleDateString()}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -331,7 +323,7 @@ const OrganizationClaims = () => {
                                                 {claim.status !== 'PENDING' ? (
                                                     <div className="flex flex-col">
                                                         <span className="text-gray-600 font-bold">{new Date(claim.updatedAt).toLocaleDateString()}</span>
-                                                        <span className="text-[10px] uppercase font-black tracking-tight">{new Date(claim.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                        <span className="text-[10px] uppercase font-black tracking-tight">{new Date(claim.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                     </div>
                                                 ) : (
                                                     <span className="italic text-gray-300">--</span>
@@ -356,7 +348,7 @@ const OrganizationClaims = () => {
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden border border-gray-200">
-                                        {claim.foundReport.imageUrl ? <img src={claim.foundReport.imageUrl} className="w-full h-full object-cover" /> : <Dog className="w-full h-full p-3 text-gray-300"/>}
+                                        {claim.foundReport.imageUrl ? <img src={claim.foundReport.imageUrl} className="w-full h-full object-cover" /> : <Dog className="w-full h-full p-3 text-gray-300" />}
                                     </div>
                                     <div>
                                         <span className="font-bold text-gray-900 block truncate max-w-[180px]">

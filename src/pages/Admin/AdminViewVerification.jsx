@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-    ArrowLeft, ShieldCheck, Building2, Mail, User, 
-    Calendar, Trash2, Loader2, Phone, Hash,
+import {
+    ArrowLeft, ShieldCheck, Building2, Mail, User,
+    Calendar, Trash2, Loader2, Hash,
     ChevronDown, Check, Clock, Info, UserX
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchVerificationRequestById, changeVerificationStatus, deleteVerificationRequest } from "@/services/api";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const AdminViewVerification = () => {
     const { id } = useParams();
@@ -20,7 +17,9 @@ const AdminViewVerification = () => {
     const [req, setReq] = useState(null);
     const [loading, setLoading] = useState(true);
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const logoMenuRef = useRef(null);
 
     useEffect(() => {
         const load = async () => {
@@ -28,11 +27,11 @@ const AdminViewVerification = () => {
                 setLoading(true);
                 const data = await fetchVerificationRequestById(id);
                 setReq(data);
-            } catch (e) { 
-                toast.error(t('report_not_found_toast') || "Request not found"); 
-                navigate(-1); 
-            } finally { 
-                setLoading(false); 
+            } catch (e) {
+                toast.error(t('report_not_found_toast') || "Request not found");
+                navigate(-1);
+            } finally {
+                setLoading(false);
             }
         };
         load();
@@ -54,8 +53,8 @@ const AdminViewVerification = () => {
             toast.success(t('status_updated_success') || "Status updated");
             setReq({ ...req, requestStatus: newStatus, updatedAt: new Date().toISOString() });
             setStatusDropdownOpen(false);
-        } catch (e) { 
-            toast.error(t('status_update_failed') || "Action failed"); 
+        } catch (e) {
+            toast.error(t('status_update_failed') || "Action failed");
         }
     };
 
@@ -65,8 +64,8 @@ const AdminViewVerification = () => {
             await deleteVerificationRequest(id);
             toast.success(t('request_deleted_success') || "Deleted successfully");
             navigate('/admin/verifications');
-        } catch (error) { 
-            toast.error(t('delete_failed') || "Delete failed"); 
+        } catch (error) {
+            toast.error(t('delete_failed') || "Delete failed");
         }
     };
 
@@ -84,7 +83,7 @@ const AdminViewVerification = () => {
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <Loader2 className="animate-spin text-indigo-600 w-12 h-12"/>
+            <Loader2 className="animate-spin text-indigo-600 w-12 h-12" />
         </div>
     );
 
@@ -96,21 +95,17 @@ const AdminViewVerification = () => {
         { value: "REJECTED", label: t('rejected') }
     ];
 
+    const orgData = req.organization || req.userResponseShort;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 pb-20">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8 max-w-4xl">
                 <div className="mb-8 flex items-center justify-between">
@@ -118,15 +113,15 @@ const AdminViewVerification = () => {
                         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-indigo-600 transition-colors mb-2">
                             <ArrowLeft className="w-3.5 h-3.5" /> {t('back')}
                         </button>
-                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                            <ShieldCheck className="w-8 h-8 text-indigo-600" />
+                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3 leading-tight">
+                            <ShieldCheck className="w-8 h-8 text-indigo-600 shrink-0" />
                             {t('view_verification_request')}
                         </h1>
                         <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest ml-11 mt-1">ID: #{req.id}</p>
                     </div>
 
                     {req.requestStatus !== 'ACCEPTED' && (
-                        <button 
+                        <button
                             onClick={handleDelete}
                             className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95"
                             title={t('delete')}
@@ -138,18 +133,19 @@ const AdminViewVerification = () => {
 
                 <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden relative">
                     <div className={`absolute top-0 left-0 w-2 h-full ${req.requestStatus === 'PENDING' ? 'bg-amber-400' : req.requestStatus === 'ACCEPTED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                    
-                    <div className="p-8 md:p-12">
-                        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-12 border-b border-gray-50 pb-8">
-                            <div className="flex items-center gap-6">
-                                <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+
+                    <div className="p-6 md:p-12">
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-12 border-b border-gray-50 pb-8">
+                            <div className="flex items-center gap-6 w-full md:w-auto">
+                                <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
                                     <Building2 className="w-8 h-8" />
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-black text-gray-900 leading-tight">{req.organizationName}</h2>
-                                    <p className="text-indigo-500 font-bold flex items-center gap-2 mt-1">
-                                        <Mail className="w-4 h-4"/> {req.organizationEmail}
-                                    </p>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-xl md:text-2xl font-black text-gray-900 leading-tight break-words">{req.organizationName}</h2>
+                                    <div className="text-indigo-500 font-bold flex items-start gap-2 mt-2 break-all">
+                                        <Mail className="w-4 h-4 mt-0.5 shrink-0" />
+                                        <span className="text-sm md:text-base">{req.organizationEmail}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -157,7 +153,7 @@ const AdminViewVerification = () => {
                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1.5 block">{t('status')}</label>
                                 {req.requestStatus === 'PENDING' ? (
                                     <>
-                                        <button 
+                                        <button
                                             onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
                                             className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase border transition-all shadow-sm ${getStatusStyle(req.requestStatus)}`}
                                         >
@@ -188,32 +184,31 @@ const AdminViewVerification = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                            {/* Representative Section */}
                             <div className="space-y-8">
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                            <User className="w-3.5 h-3.5" /> {t('representative_details')}
+                                            <User className="w-3.5 h-3.5" /> {t('organization_details')}
                                         </h4>
-                                        {req.userResponseShort && (
-                                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">User ID: #{req.userResponseShort.id}</span>
+                                        {orgData?.id && (
+                                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">ID: #{orgData.id}</span>
                                         )}
                                     </div>
-                                    
-                                    {req.userResponseShort ? (
+
+                                    {orgData ? (
                                         <div className="grid grid-cols-1 gap-6">
                                             <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-gray-400 uppercase">{t('username')}</p>
-                                                <p className="text-sm font-bold text-gray-900">@{req.userResponseShort.username}</p>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase">{t('name')}</p>
+                                                <p className="text-sm font-bold text-gray-900 break-words">{orgData.organizationName || orgData.username}</p>
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-[10px] font-black text-gray-400 uppercase">{t('phone')}</p>
-                                                <p className="text-sm font-bold text-gray-800">{req.userResponseShort.phone || 'N/A'}</p>
+                                                <p className="text-sm font-bold text-gray-800">{orgData.phone || req.phone || 'N/A'}</p>
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-gray-400 uppercase">{t('account_status')}</p>
-                                                <span className={`inline-flex px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border tracking-widest ${getAccountStatusStyle(req.userResponseShort.accountStatus)}`}>
-                                                    {t(req.userResponseShort.accountStatus?.toLowerCase()) || req.userResponseShort.accountStatus}
+                                                <p className="text-[10px] font-black text-gray-400 uppercase">{t('status')}</p>
+                                                <span className={`inline-flex px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border tracking-widest ${getAccountStatusStyle(orgData.status || orgData.accountStatus)}`}>
+                                                    {t((orgData.status || orgData.accountStatus)?.toLowerCase()) || (orgData.status || orgData.accountStatus)}
                                                 </span>
                                             </div>
                                         </div>
@@ -231,7 +226,6 @@ const AdminViewVerification = () => {
                                 </div>
                             </div>
 
-                            {/* Timeline Section */}
                             <div className="space-y-8">
                                 <div className="space-y-6">
                                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -245,7 +239,7 @@ const AdminViewVerification = () => {
                                                 <p className="text-sm font-bold text-gray-700">{new Date(req.createdAt).toLocaleString()}</p>
                                             </div>
                                         </div>
-                                        
+
                                         {req.createdAt !== req.updatedAt && (
                                             <div className="flex items-start gap-4 relative">
                                                 <div className="mt-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-emerald-400 z-10" />

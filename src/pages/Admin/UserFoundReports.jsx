@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-    Loader2, ChevronLeft, Search, Calendar, MapPin, 
+import {
+    Loader2, ChevronLeft, Search, Calendar, MapPin,
     Dog, AlertCircle, ChevronRight, Trash2, X, Copy, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const LocationName = ({ lat, lng }) => {
     const [address, setAddress] = useState("Loading...");
@@ -48,42 +45,42 @@ const LocationName = ({ lat, lng }) => {
 
 const MapModal = ({ isOpen, onClose, lat, lng, title }) => {
     if (!isOpen) return null;
-    
+
     const mapUrl = `https://maps.google.com/maps?q=${lat},${lng}&hl=es&z=14&output=embed`;
     const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={onClose}
         >
-            <div 
+            <div
                 className="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button 
-                    onClick={onClose} 
+                <button
+                    onClick={onClose}
                     className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-md rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-md"
                 >
                     <X className="w-5 h-5" />
                 </button>
-                
+
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between pr-16">
                     <div>
                         <h3 className="font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-orange-500" />
                             {title || "Location"}
                         </h3>
-                        <a 
-                            href={googleMapsLink} 
-                            target="_blank" 
+                        <a
+                            href={googleMapsLink}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-[9px] font-black text-indigo-500 uppercase flex items-center gap-1 mt-1 hover:underline"
                         >
                             Open in Google Maps <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                     </div>
-                    <button 
+                    <button
                         onClick={() => {
                             navigator.clipboard.writeText(`${lat}, ${lng}`);
                             toast.success("Coordinates copied!");
@@ -113,6 +110,9 @@ const UserFoundReports = () => {
     const { userId } = useParams();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const logoMenuRef = useRef(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const getCurrentLanguage = () => {
         const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
         return String(preferred).toLowerCase();
@@ -130,7 +130,7 @@ const UserFoundReports = () => {
             ? item.descriptionEl || item.description || item.descriptionEl || ''
             : item.description || item.descriptionEl || item.description || '';
     };
-    
+
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
@@ -148,7 +148,7 @@ const UserFoundReports = () => {
             const response = await api.get(`/admin/users/${userId}/found-reports`, {
                 params: { page: page, size: 6, sortBy: 'id', sortDirection: 'DESC' }
             });
-            
+
             if (response && response.data) {
                 const data = response.data;
                 const content = data.content || (Array.isArray(data) ? data : []);
@@ -188,19 +188,13 @@ const UserFoundReports = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
@@ -229,8 +223,8 @@ const UserFoundReports = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {reports.map((report) => (
-                            <div 
-                                key={report.id} 
+                            <div
+                                key={report.id}
                                 onClick={() => navigate(`/admin/reports/found/${report.id}`)}
                                 className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group h-full cursor-pointer active:scale-[0.98]"
                             >
@@ -240,13 +234,13 @@ const UserFoundReports = () => {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center"><Dog className="w-12 h-12 text-gray-200" /></div>
                                     )}
-                                    
+
                                     <div className="absolute top-4 right-4 flex items-center gap-2">
                                         <div className={`min-w-[70px] h-8 flex items-center justify-center px-3 rounded-xl text-[9px] font-black uppercase border shadow-sm backdrop-blur-md bg-white/90 ${getConditionStyle(report.condition)}`}>
                                             {t(report.condition) || report.condition}
                                         </div>
-                                        <button 
-                                            onClick={(e) => handleDelete(e, report.id)} 
+                                        <button
+                                            onClick={(e) => handleDelete(e, report.id)}
                                             className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -281,7 +275,7 @@ const UserFoundReports = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); setSelectedMap(report); }}
                                             className="flex items-start gap-2 group/loc text-left hover:opacity-80 transition-opacity"
                                         >
@@ -304,16 +298,16 @@ const UserFoundReports = () => {
                             {t('page')} {page + 1} {t('of')} {totalPages}
                         </p>
                         <div className="flex gap-2">
-                            <button 
-                                disabled={page === 0} 
-                                onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }} 
+                            <button
+                                disabled={page === 0}
+                                onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }}
                                 className="p-2 border border-gray-200 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
-                            <button 
-                                disabled={page >= totalPages - 1} 
-                                onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }} 
+                            <button
+                                disabled={page >= totalPages - 1}
+                                onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }}
                                 className="p-2 border border-gray-200 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 <ChevronRight className="w-5 h-5" />
@@ -323,12 +317,12 @@ const UserFoundReports = () => {
                 )}
             </main>
 
-            <MapModal 
-                isOpen={!!selectedMap} 
-                onClose={() => setSelectedMap(null)} 
-                lat={selectedMap?.latitude} 
-                lng={selectedMap?.longitude} 
-                title={getLocalizedTitle(selectedMap)} 
+            <MapModal
+                isOpen={!!selectedMap}
+                onClose={() => setSelectedMap(null)}
+                lat={selectedMap?.latitude}
+                lng={selectedMap?.longitude}
+                title={getLocalizedTitle(selectedMap)}
             />
         </div>
     );

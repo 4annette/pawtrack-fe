@@ -182,7 +182,7 @@ const OrgViewFoundReport = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-900">
             <Header
-                activeTab="claims"
+                activeTab=""
                 setActiveTab={() => { }}
                 isMobileMenuOpen={isMobileMenuOpen}
                 setIsMobileMenuOpen={setIsMobileMenuOpen}
@@ -296,7 +296,7 @@ const OrgViewFoundReport = () => {
                                     <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-lg font-black text-white shadow-md uppercase shrink-0">
                                         {report.creator.firstName.charAt(0)}
                                     </div>
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="text-base font-black text-slate-900 truncate">{report.creator.firstName} {report.creator.lastName}</p>
                                         <p className="text-[11px] font-bold text-blue-400 tracking-tight truncate">@{report.creator.username}</p>
                                     </div>
@@ -349,10 +349,10 @@ const OrgViewFoundReport = () => {
                                             }`}
                                     >
                                         <div className={`p-3 rounded-2xl ${report.claimVerificationStatus === 'ACCEPTED'
-                                                ? 'bg-emerald-600 text-white'
-                                                : report.claimVerificationStatus === 'REJECTED'
-                                                    ? 'bg-red-600 text-white'
-                                                    : 'bg-orange-600 text-white'
+                                            ? 'bg-emerald-600 text-white'
+                                            : report.claimVerificationStatus === 'REJECTED'
+                                                ? 'bg-red-600 text-white'
+                                                : 'bg-orange-600 text-white'
                                             } shadow-md shrink-0`}>
                                             <ShieldCheck className="w-6 h-6" />
                                         </div>

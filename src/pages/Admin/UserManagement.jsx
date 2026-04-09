@@ -9,10 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
     const { t, i18n } = useTranslation();
@@ -55,8 +52,8 @@ const CustomDatePicker = ({ label, value, onChange }) => {
             <label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-1 ml-1">
                 <Calendar className="w-3 h-3" /> {label}
             </label>
-            <div 
-                onClick={() => setIsOpen(!isOpen)} 
+            <div
+                onClick={() => setIsOpen(!isOpen)}
                 className={`w-full h-11 px-3 bg-gray-50 border-none rounded-xl flex items-center justify-between cursor-pointer transition-all ${isOpen ? 'ring-2 ring-indigo-500' : ''}`}
             >
                 <span className={`text-sm font-bold ${value ? 'text-gray-900' : 'text-gray-400'}`}>{value || "YYYY-MM-DD"}</span>
@@ -134,8 +131,8 @@ const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange }
     if (!isOpen || !coords) return null;
 
     return createPortal(
-        <div 
-            className="fixed inset-0 z-[10001]" 
+        <div
+            className="fixed inset-0 z-[10001]"
             style={{ pointerEvents: coords.opacity === 0 ? 'none' : 'auto' }}
             onClick={onClose}
         >
@@ -214,6 +211,8 @@ const UserManagement = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [showFilterPanel, setShowFilterPanel] = useState(false);
     const filterPanelRef = useRef(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const logoMenuRef = useRef(null);
 
     const initialFilters = {
         search: "",
@@ -296,8 +295,8 @@ const UserManagement = () => {
 
     const handleUpdateStatus = async (userId, newStatus) => {
         try {
-            await api.patch(`/admin/users/${userId}/account-status`, null, { 
-                params: { accountStatus: newStatus } 
+            await api.patch(`/admin/users/${userId}/account-status`, null, {
+                params: { accountStatus: newStatus }
             });
             toast.success(t('status_updated_success'));
             setActiveDropdown({ id: null, type: null });
@@ -344,19 +343,13 @@ const UserManagement = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8 flex items-end justify-between">
@@ -374,19 +367,19 @@ const UserManagement = () => {
                     <div className="flex gap-3 items-center">
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder={t('name_email_placeholder')} 
-                                className="w-full h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-indigo-50 text-sm font-bold pl-11 pr-4" 
-                                value={filters.search} 
-                                onChange={(e) => handleFilterChange("search", e.target.value)} 
+                            <input
+                                type="text"
+                                placeholder={t('name_email_placeholder')}
+                                className="w-full h-12 rounded-2xl border-none bg-white shadow-sm focus:ring-2 focus:ring-indigo-50 text-sm font-bold pl-11 pr-4"
+                                value={filters.search}
+                                onChange={(e) => handleFilterChange("search", e.target.value)}
                             />
                         </div>
-                        <button 
-                            onClick={() => setShowFilterPanel(!showFilterPanel)} 
-                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
+                        <button
+                            onClick={() => setShowFilterPanel(!showFilterPanel)}
+                            className={`h-12 px-5 rounded-2xl border transition-all flex items-center gap-2 shadow-sm ${showFilterPanel ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-100 text-gray-600'}`}
                         >
-                            <Filter className="w-5 h-5" /> 
+                            <Filter className="w-5 h-5" />
                             <span className="hidden sm:inline font-bold text-sm">{t('filters_btn')}</span>
                         </button>
                     </div>
@@ -396,7 +389,7 @@ const UserManagement = () => {
                             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-50">
                                 <h3 className="font-black text-gray-900 uppercase text-xs tracking-widest">{t('filter_options_title')}</h3>
                                 <button onClick={clearAllFilters} className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 hover:text-red-700 transition-colors">
-                                    {t('clear_all_btn')}
+                                    <RefreshCcw className="w-3 h-3" /> {t('clear_all_btn')}
                                 </button>
                             </div>
                             <div className="flex flex-col gap-6">

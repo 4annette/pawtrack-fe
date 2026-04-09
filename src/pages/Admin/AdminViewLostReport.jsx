@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
     ArrowLeft, Trash2, Loader2, Image as ImageIcon,
-    Calendar, Dog, CheckCircle, MapPin, 
+    Calendar, Dog, CheckCircle, MapPin,
     Hash, Info, Activity, Search
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,10 +19,7 @@ import {
     deleteLostReportImage
 } from "../../services/api";
 
-import PawTrackLogo from "@/components/PawTrackLogo";
-import Notifications from "@/components/notifications/Notifications";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 let DefaultIcon = L.icon({
     iconUrl: icon,
@@ -48,6 +45,9 @@ const AdminViewLostReport = () => {
     const { t, i18n } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
+    const logoMenuRef = useRef(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const getCurrentLanguage = () => {
         const preferred = i18n.language || i18n.resolvedLanguage || localStorage.getItem('i18nextLng') || '';
         return String(preferred).toLowerCase();
@@ -61,7 +61,7 @@ const AdminViewLostReport = () => {
         if (!item) return '';
         return isGreekLanguage ? item.descriptionEl || item.description || item.descriptionEl || '' : item.description || item.descriptionEl || item.description || '';
     };
-    
+
     const [loading, setLoading] = useState(true);
     const [imageLoading, setImageLoading] = useState(false);
     const [report, setReport] = useState(null);
@@ -135,37 +135,30 @@ const AdminViewLostReport = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900 pb-20">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel') || "ADMIN"}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="container mx-auto px-4 py-8 max-w-5xl">
-                {/* Mobile Optimized Header */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
                         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-orange-600 transition-colors">
                             <ArrowLeft className="w-3.5 h-3.5" /> {t('back') || "BACK"}
                         </button>
-                        
-                        <button 
-                            onClick={handleDeleteReport} 
+
+                        <button
+                            onClick={handleDeleteReport}
                             className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm font-black text-[10px] uppercase tracking-widest active:scale-95"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>{t('delete_report') || "DELETE"}</span>
                         </button>
                     </div>
-                    
+
                     <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3 leading-tight">
                         <Dog className="w-8 h-8 text-orange-500 shrink-0" />
                         {t('view_lost_report') || "Lost Report"}
@@ -192,11 +185,11 @@ const AdminViewLostReport = () => {
                                         <span className="text-[10px] font-black uppercase mt-2">{t('no_image') || "NO IMAGE"}</span>
                                     </div>
                                 )}
-                                
+
                                 {report.imageUrl && !imageLoading && (
-                                    <button 
+                                    <button
                                         type="button"
-                                        onClick={handleDeletePhoto} 
+                                        onClick={handleDeletePhoto}
                                         className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-full hover:bg-red-500 hover:text-white shadow-md transition-all active:scale-90"
                                     >
                                         <Trash2 className="w-4 h-4" />

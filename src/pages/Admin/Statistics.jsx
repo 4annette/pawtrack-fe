@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
     Loader2, Users, Map as MapIcon, BarChart3,
     CheckCircle2, AlertCircle, FileText,
-    TrendingUp, Calendar, Share2, Search, Clock, ClipboardCheck, ChevronDown
+    TrendingUp, Calendar, Share2, ClipboardCheck, ChevronDown
 } from "lucide-react";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -14,10 +14,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { toast } from "sonner";
 import { fetchAdminStatistics } from "@/services/api";
-import ProfileButton from "@/components/topBar/ProfileButton";
-import Notifications from "@/components/notifications/Notifications";
-import PawTrackLogo from "@/components/PawTrackLogo";
-import AdminMenu from "@/components/admin/AdminMenu";
+import Header from "@/pages/Header";
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 const VERIFICATION_COLORS = {
@@ -64,9 +61,8 @@ const CustomSelect = ({ value, onChange, options, label }) => {
                                     onChange(opt.value);
                                     setIsOpen(false);
                                 }}
-                                className={`w-full text-left px-3 py-2 text-[10px] font-black uppercase rounded-lg transition-colors hover:bg-indigo-50 ${
-                                    value === opt.value ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'
-                                }`}
+                                className={`w-full text-left px-3 py-2 text-[10px] font-black uppercase rounded-lg transition-colors hover:bg-indigo-50 ${value === opt.value ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'
+                                    }`}
                             >
                                 {opt.label}
                             </button>
@@ -93,12 +89,12 @@ const StatCard = ({ title, value, icon: Icon, gradient }) => (
 const ChartFilter = ({ year, setYear, month, setMonth }) => {
     const { t, i18n } = useTranslation();
     const currentYear = new Date().getFullYear();
-    
-    const yearOptions = [currentYear, currentYear - 1].map(y => ({ 
-        value: y, 
-        label: y.toString() 
+
+    const yearOptions = [currentYear, currentYear - 1].map(y => ({
+        value: y,
+        label: y.toString()
     }));
-    
+
     const monthOptions = useMemo(() => {
         const lang = i18n.language || 'el';
         return [
@@ -112,19 +108,19 @@ const ChartFilter = ({ year, setYear, month, setMonth }) => {
 
     return (
         <div className="flex items-center gap-1 md:gap-2 bg-gray-100/50 p-1 md:p-1.5 rounded-xl md:rounded-2xl border border-gray-100">
-            <CustomSelect 
-                value={year} 
-                onChange={(val) => setYear(parseInt(val))} 
-                options={yearOptions} 
+            <CustomSelect
+                value={year}
+                onChange={(val) => setYear(parseInt(val))}
+                options={yearOptions}
             />
-            
+
             {setMonth && (
                 <>
                     <div className="w-px h-3 md:h-4 bg-gray-200 mx-0.5 md:mx-1" />
-                    <CustomSelect 
-                        value={month} 
-                        onChange={setMonth} 
-                        options={monthOptions} 
+                    <CustomSelect
+                        value={month}
+                        onChange={setMonth}
+                        options={monthOptions}
                     />
                 </>
             )}
@@ -134,7 +130,7 @@ const ChartFilter = ({ year, setYear, month, setMonth }) => {
 
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     const RADIAN = Math.PI / 180;
-    const radius = outerRadius * 0.6; 
+    const radius = outerRadius * 0.6;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -150,6 +146,8 @@ const Statistics = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const logoMenuRef = useRef(null);
 
     const currentYear = new Date().getFullYear();
     const [reportsYear, setReportsYear] = useState(currentYear);
@@ -243,19 +241,13 @@ const Statistics = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans text-gray-900">
-            <header className="sticky top-0 z-[1000] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm h-16 flex items-center px-4">
-                <div className="w-full flex items-center justify-between">
-                    <div className="flex items-center gap-3 md:gap-6 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                        <PawTrackLogo size="sm" />
-                        <span className="hidden md:block font-black text-gray-400 text-xs uppercase tracking-widest border-l pl-4 border-gray-200">{t('admin_panel')}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <AdminMenu />
-                        <Notifications />
-                        <ProfileButton />
-                    </div>
-                </div>
-            </header>
+            <Header
+                showNav={false}
+                isAdmin={true}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                logoMenuRef={logoMenuRef}
+            />
 
             <main className="w-full px-4 py-6 md:py-8 space-y-6 md:space-y-8 relative z-0">
                 <div className="mb-2 md:mb-4">
@@ -283,19 +275,19 @@ const Statistics = () => {
                             <h3 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
                                 <BarChart3 className="w-4 h-4 text-indigo-600" /> {t('monthly_activity')}
                             </h3>
-                            <ChartFilter 
-                                year={reportsYear} setYear={setReportsYear} 
-                                month={reportsMonth} setMonth={setReportsMonth} 
+                            <ChartFilter
+                                year={reportsYear} setYear={setReportsYear}
+                                month={reportsMonth} setMonth={setReportsMonth}
                             />
                         </div>
                         <div className="h-[250px] md:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={monthlyReportData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <Tooltip contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '11px'}} />
-                                    <Legend align="right" verticalAlign="top" iconType="circle" wrapperStyle={{paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase'}} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '11px' }} />
+                                    <Legend align="right" verticalAlign="top" iconType="circle" wrapperStyle={{ paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' }} />
                                     <Bar dataKey="found" name={t('found')} fill="#10b981" radius={[4, 4, 0, 0]} barSize={reportsMonth === 'ALL' ? 12 : 40} />
                                     <Bar dataKey="lost" name={t('lost')} fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={reportsMonth === 'ALL' ? 12 : 40} />
                                 </BarChart>
@@ -308,23 +300,23 @@ const Statistics = () => {
                             <h3 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
                                 <Users className="w-4 h-4 text-blue-600" /> {t('registrations_by_type')}
                             </h3>
-                            <ChartFilter 
-                                year={usersYear} setYear={setUsersYear} 
-                                month={usersMonth} setMonth={setUsersMonth} 
+                            <ChartFilter
+                                year={usersYear} setYear={setUsersYear}
+                                month={usersMonth} setMonth={setUsersMonth}
                             />
                         </div>
                         <div className="h-[250px] md:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={monthlyUserData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <Tooltip contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '11px'}} />
-                                    <Legend 
-                                        align="right" 
-                                        verticalAlign="top" 
-                                        iconType="circle" 
-                                        wrapperStyle={{paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase'}}
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '11px' }} />
+                                    <Legend
+                                        align="right"
+                                        verticalAlign="top"
+                                        iconType="circle"
+                                        wrapperStyle={{ paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' }}
                                         payload={[
                                             { value: t('users'), type: 'circle', color: '#3b82f6' },
                                             { value: t('organizations'), type: 'circle', color: '#10b981' },
@@ -346,19 +338,19 @@ const Statistics = () => {
                             <h3 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
                                 <ClipboardCheck className="w-4 h-4 text-emerald-600" /> {t('monthly_verification_requests')}
                             </h3>
-                            <ChartFilter 
-                                year={verificationsYear} setYear={setVerificationsYear} 
-                                month={verificationsMonth} setMonth={setVerificationsMonth} 
+                            <ChartFilter
+                                year={verificationsYear} setYear={setVerificationsYear}
+                                month={verificationsMonth} setMonth={setVerificationsMonth}
                             />
                         </div>
                         <div className="h-[250px] md:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={monthlyVerificationData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800}} />
-                                    <Tooltip contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '12px'}} />
-                                    <Legend align="right" verticalAlign="top" iconType="circle" wrapperStyle={{paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase'}} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 800 }} />
+                                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '12px' }} />
+                                    <Legend align="right" verticalAlign="top" iconType="circle" wrapperStyle={{ paddingBottom: '10px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' }} />
                                     <Bar dataKey="count" name={t('requests')} fill="#10b981" radius={[4, 4, 0, 0]} barSize={verificationsMonth === 'ALL' ? 20 : 60} />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -395,10 +387,10 @@ const Statistics = () => {
                         <div className="h-[220px] md:h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie 
-                                        data={stats.userDistribution || []} 
+                                    <Pie
+                                        data={stats.userDistribution || []}
                                         innerRadius={0}
-                                        outerRadius={70} 
+                                        outerRadius={70}
                                         dataKey="count" nameKey="role"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
@@ -411,10 +403,10 @@ const Statistics = () => {
                                         })}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
-                                    <Legend 
-                                        verticalAlign="bottom" align="center" layout="horizontal" 
+                                    <Legend
+                                        verticalAlign="bottom" align="center" layout="horizontal"
                                         formatter={(value) => t(value.toLowerCase())}
-                                        wrapperStyle={{paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} 
+                                        wrapperStyle={{ paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -426,10 +418,10 @@ const Statistics = () => {
                         <div className="h-[220px] md:h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie 
-                                        data={stats.speciesLostStats || []} 
+                                    <Pie
+                                        data={stats.speciesLostStats || []}
                                         innerRadius={0}
-                                        outerRadius={70} 
+                                        outerRadius={70}
                                         dataKey="count" nameKey="species"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
@@ -437,10 +429,10 @@ const Statistics = () => {
                                         {(stats.speciesLostStats || []).map((_, i) => <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} stroke="none" />)}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
-                                    <Legend 
-                                        verticalAlign="bottom" align="center" layout="horizontal" 
+                                    <Legend
+                                        verticalAlign="bottom" align="center" layout="horizontal"
                                         formatter={(value) => t(value.toLowerCase())}
-                                        wrapperStyle={{paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} 
+                                        wrapperStyle={{ paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -452,10 +444,10 @@ const Statistics = () => {
                         <div className="h-[220px] md:h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie 
-                                        data={stats.speciesFoundStats || []} 
+                                    <Pie
+                                        data={stats.speciesFoundStats || []}
                                         innerRadius={0}
-                                        outerRadius={70} 
+                                        outerRadius={70}
                                         dataKey="count" nameKey="species"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
@@ -463,10 +455,10 @@ const Statistics = () => {
                                         {(stats.speciesFoundStats || []).map((_, i) => <Cell key={i} fill={COLORS[(i + 3) % COLORS.length]} stroke="none" />)}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
-                                    <Legend 
-                                        verticalAlign="bottom" align="center" layout="horizontal" 
+                                    <Legend
+                                        verticalAlign="bottom" align="center" layout="horizontal"
                                         formatter={(value) => t(value.toLowerCase())}
-                                        wrapperStyle={{paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} 
+                                        wrapperStyle={{ paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -478,10 +470,10 @@ const Statistics = () => {
                         <div className="h-[220px] md:h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie 
-                                        data={stats.orgVerificReqStats || []} 
+                                    <Pie
+                                        data={stats.orgVerificReqStats || []}
                                         innerRadius={0}
-                                        outerRadius={70} 
+                                        outerRadius={70}
                                         dataKey="count" nameKey="status"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
@@ -491,10 +483,10 @@ const Statistics = () => {
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
-                                    <Legend 
-                                        verticalAlign="bottom" align="center" layout="horizontal" 
+                                    <Legend
+                                        verticalAlign="bottom" align="center" layout="horizontal"
                                         formatter={(value) => t(value.toLowerCase())}
-                                        wrapperStyle={{paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} 
+                                        wrapperStyle={{ paddingTop: '15px', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
