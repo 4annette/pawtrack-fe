@@ -5,9 +5,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe, Building2, Phone } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe, Building2, Phone, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 import { loginUser, registerUser, registerOrganization, syncFcmToken, fetchStatistics, fetchCurrentUser } from "@/services/api";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+const icon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+const LocationMarker = ({ position, setPosition, setFormData, formData }) => {
+  useMapEvents({
+    async click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition(e.latlng);
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await response.json();
+        if (data && data.display_name) {
+          const shortAddress = data.display_name.split(',').slice(0, 3).join(',');
+          setFormData({ ...formData, address: shortAddress });
+        }
+      } catch (error) {
+        console.error("Reverse geocoding failed", error);
+      }
+    },
+  });
+  return position ? <Marker position={position} icon={icon} /> : null;
+};
+
+const ChangeView = ({ center }) => {
+  const map = useMap();
+  map.setView(center, 13);
+  return null;
+};
 
 const Auth = () => {
   const { t, i18n } = useTranslation();
@@ -21,6 +57,11 @@ const Auth = () => {
   const [isOrgRegistration, setIsOrgRegistration] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mapCenter, setMapCenter] = useState([38.2466, 21.7346]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
   const [stats, setStats] = useState({
     foundedLostReports: 2500,
     activeUsers: 15000,
@@ -34,7 +75,8 @@ const Auth = () => {
     firstName: "",
     lastName: "",
     organizationName: "",
-    phone: ""
+    phone: "",
+    address: ""
   });
 
   useEffect(() => {
@@ -57,6 +99,26 @@ const Auth = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSearchLocation = async () => {
+    if (!searchQuery) return;
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        const newPos = { lat: parseFloat(lat), lng: parseFloat(lon) };
+        const shortAddress = display_name.split(',').slice(0, 3).join(',');
+        setMapCenter([newPos.lat, newPos.lng]);
+        setSelectedLocation(newPos);
+        setFormData({ ...formData, address: shortAddress });
+      } else {
+        toast.error(t('location_not_found'));
+      }
+    } catch (error) {
+      toast.error(t('search_error'));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -85,12 +147,20 @@ const Auth = () => {
         
       } else {
         if (isOrgRegistration) {
+          if (!selectedLocation) {
+            toast.error(t('please_select_location'));
+            setLoading(false);
+            return;
+          }
           await registerOrganization({
             username: formData.username,
             password: formData.password,
             email: formData.email,
             organizationName: formData.organizationName,
-            phone: formData.phone
+            phone: formData.phone,
+            address: formData.address,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng
           });
           toast.success(t('auth_org_request_sent'));
         } else {
@@ -209,6 +279,20 @@ const Auth = () => {
                         <Input id="phone" name="phone" placeholder="69XXXXXXXX" value={formData.phone} onChange={handleChange} className="pl-11" required />
                       </div>
                     </div>
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <Label>{t('auth_address')}</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full flex justify-start gap-3 text-gray-500 h-auto py-2 px-3 text-left whitespace-normal break-words leading-tight"
+                        onClick={() => setShowMap(true)}
+                      >
+                        <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                        <span className="text-sm">
+                          {formData.address ? formData.address : t('auth_select_on_map')}
+                        </span>
+                      </Button>
+                    </div>
                   </>
                 )}
 
@@ -290,6 +374,61 @@ const Auth = () => {
           </div>
         </div>
       </div>
+
+      {showMap && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="font-bold text-gray-800">{t('auth_select_address')}</h3>
+              <button onClick={() => setShowMap(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input 
+                    placeholder={t('auth_search_address')} 
+                    value={searchQuery} 
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
+                    className="pl-9"
+                  />
+                </div>
+                <Button onClick={handleSearchLocation} className="bg-emerald-500 hover:bg-emerald-600">
+                  {t('search')}
+                </Button>
+              </div>
+
+              <div className="h-[400px] w-full rounded-xl overflow-hidden border">
+                <MapContainer center={mapCenter} zoom={13} style={{ height: "100%", width: "100%" }}>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LocationMarker 
+                    position={selectedLocation} 
+                    setPosition={setSelectedLocation} 
+                    setFormData={setFormData}
+                    formData={formData}
+                  />
+                  <ChangeView center={mapCenter} />
+                </MapContainer>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowMap(false)}>{t('cancel')}</Button>
+                <Button 
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white" 
+                  disabled={!selectedLocation}
+                  onClick={() => setShowMap(false)}
+                >
+                  {t('auth_confirm_address')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
