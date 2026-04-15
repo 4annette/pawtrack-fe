@@ -58,6 +58,8 @@ const resources = {
             "please_select_location": "Please select a location on the map",
             "cancel": "Cancel",
             "search": "Search",
+            "auth_org_success_title": "Το αίτημα στάλθηκε!",
+            "auth_org_success_message": "Η εγγραφή σας εκκρεμεί για έγκριση. Θα λάβετε ένα email μόλις ενεργοποιηθεί ο λογαριασμός σας.",
             // create lost reports page translation
             "dtp_placeholder": "Select date & time",
             "S": "S", "M": "M", "T": "T", "W": "W", "T_short": "T", "F": "F", "S_short": "S",
@@ -909,6 +911,8 @@ const resources = {
             "please_select_location": "Παρακαλώ επιλέξτε μια τοποθεσία στον χάρτη",
             "cancel": "Ακύρωση",
             "search": "Αναζήτηση",
+            "auth_org_success_title": "Το αίτημα στάλθηκε!",
+            "auth_org_success_message": "Η εγγραφή σας εκκρεμεί για έγκριση. Θα λάβετε ένα email μόλις ενεργοποιηθεί ο λογαριασμός σας.",
             // create lost reports page translation
             "dtp_placeholder": "Επιλέξτε ημερομηνία & ώρα",
             "S": "Κ", "M": "Δ", "T": "Τ", "W": "Τ", "T_short": "Π", "F": "Π", "S_short": "Σ",

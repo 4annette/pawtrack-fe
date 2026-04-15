@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PawTrackLogo from "@/components/PawTrackLogo";
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe, Building2, Phone, MapPin, Search } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, PawPrint, X, Globe, Building2, Phone, MapPin, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { loginUser, registerUser, registerOrganization, syncFcmToken, fetchStatistics, fetchCurrentUser } from "@/services/api";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
@@ -19,7 +19,7 @@ const icon = L.icon({
   iconAnchor: [12, 41]
 });
 
-const LocationMarker = ({ position, setPosition, setFormData, formData }) => {
+const LocationMarker = ({ position, setPosition, setAddressLabel }) => {
   useMapEvents({
     async click(e) {
       const { lat, lng } = e.latlng;
@@ -29,7 +29,7 @@ const LocationMarker = ({ position, setPosition, setFormData, formData }) => {
         const data = await response.json();
         if (data && data.display_name) {
           const shortAddress = data.display_name.split(',').slice(0, 3).join(',');
-          setFormData({ ...formData, address: shortAddress });
+          setAddressLabel(shortAddress);
         }
       } catch (error) {
         console.error("Reverse geocoding failed", error);
@@ -61,6 +61,8 @@ const Auth = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [mapCenter, setMapCenter] = useState([38.2466, 21.7346]);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [addressLabel, setAddressLabel] = useState("");
+  const [orgSuccess, setOrgSuccess] = useState(false);
 
   const [stats, setStats] = useState({
     foundedLostReports: 2500,
@@ -75,8 +77,7 @@ const Auth = () => {
     firstName: "",
     lastName: "",
     organizationName: "",
-    phone: "",
-    address: ""
+    phone: ""
   });
 
   useEffect(() => {
@@ -112,7 +113,7 @@ const Auth = () => {
         const shortAddress = display_name.split(',').slice(0, 3).join(',');
         setMapCenter([newPos.lat, newPos.lng]);
         setSelectedLocation(newPos);
-        setFormData({ ...formData, address: shortAddress });
+        setAddressLabel(shortAddress);
       } else {
         toast.error(t('location_not_found'));
       }
@@ -158,11 +159,12 @@ const Auth = () => {
             email: formData.email,
             organizationName: formData.organizationName,
             phone: formData.phone,
-            address: formData.address,
             latitude: selectedLocation.lat,
             longitude: selectedLocation.lng
           });
-          toast.success(t('auth_org_request_sent'));
+          setOrgSuccess(true);
+          setIsLogin(true);
+          setFormData({ ...formData, password: "" }); 
         } else {
           await registerUser({
             username: formData.username,
@@ -172,8 +174,8 @@ const Auth = () => {
             lastName: formData.lastName
           });
           toast.success(t('auth_account_created'));
+          setIsLogin(true);
         }
-        setIsLogin(true);
       }
     } catch (err) {
       console.error(err);
@@ -240,6 +242,18 @@ const Auth = () => {
             <PawTrackLogo size="lg" />
           </div>
 
+          {isLogin && orgSuccess && (
+            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex gap-3 animate-in fade-in zoom-in-95 duration-500">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
+              <div>
+                <h4 className="font-bold text-emerald-900 text-sm">{t('auth_org_success_title') || "Request Sent!"}</h4>
+                <p className="text-emerald-700 text-xs leading-relaxed mt-1">
+                  {t('auth_org_success_message') || "Your registration is pending approval. You will receive an email once your account is activated."}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-gray-900 mb-2 transition-all duration-300">
               {isLogin ? t('auth_welcome_title') : (isOrgRegistration ? t('auth_org_register_title') : t('auth_register_title'))}
@@ -280,7 +294,7 @@ const Auth = () => {
                       </div>
                     </div>
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                      <Label>{t('auth_address')}</Label>
+                      <Label>{t('auth_location')}</Label>
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -289,7 +303,7 @@ const Auth = () => {
                       >
                         <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         <span className="text-sm">
-                          {formData.address ? formData.address : t('auth_select_on_map')}
+                          {addressLabel ? addressLabel : t('auth_select_on_map')}
                         </span>
                       </Button>
                     </div>
@@ -365,6 +379,7 @@ const Auth = () => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setIsOrgRegistration(false);
+                  setOrgSuccess(false);
                 }}
                 className="text-emerald-600 hover:text-emerald-700 font-semibold"
               >
@@ -408,8 +423,7 @@ const Auth = () => {
                   <LocationMarker 
                     position={selectedLocation} 
                     setPosition={setSelectedLocation} 
-                    setFormData={setFormData}
-                    formData={formData}
+                    setAddressLabel={setAddressLabel}
                   />
                   <ChangeView center={mapCenter} />
                 </MapContainer>
