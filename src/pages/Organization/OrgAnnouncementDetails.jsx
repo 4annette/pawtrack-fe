@@ -229,8 +229,8 @@ const OrgAnnouncementDetails = () => {
                     )}
                 </div>
 
-                <div className="bg-white rounded-[40px] shadow-xl border border-indigo-50 relative overflow-hidden">
-                    <div className={`absolute top-0 left-0 right-0 h-2 ${config.color.split(' ')[1].replace('text', 'bg')}`} />
+                <div className="bg-white rounded-[40px] shadow-xl border border-indigo-50 relative overflow-visible">
+                    <div className={`absolute top-0 left-0 right-0 h-2 ${config.color.split(' ')[1].replace('text', 'bg')} rounded-t-[40px]`} />
                     
                     <div className="p-8 md:p-12 pt-10 md:pt-14">
                         {isEditing ? (

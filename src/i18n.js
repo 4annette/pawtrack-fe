@@ -160,6 +160,7 @@ const resources = {
             "link_reports_failed": "Failed to link reports. Try again.",
             "load_lost_reports_failed": "Could not load your lost reports",
             "found_pet_banner_title": "Found a pet?",
+            "announcements_nav": "Announcements",
             //dashboard components translation
             "selected_location_popup": "Selected Location",
             "label_pin_location": "Pin Location",
@@ -1010,6 +1011,7 @@ const resources = {
             "link_reports_failed": "Αποτυχία σύνδεσης. Δοκιμάστε ξανά.",
             "load_lost_reports_failed": "Αδυναμία φόρτωσης αγγελιών",
             "found_pet_banner_title": "Βρήκατε χαμένο κατοικίδιο?",
+            "announcements_nav": "Ανακοινώσεις",
             // dashboard components translation
             "selected_location_popup": "Επιλεγμένο Σημείο",
             "label_pin_location": "Ορισμός Τοποθεσίας",
