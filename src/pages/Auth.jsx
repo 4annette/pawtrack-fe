@@ -62,7 +62,6 @@ const Auth = () => {
   const [mapCenter, setMapCenter] = useState([38.2466, 21.7346]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [addressLabel, setAddressLabel] = useState("");
-  const [orgSuccess, setOrgSuccess] = useState(false);
 
   const [stats, setStats] = useState({
     foundedLostReports: 2500,
@@ -162,7 +161,12 @@ const Auth = () => {
             latitude: selectedLocation.lat,
             longitude: selectedLocation.lng
           });
-          setOrgSuccess(true);
+          
+          toast.success(t('auth_org_success_title') || "Request Sent!", {
+            description: t('auth_org_success_message') || "Your registration is pending approval. You will receive an email once your account is activated.",
+            duration: 8000,
+          });
+
           setIsLogin(true);
           setFormData({ ...formData, password: "" }); 
         } else {
@@ -241,18 +245,6 @@ const Auth = () => {
           <div className="flex justify-center mb-8 lg:justify-start">
             <PawTrackLogo size="lg" />
           </div>
-
-          {isLogin && orgSuccess && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex gap-3 animate-in fade-in zoom-in-95 duration-500">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
-              <div>
-                <h4 className="font-bold text-emerald-900 text-sm">{t('auth_org_success_title') || "Request Sent!"}</h4>
-                <p className="text-emerald-700 text-xs leading-relaxed mt-1">
-                  {t('auth_org_success_message') || "Your registration is pending approval. You will receive an email once your account is activated."}
-                </p>
-              </div>
-            </div>
-          )}
 
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-gray-900 mb-2 transition-all duration-300">
@@ -379,7 +371,6 @@ const Auth = () => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setIsOrgRegistration(false);
-                  setOrgSuccess(false);
                 }}
                 className="text-emerald-600 hover:text-emerald-700 font-semibold"
               >
