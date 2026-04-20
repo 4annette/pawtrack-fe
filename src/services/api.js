@@ -294,7 +294,8 @@ export const updateUserProfile = async (userData) => {
 };
 
 export const deleteUserAccount = async (userId) => {
-  const response = await api.delete(`/users?userId=${userId}`);
+  const url = userId ? `/users?userId=${userId}` : '/users';
+  const response = await api.delete(url);
   return response.data;
 };
 

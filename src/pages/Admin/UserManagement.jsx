@@ -8,7 +8,7 @@ import {
     Search, AlertCircle, Building2, ChevronDown, X, Check, Clock, Filter, RefreshCcw, Shield
 } from "lucide-react";
 import { toast } from "sonner";
-import api from "@/services/api";
+import api, { deleteUserAccount } from "@/services/api";
 import Header from "@/pages/Header";
 
 const CustomDatePicker = ({ label, value, onChange }) => {
@@ -309,11 +309,16 @@ const UserManagement = () => {
     const handleDelete = async (userId) => {
         if (!window.confirm(t('confirm_delete_user'))) return;
         try {
-            await api.delete(`/admin/users/${userId}`);
+            await deleteUserAccount(userId);
             toast.success(t('user_deleted_success'));
             loadUsers();
         } catch (error) {
-            toast.error(t('delete_user_failed'));
+            const rawMessage = error.response?.data?.message || "";
+            if (rawMessage.includes("reflection") || rawMessage.includes("LostReport")) {
+              toast.error("Δεν είναι δυνατή η διαγραφή του χρήστη επειδή υπάρχουν ενεργές αναφορές συνδεδεμένες με αυτόν.");
+            } else {
+              toast.error(rawMessage || t('delete_user_failed'));
+            }
         }
     };
 

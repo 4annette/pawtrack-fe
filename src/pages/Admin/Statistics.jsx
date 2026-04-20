@@ -4,22 +4,24 @@ import { useTranslation } from "react-i18next";
 import {
     Loader2, Users, Map as MapIcon, BarChart3,
     CheckCircle2, AlertCircle, FileText,
-    TrendingUp, Calendar, Share2, ClipboardCheck, ChevronDown
+    TrendingUp, Calendar, Share2, ClipboardCheck, ChevronDown, Filter
 } from "lucide-react";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
 } from "recharts";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
+import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
 import "leaflet/dist/leaflet.css";
 import { toast } from "sonner";
 import { fetchAdminStatistics } from "@/services/api";
 import Header from "@/pages/Header";
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
 const VERIFICATION_COLORS = {
     APPROVED: "#10b981",
-    PENDING: "#f59e0b",
+    PENDING: "#10b981",
     REJECTED: "#ef4444"
 };
 
@@ -156,6 +158,8 @@ const Statistics = () => {
     const [usersMonth, setUsersMonth] = useState("ALL");
     const [verificationsYear, setVerificationsYear] = useState(currentYear);
     const [verificationsMonth, setVerificationsMonth] = useState("ALL");
+    
+    const [heatmapType, setHeatmapType] = useState("ALL");
 
     useEffect(() => {
         loadStats();
@@ -176,6 +180,16 @@ const Statistics = () => {
             setLoading(false);
         }
     };
+
+    const heatmapPoints = useMemo(() => {
+        if (!stats) return [];
+        const lost = (stats.lostHeatmapLocations || []).map(l => [l.lat, l.lng, 100]);
+        const found = (stats.foundHeatmapLocations || []).map(f => [f.lat, f.lng, 100]);
+        
+        if (heatmapType === "LOST") return lost;
+        if (heatmapType === "FOUND") return found;
+        return [...lost, ...found];
+    }, [stats, heatmapType]);
 
     const filterByMonth = (dataArray, selectedMonth) => {
         if (!dataArray) return [];
@@ -358,24 +372,36 @@ const Statistics = () => {
                     </div>
 
                     <div className="bg-white p-4 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden min-h-[350px]">
-                        <div className="p-3 md:p-4">
-                            <h3 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 md:mb-4 flex items-center gap-2">
+                        <div className="p-3 md:p-4 flex justify-between items-center">
+                            <h3 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
                                 <MapIcon className="w-4 h-4 text-indigo-600" /> {t('incident_geographic_distribution')}
                             </h3>
+                            <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
+                                <CustomSelect 
+                                    value={heatmapType} 
+                                    onChange={setHeatmapType} 
+                                    options={[
+                                        { value: "ALL", label: t('all') },
+                                        { value: "LOST", label: t('lost') },
+                                        { value: "FOUND", label: t('found') }
+                                    ]} 
+                                />
+                            </div>
                         </div>
                         <div className="h-[250px] md:h-[312px] rounded-[1.2rem] md:rounded-[2rem] overflow-hidden border border-gray-50 mx-2 mb-2">
                             <MapContainer center={[37.9838, 23.7275]} zoom={6} className="w-full h-full z-10">
                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                {stats.lostHeatmapLocations?.map((loc, i) => (
-                                    <CircleMarker key={`l-${i}`} center={[loc.lat, loc.lng]} radius={10} pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.5 }}>
-                                        <Popup><span className="font-black uppercase text-[10px] text-red-600">{t('lost_pet')}</span></Popup>
-                                    </CircleMarker>
-                                ))}
-                                {stats.foundHeatmapLocations?.map((loc, i) => (
-                                    <CircleMarker key={`f-${i}`} center={[loc.lat, loc.lng]} radius={10} pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.5 }}>
-                                        <Popup><span className="font-black uppercase text-[10px] text-emerald-600">{t('found_pet')}</span></Popup>
-                                    </CircleMarker>
-                                ))}
+                                <HeatmapLayer
+                                    points={heatmapPoints}
+                                    longitudeExtractor={m => m[1]}
+                                    latitudeExtractor={m => m[0]}
+                                    intensityExtractor={m => m[2]}
+                                    radius={40}
+                                    blur={30}
+                                    max={100}
+                                    minOpacity={0.4}
+                                    gradient={heatmapType === "LOST" ? { 0.4: 'orange', 1.0: 'red' } : heatmapType === "FOUND" ? { 0.4: 'cyan', 1.0: 'green' } : { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' }}
+                                />
                             </MapContainer>
                         </div>
                     </div>
@@ -478,9 +504,11 @@ const Statistics = () => {
                                         label={renderCustomizedLabel}
                                         labelLine={false}
                                     >
-                                        {(stats.orgVerificReqStats || []).map((entry, i) => (
-                                            <Cell key={i} fill={VERIFICATION_COLORS[entry.status] || COLORS[i % COLORS.length]} stroke="none" />
-                                        ))}
+                                        {(stats.orgVerificReqStats || []).map((entry, i) => {
+                                            const normalizedStatus = entry.status ? entry.status.trim().toUpperCase() : '';
+                                            const color = VERIFICATION_COLORS[normalizedStatus] || COLORS[i % COLORS.length];
+                                            return <Cell key={i} fill={color} stroke="none" />;
+                                        })}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
                                     <Legend

@@ -168,12 +168,18 @@ const Profile = () => {
   const handleDelete = async () => {
     if (window.confirm(t('confirm_delete_account'))) {
       try {
-        await deleteUserAccount(formData.editedUserId);
+        await deleteUserAccount();
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/auth");
         toast.success(t('account_deleted_toast'));
       } catch (error) {
-        toast.error(t('account_delete_error'));
+        const rawMessage = error.response?.data?.message || "";
+        if (rawMessage.includes("reflection") || rawMessage.includes("LostReport")) {
+          toast.error("Δεν είναι δυνατή η διαγραφή του λογαριασμού σας επειδή υπάρχουν ενεργές αναφορές συνδεδεμένες με αυτόν.");
+        } else {
+          toast.error(rawMessage || t('account_delete_error'));
+        }
       }
     }
   };
