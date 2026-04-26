@@ -26,90 +26,69 @@ const OrganizationMenu = () => {
     }, []);
 
     const menuItems = [
-        {
-            label: t('manage_verifications_title') || "Verifications",
-            icon: ShieldCheck,
-            path: "/organization/claims",
-            desc: t('manage_verifications_subtitle') || "Verify found pets"
+        { 
+            icon: ShieldCheck, 
+            label: t('manage_verifications_title') || "Verifications", 
+            path: "/organization/claims", 
+            color: 'text-indigo-600' 
         },
-        {
-            label: t('announcements_management') || "Announcements",
-            icon: Megaphone,
-            path: "/organization/announcements",
-            desc: t('announcements_management_subtitle') || "Manage pet broadcasts"
+        { 
+            icon: Megaphone, 
+            label: t('announcements_management') || "Announcements", 
+            path: "/organization/announcements", 
+            color: 'text-indigo-600' 
         },
     ];
 
-    const handleNavigate = (path) => {
-        navigate(path);
-        setIsOpen(false);
-    };
-
     return (
-        <div className="relative flex items-center" ref={menuRef}>
+        <div className="relative" ref={menuRef}>
             <button
-                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                title={t('organization') || "Organization"}
-                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                    : 'text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600'
+                onClick={() => setIsOpen(!isOpen)}
+                className={`p-2.5 rounded-full transition-all flex items-center justify-center ${isOpen
+                    ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                    : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
                     }`}
+                title={t('organization') || "Organization"}
             >
                 <Building2 className="w-5 h-5" />
             </button>
 
             {isOpen && (
-                <>
-                    <div className="md:hidden fixed inset-0 bg-black/5 z-[4999]" onClick={() => setIsOpen(false)} />
-
-                    <div className="
-                        absolute top-full right-0 mt-3 
-                        w-[85vw] sm:w-64 
-                        bg-white border border-indigo-50 shadow-2xl rounded-[1.5rem] 
-                        p-2 z-[5000] 
-                        animate-in fade-in zoom-in-95 duration-200 
-                        origin-top-right
-                        fixed md:absolute
-                        left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0
-                    ">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 mb-1">
-                            <p className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">Management</p>
-                            <button onClick={() => setIsOpen(false)} className="md:hidden p-1 text-gray-400">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-1">
-                            {menuItems.map((item) => {
-                                const isActive = location.pathname === item.path;
-                                return (
-                                    <button
-                                        key={item.path}
-                                        disabled={isActive}
-                                        onClick={(e) => { e.stopPropagation(); handleNavigate(item.path); }}
-                                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${isActive
-                                            ? 'bg-indigo-50/50 cursor-default pointer-events-none opacity-80'
-                                            : 'hover:bg-indigo-50 active:bg-indigo-100'
-                                            }`}
-                                    >
-                                        <div className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-white'
-                                            }`}>
-                                            <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-600'}`} />
-                                        </div>
-                                        <div className="flex flex-col text-left overflow-hidden">
-                                            <span className={`text-xs font-black uppercase tracking-tight truncate ${isActive ? 'text-indigo-900' : 'text-gray-800'}`}>
-                                                {item.label}
-                                            </span>
-                                            <span className={`text-[9px] font-bold uppercase tracking-tighter truncate ${isActive ? 'text-indigo-400' : 'text-gray-400'}`}>
-                                                {item.desc}
-                                            </span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                <div className="fixed md:absolute top-16 md:top-full right-4 md:right-0 mt-2 md:mt-3 w-[calc(100vw-32px)] md:w-64 bg-white border border-gray-100 shadow-2xl rounded-[2rem] z-[999] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Management</p>
+                        <button onClick={() => setIsOpen(false)} className="md:hidden p-1 text-gray-400">
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
-                </>
+                    <div className="p-2 max-h-[70vh] overflow-y-auto">
+                        {menuItems.map((item) => {
+                            const isActive = location.pathname === item.path;
+                            return (
+                                <button
+                                    key={item.path}
+                                    onClick={() => {
+                                        if (!isActive) {
+                                            navigate(item.path);
+                                            setIsOpen(false);
+                                        }
+                                    }}
+                                    className={`w-full flex items-center gap-4 px-4 py-4 md:py-3 rounded-2xl transition-colors group text-left ${isActive
+                                        ? 'bg-indigo-50/50 cursor-default pointer-events-none opacity-80'
+                                        : 'hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <div className={`p-2 rounded-xl bg-white shadow-sm border border-gray-50 ${!isActive && 'group-hover:scale-110'} transition-transform`}>
+                                        <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : item.color}`} />
+                                    </div>
+                                    <span className={`text-sm font-bold ${isActive ? 'text-indigo-900' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                                        {item.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             )}
         </div>
     );

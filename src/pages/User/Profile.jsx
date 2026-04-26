@@ -214,7 +214,7 @@ const Profile = () => {
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 text-xs font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-50 px-3 py-2 rounded-xl transition-colors"
               >
-                <Edit3 className="w-4 h-4" /> {t('edit_btn', { format: 'uppercase' })}
+                <Edit3 className="w-4 h-4" /> {t('edit_btn_my_profile', { format: 'uppercase' })}
               </button>
             )}
           </div>
@@ -236,8 +236,8 @@ const Profile = () => {
                   <InfoRow label={t('organization_name', { format: 'uppercase' })} value={formData.firstName} />
               ) : (
                   <>
-                    <InfoRow label={t('auth_first_name', { format: 'uppercase' })} value={formData.firstName} />
-                    <InfoRow label={t('auth_last_name', { format: 'uppercase' })} value={formData.lastName} />
+                    <InfoRow label={t('first_name', { format: 'uppercase' })} value={formData.firstName} />
+                    <InfoRow label={t('last_name', { format: 'uppercase' })} value={formData.lastName} />
                   </>
               )}
               <InfoRow label={t('auth_email', { format: 'uppercase' })} value={formData.email} />
@@ -272,12 +272,12 @@ const Profile = () => {
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('auth_first_name', { format: 'uppercase' })}</label>
-                    <input name="firstName" placeholder={t('auth_first_name')} value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('first_name', { format: 'uppercase' })}</label>
+                    <input name="firstName" placeholder={t('first_name')} value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('auth_last_name', { format: 'uppercase' })}</label>
-                    <input name="lastName" placeholder={t('auth_last_name')} value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block ml-1">{t('last_name', { format: 'uppercase' })}</label>
+                    <input name="lastName" placeholder={t('last_name')} value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-emerald-100 focus:ring-4 ring-emerald-500/5 transition-all font-bold" required />
                   </div>
                 </div>
               )}
