@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -37,15 +37,40 @@ import OrgAnnouncementDetails from "./pages/Organization/OrgAnnouncementDetails"
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/admin/AdminRoute";
 import OrganizationRoute from "./components/organization/OrganizationRoute";
+import FloatingMessages from "./components/chat/FloatingMessages";
 
 import "./index.css";
 import './i18n';
+
+const AuthenticatedFeatures = () => {
+  const [hasToken, setHasToken] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    const checkToken = () => {
+      setHasToken(!!localStorage.getItem('token'));
+    };
+
+    window.addEventListener('storage', checkToken);
+    
+    const interval = setInterval(checkToken, 1000);
+
+    return () => {
+      window.removeEventListener('storage', checkToken);
+      clearInterval(interval);
+    };
+  }, []);
+
+  if (!hasToken) return null;
+  
+  return <FloatingMessages />;
+};
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <FCMHandler />
       <Toaster position="top-center" richColors />
+      <AuthenticatedFeatures />
 
       <Routes>
         <Route path="/" element={<Home />} />

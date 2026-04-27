@@ -7,12 +7,14 @@ import MatchModal from "@/components/notifications/MatchModal";
 import ReminderModal from "@/components/notifications/ReminderModal";
 import FoundClaimModal from "@/components/notifications/FoundClaimModal";
 import FoundMatchModal from "@/components/notifications/FoundMatchModal";
+import ChatWindow from "@/components/chat/ChatWindow";
 
 const Notifications = () => {
     const { t } = useTranslation();
     const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [selectedNotification, setSelectedNotification] = useState(null);
+    const [chatData, setChatData] = useState(null);
     const notificationMenuRef = useRef(null);
 
     useEffect(() => {
@@ -61,10 +63,23 @@ const Notifications = () => {
         }
     };
 
+    const handleOpenChat = (id, name, username) => {
+        setChatData({ recipientId: id, recipientName: name, recipientUsername: username });
+    };
+
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <>
+            {chatData && (
+                <ChatWindow 
+                    recipientId={chatData.recipientId}
+                    recipientName={chatData.recipientName}
+                    recipientUsername={chatData.recipientUsername}
+                    onClose={() => setChatData(null)}
+                />
+            )}
+
             {selectedNotification && createPortal(
                 <>
                     {selectedNotification.notificationType === 'LOST_REPORT_NOTIFICATION_REMINDER' ? (
@@ -73,19 +88,22 @@ const Notifications = () => {
                             onClose={() => setSelectedNotification(null)}
                         />
                     ) : selectedNotification.notificationType === 'FOUND_REPORT_NOTIFICATION' ? (
-                         <FoundClaimModal
+                        <FoundClaimModal
                             notification={selectedNotification}
                             onClose={() => setSelectedNotification(null)}
-                         />
+                            onChat={handleOpenChat}
+                        />
                     ) : selectedNotification.notificationType === 'FOUND_REPORT_NOTIFICATION_CONNECTED_FOUND' ? (
                         <FoundMatchModal
-                           notification={selectedNotification}
-                           onClose={() => setSelectedNotification(null)}
+                            notification={selectedNotification}
+                            onClose={() => setSelectedNotification(null)}
+                            onChat={handleOpenChat}
                         />
-                   ) : (
+                    ) : (
                         <MatchModal
                             notification={selectedNotification}
                             onClose={() => setSelectedNotification(null)}
+                            onChat={handleOpenChat}
                         />
                     )}
                 </>,
@@ -112,7 +130,7 @@ const Notifications = () => {
                             <h3 className="font-black text-gray-800 text-sm tracking-wide">{t('notif_list_header')}</h3>
                             <div className="flex items-center gap-3">
                                 {unreadCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black uppercase tracking-widest">{unreadCount} {t('notif_list_new')}</span>}
-                                <button 
+                                <button
                                     onClick={() => setIsNotificationMenuOpen(false)}
                                     className="sm:hidden p-1 text-gray-400 hover:text-gray-600"
                                 >
@@ -139,7 +157,7 @@ const Notifications = () => {
                                     const isConnectedFound = n.notificationType === 'FOUND_REPORT_NOTIFICATION_CONNECTED_FOUND';
                                     const isReminder = n.notificationType === 'LOST_REPORT_NOTIFICATION_REMINDER';
                                     const isMatch = isLostMatch || isFoundMatch || isConnectedFound;
-                                    
+
                                     return (
                                         <div
                                             key={n.notificationId}

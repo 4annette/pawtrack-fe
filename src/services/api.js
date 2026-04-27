@@ -525,8 +525,40 @@ export const fetchAnnouncementById = async (id) => {
 };
 
 export const updateOrganizationProfile = async (orgData) => {
-    const response = await api.put("/organizations", orgData);
+  const response = await api.put("/organizations", orgData);
+  return response.data;
+};
+
+// Chat API endpoints
+export const getChatHistory = async (userId) => {
+  const response = await api.get(`/users/chats/${userId}`);
+  return response.data;
+};
+
+export const fetchActiveChats = async () => {
+    const response = await api.get('/users/chats');
     return response.data;
+};
+
+export const getUnreadCount = async () => {
+    const response = await api.get('/users/chats/unread-count');
+    return response.data;
+};
+
+export const setMessagesAsRead = async (messagesIds) => {
+  if (!messagesIds || messagesIds.length === 0) return null;
+
+  const response = await api({
+    method: 'PUT',
+    url: '/users/chats/set-read',
+    data: messagesIds,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')?.replace(/"/g, '')}`
+    }
+  });
+
+  return response.data;
 };
 
 export default api;
