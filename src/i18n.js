@@ -485,6 +485,7 @@ const resources = {
             "all": "All",
             "back_to_users": "BACK TO USERS",
             "lost_reports": "Lost Reports",
+            "found_reports": "Found Reports",
             "user_id": "USER ID",
             "reports_total": "reports total",
             "no_reports": "NO REPORTS FOUND",
@@ -1164,7 +1165,8 @@ const resources = {
             "INACTIVE": "ΑΝΕΝΕΡΓΟΣ",
             "all": "Όλα", "admin_panel": "ΠΑΝΕΛ ΔΙΑΧΕΙΡΙΣΤΗ",
             "back_to_users": "ΕΠΙΣΤΡΟΦΗ ΣΤΟΥΣ ΧΡΗΣΤΕΣ",
-            "lost_reports": "ΧΑΜΕΝΕΣ ΑΝΑΦΟΡΕΣ",
+            "lost_reports": "ΧΑΜΕΝΑ ΚΑΤΟΙΚΙΔΙΑ",
+            "found_reports":"ΒΡΕΘΕΝΤΑ ΚΑΤΟΙΚΙΔΙΑ",
             "user_id": "ID ΧΡΗΣΤΗ",
             "reports_total": "ΑΝΑΦΟΡΕΣ ΣΥΝΟΛΙΚΑ",
             "no_reports": "ΔΕΝ ΒΡΕΘΗΚΑΝ ΑΝΑΦΟΡΕΣ",
@@ -1354,7 +1356,7 @@ const resources = {
             "success_rate": "ΠΟΣΟΣΤΟ ΕΠΙΤΥΧΙΑΣ",
             "lost_reports_total": "ΣΥΝΟΛΙΚΕΣ ΑΝΑΦΟΡΕΣ ΑΠΩΛΕΙΑΣ",
             "found_reports_total": "ΣΥΝΟΛΙΚΕΣ ΑΝΑΦΟΡΕΣ ΕΥΡΕΣΗΣ",
-            "lost_resolved": "ΧΑΜΜΕΝΑ ΚΑΤΟΙΚΙΑ ΠΟΥ ΕΧΟΥΝ ΒΡΕΘΕΙ",
+            "lost_resolved": "ΧΑΜΕΝΑ ΚΑΤΟΙΚΙΔΙΑ ΠΟΥ ΕΧΟΥΝ ΒΡΕΘΕΙ",
             "found_resolved": "ΒΡΕΘΕΝΤΑ ΚΑΤΟΙΚΙΔΙΑ ΠΟΥ ΕΧΟΥΝ ΑΝΤΙΣΤΟΙΧΗΘΕΙ",
             "found_to_lost": "ΑΝΤΙΣΤΟΙΧΙΣΕΙΣ ΧΑΜΜΕΝΩΝ ΚΑΤΟΙΚΙΔΙΩΝ ΜΕ ΒΡΕΘΕΝΤΑ",
             "found_to_found": "ΚΑΤΟΙΚΙΔΙΑ ΠΟΥ ΕΧΟΥΝ ΕΝΤΟΠΙΣΤΕΙ ΑΠΟ ΠΟΛΛΟΥΣ ΧΡΗΣΤΕΣ",
@@ -1371,7 +1373,7 @@ const resources = {
             "lost_pet": "ΧΑΜΜΕΝΟ ΖΩΟ",
             "found_pet": "ΒΡΕΘΕΝ ΖΩΟ",
             "user_distribution": "ΚΑΤΑΝΟΜΗ ΧΡΗΣΤΩΝ",
-            "popular_species_lost": "ΔΗΜΟΦΙΛΗ ΕΙΔΗ (ΧΑΜΜΕΝΑ)",
+            "popular_species_lost": "ΔΗΜΟΦΙΛΗ ΕΙΔΗ (ΧΑΜΕΝΑ)",
             "verification_status": "ΚΑΤΑΝΟΜΗ ΑΙΤΗΜΑΤΩΝ ΟΡΓΑΝΙΣΜΩΝ",
             "months": {
                 "jan": "ΙΑΝ",
@@ -1505,7 +1507,7 @@ const resources = {
             "back_to_announcements": "Επιστροφή στις Ανακοινώσεις",
             "back_to_list": "Επιστροφή στη λίστα",
             "announcement_not_found": "Η ανακοίνωση δεν βρέθηκε",
-            "organization_info": "ΣΤΟΙΧΕΙΑ ΟΡΓΑΝΙΣΜΟΥ"
+            "organization_info": "ΣΤΟΙΧΕΙΑ ΟΡΓΑΝΙΣΜΟΥ"            
         }
     }
 };
