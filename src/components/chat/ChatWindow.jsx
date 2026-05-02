@@ -26,7 +26,8 @@ const ChatWindow = ({ recipientId, recipientName, onClose }) => {
                     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                     const decoded = JSON.parse(window.atob(base64));
                     currentUserId.current = String(decoded.sub || decoded.userId);
-                    currentUserFirstName.current = decoded.firstName || t('you');
+                    // Μετάφραση για το "Εσείς" αν δεν υπάρχει όνομα
+                    currentUserFirstName.current = decoded.firstName || t('chat_you');
                 }
 
                 const history = await getChatHistory(recipientId);
@@ -138,7 +139,7 @@ const ChatWindow = ({ recipientId, recipientName, onClose }) => {
                         </div>
                         <div>
                             <h3 className="font-bold text-sm leading-none">{recipientName}</h3>
-                            <p className="text-[10px] text-emerald-100 mt-1 uppercase font-black tracking-widest">{t('active_chat')}</p>
+                            <p className="text-[10px] text-emerald-100 mt-1 uppercase font-black tracking-widest">{t('chat_active_status')}</p>
                         </div>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="p-2 hover:bg-white/10 rounded-full transition-colors">

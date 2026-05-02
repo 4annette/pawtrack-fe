@@ -652,7 +652,16 @@ const resources = {
             "back_to_announcements": "Back to Announcements",
             "back_to_list": "Back to list",
             "announcement_not_found": "Announcement not found",
-            "organization_info": "Organization Details"
+            "organization_info": "Organization Details",
+            "date_lost_label": "Date Lost",
+            "date_found_label": "Date Found",
+            "fm_messages_title": "MESSAGES",
+            "fm_no_chats": "NO CHATS YET",
+            "fm_unknown_user": "Unknown user",
+            "chat_you": "You",
+            "chat_active_status": "ACTIVE CHAT",
+            "chat_error_send": "Failed to send message",
+            "chat_input_placeholder": "Type a message..."
         }
     },
     el: {
@@ -1166,7 +1175,7 @@ const resources = {
             "all": "Όλα", "admin_panel": "ΠΑΝΕΛ ΔΙΑΧΕΙΡΙΣΤΗ",
             "back_to_users": "ΕΠΙΣΤΡΟΦΗ ΣΤΟΥΣ ΧΡΗΣΤΕΣ",
             "lost_reports": "ΧΑΜΕΝΑ ΚΑΤΟΙΚΙΔΙΑ",
-            "found_reports":"ΒΡΕΘΕΝΤΑ ΚΑΤΟΙΚΙΔΙΑ",
+            "found_reports": "ΒΡΕΘΕΝΤΑ ΚΑΤΟΙΚΙΔΙΑ",
             "user_id": "ID ΧΡΗΣΤΗ",
             "reports_total": "ΑΝΑΦΟΡΕΣ ΣΥΝΟΛΙΚΑ",
             "no_reports": "ΔΕΝ ΒΡΕΘΗΚΑΝ ΑΝΑΦΟΡΕΣ",
@@ -1507,7 +1516,16 @@ const resources = {
             "back_to_announcements": "Επιστροφή στις Ανακοινώσεις",
             "back_to_list": "Επιστροφή στη λίστα",
             "announcement_not_found": "Η ανακοίνωση δεν βρέθηκε",
-            "organization_info": "ΣΤΟΙΧΕΙΑ ΟΡΓΑΝΙΣΜΟΥ"            
+            "organization_info": "ΣΤΟΙΧΕΙΑ ΟΡΓΑΝΙΣΜΟΥ",
+            "date_lost_label": "Ημερομηνία Απώλειας",
+            "date_found_label": "Ημερομηνία Εύρεσης",
+            "fm_messages_title": "ΜΗΝΥΜΑΤΑ",
+            "fm_no_chats": "ΔΕΝ ΥΠΑΡΧΟΥΝ ΣΥΝΟΜΙΛΙΕΣ",
+            "fm_unknown_user": "Άγνωστος χρήστης",
+            "chat_you": "Εσείς",
+            "chat_active_status": "ΕΝΕΡΓΗ ΣΥΝΟΜΙΛΙΑ",
+            "chat_error_send": "Αποτυχία αποστολής μηνύματος",
+            "chat_input_placeholder": "Πληκτρολογήστε ένα μήνυμα..."
         }
     }
 };

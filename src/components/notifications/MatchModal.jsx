@@ -11,227 +11,239 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { fetchFoundReportById, fetchLostReportById, removeFoundReportFromLostReport, confirmLostReportMatch } from "@/services/api";
 
 let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MatchModal = ({ notification, onClose, onChat }) => {
-  const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [foundReport, setFoundReport] = useState(null);
-  const [lostReport, setLostReport] = useState(null);
+    const { t, i18n } = useTranslation();
+    const [loading, setLoading] = useState(true);
+    const [foundReport, setFoundReport] = useState(null);
+    const [lostReport, setLostReport] = useState(null);
 
-  useEffect(() => {
-    if (!notification) return;
+    const isGreek = i18n.language.startsWith('el');
 
-    const fetchData = async () => {
-      if (!notification.foundReportId || !notification.lostReportId) {
-        toast.error(t('pm_error_unavailable'));
-        onClose();
-        return;
-      }
+    const getLocalizedTitle = (report) => {
+        if (!report) return "";
+        return isGreek ? (report.titleEl || report.title) : (report.title || report.titleEl);
+    };
 
-      try {
-        const [foundData, lostData] = await Promise.all([
-          fetchFoundReportById(notification.foundReportId),
-          fetchLostReportById(notification.lostReportId)
-        ]);
+    const getLocalizedDescription = (report) => {
+        if (!report) return "";
+        return isGreek ? (report.descriptionEl || report.description) : (report.description || report.descriptionEl);
+    };
 
-        if (!foundData || !lostData || !foundData.lostReport) {
-          toast.info(t('pm_error_disconnected'));
-          onClose();
-          return;
-        }
+    useEffect(() => {
+        if (!notification) return;
 
-        setFoundReport(foundData);
-        setLostReport(lostData);
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-        toast.error(t('pm_error_load'));
-        onClose();
-      }
-    };
-    fetchData();
-  }, [notification, t, onClose]);
+        const fetchData = async () => {
+            if (!notification.foundReportId || !notification.lostReportId) {
+                toast.error(t('pm_error_unavailable'));
+                onClose();
+                return;
+            }
 
-  if (!notification || loading) return null;
+            try {
+                const [foundData, lostData] = await Promise.all([
+                    fetchFoundReportById(notification.foundReportId),
+                    fetchLostReportById(notification.lostReportId)
+                ]);
 
-  const handleConfirm = async () => {
-    try {
-      await confirmLostReportMatch(notification.lostReportId);
-      toast.success(t('pm_success_found'));
-      onClose();
-    } catch (error) {
-      console.error("Error confirming match:", error);
-      toast.error(t('pm_error_confirm'));
-    }
-  };
+                if (!foundData || !lostData || !foundData.lostReport) {
+                    toast.info(t('pm_error_disconnected'));
+                    onClose();
+                    return;
+                }
 
-  const handleReject = async () => {
-    try {
-      await removeFoundReportFromLostReport(notification.lostReportId, notification.foundReportId);
-      toast.info(t('pm_info_disconnected'));
-      onClose();
-    } catch (error) {
-      console.error(error);
-      toast.error(t('pm_error_disconnect'));
-    }
-  };
+                setFoundReport(foundData);
+                setLostReport(lostData);
+                setLoading(false);
+            } catch (error) {
+                console.error(error);
+                toast.error(t('pm_error_load'));
+                onClose();
+            }
+        };
+        fetchData();
+    }, [notification, t, onClose]);
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl shadow-emerald-900/20 overflow-hidden max-h-[90vh] flex flex-col border border-white/50 ring-4 ring-emerald-50/50"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-emerald-600 p-5 text-white flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/30 rounded-xl backdrop-blur-sm">
-              <AlertCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-black text-lg tracking-tight leading-none">{t('pm_title')}</h2>
-              <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">{t('pm_subtitle')}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-        </div>
+    if (!notification || loading) return null;
 
-        <div className="overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-          <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-3xl p-5 flex items-center gap-5 shadow-sm">
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-200">
-              <Phone className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('pm_contact_finder')}</p>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-emerald-900 truncate">
-                    {notification.fromUserName}
-                  </span>
-                  <span className="text-sm font-black text-emerald-600">
-                    {notification.fromUserPhone || foundReport?.creator?.phone || t('no_phone')}
-                  </span>
-                </div>
-                {foundReport?.creator && (
-                  <button 
-                    onClick={() => onChat(foundReport.creator.id, foundReport.creator.fullName || foundReport.creator.username, foundReport.creator.username)}
-                    className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-100 transition-all active:scale-90 flex-shrink-0"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+    const handleConfirm = async () => {
+        try {
+            await confirmLostReportMatch(notification.lostReportId);
+            toast.success(t('pm_success_found'));
+            onClose();
+        } catch (error) {
+            console.error("Error confirming match:", error);
+            toast.error(t('pm_error_confirm'));
+        }
+    };
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">{t('pm_found_pet')}</span>
-            </div>
+    const handleReject = async () => {
+        try {
+            await removeFoundReportFromLostReport(notification.lostReportId, notification.foundReportId);
+            toast.info(t('pm_info_disconnected'));
+            onClose();
+        } catch (error) {
+            console.error(error);
+            toast.error(t('pm_error_disconnect'));
+        }
+    };
 
-            <div className="bg-white border border-emerald-100/80 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <div className="flex gap-4 mb-4">
-                <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100 shadow-inner">
-                  {foundReport?.imageUrl ? (
-                    <img src={foundReport.imageUrl} className="w-full h-full object-cover" alt="Found" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-8 h-8" /></div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{foundReport?.title || t('untitled')}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{foundReport?.description || t('no_description_provided')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
-                      <Calendar className="w-3 h-3" />
-                      {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : t('not_applicable')}
-                    </div>
-                  </div>
-                </div>
-              </div>
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl shadow-emerald-900/20 overflow-hidden max-h-[90vh] flex flex-col border border-white/50 ring-4 ring-emerald-50/50"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="bg-emerald-600 p-5 text-white flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-500/30 rounded-xl backdrop-blur-sm">
+                            <AlertCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="font-black text-lg tracking-tight leading-none">{t('pm_title')}</h2>
+                            <p className="text-xs text-emerald-100 font-medium mt-1 opacity-90">{t('pm_subtitle')}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-emerald-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                </div>
 
-              {foundReport?.latitude && foundReport?.longitude && (
-                <div className="w-full h-36 rounded-2xl overflow-hidden border border-emerald-100/50 relative z-0">
-                  <MapContainer
-                    center={[foundReport.latitude, foundReport.longitude]}
-                    zoom={14}
-                    scrollWheelZoom={false}
-                    zoomControl={false}
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[foundReport.latitude, foundReport.longitude]}>
-                      <Popup>{t('found_here_popup')}</Popup>
-                    </Marker>
-                  </MapContainer>
-                </div>
-              )}
-            </div>
-          </div>
+                <div className="overflow-y-auto p-6 space-y-6 bg-gray-50/50">
+                    <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-3xl p-5 flex items-center gap-5 shadow-sm">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-200">
+                            <Phone className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-0.5">{t('pm_contact_finder')}</p>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-sm font-bold text-emerald-900 truncate">
+                                        {notification.fromUserName}
+                                    </span>
+                                    <span className="text-sm font-black text-emerald-600">
+                                        {notification.fromUserPhone || foundReport?.creator?.phone || t('no_phone')}
+                                    </span>
+                                </div>
+                                {foundReport?.creator && (
+                                    <button
+                                        onClick={() => onChat(foundReport.creator.id, foundReport.creator.fullName || foundReport.creator.username, foundReport.creator.username)}
+                                        className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-100 transition-all active:scale-90 flex-shrink-0"
+                                    >
+                                        <Send className="w-5 h-5" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-              <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('pm_your_report')}</span>
-            </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 px-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">{t('pm_found_pet')}</span>
+                        </div>
 
-            <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
-              <div className="flex gap-4 mb-4">
-                <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
-                  {lostReport?.imageUrl ? (
-                    <img src={lostReport.imageUrl} className="w-full h-full object-cover" alt="Lost" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-6 h-6" /></div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{lostReport?.title || t('untitled')}</h3>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-600 bg-orange-50 w-fit px-2.5 py-1 rounded-lg border border-orange-100">
-                    <Calendar className="w-3 h-3" /> {t('label_date_lost')}: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : t('not_applicable')}
-                  </div>
-                </div>
-              </div>
+                        <div className="bg-white border border-emerald-100/80 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+                            <div className="flex gap-4 mb-4">
+                                <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100 shadow-inner">
+                                    {foundReport?.imageUrl ? (
+                                        <img src={foundReport.imageUrl} className="w-full h-full object-cover" alt="Found" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-8 h-8" /></div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
+                                    <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-2">{getLocalizedTitle(foundReport) || t('untitled')}</h3>
+                                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{getLocalizedDescription(foundReport) || t('no_description_provided')}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100/50">
+                                            <Calendar className="w-3 h-3" />
+                                            {foundReport?.foundDate ? new Date(foundReport.foundDate).toLocaleDateString() : t('not_applicable')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-              {lostReport?.latitude && lostReport?.longitude && (
-                <div className="w-full h-36 rounded-2xl overflow-hidden border border-gray-200/50 relative z-0 grayscale-[50%] hover:grayscale-0 transition-all duration-500">
-                  <MapContainer
-                    center={[lostReport.latitude, lostReport.longitude]}
-                    zoom={14}
-                    scrollWheelZoom={false}
-                    zoomControl={false}
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[lostReport.latitude, lostReport.longitude]} />
-                  </MapContainer>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                            {foundReport?.latitude && foundReport?.longitude && (
+                                <div className="w-full h-36 rounded-2xl overflow-hidden border border-emerald-100/50 relative z-0">
+                                    <MapContainer
+                                        center={[foundReport.latitude, foundReport.longitude]}
+                                        zoom={14}
+                                        scrollWheelZoom={false}
+                                        zoomControl={false}
+                                        style={{ height: "100%", width: "100%" }}
+                                    >
+                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                        <Marker position={[foundReport.latitude, foundReport.longitude]}>
+                                            <Popup>{t('found_here_popup')}</Popup>
+                                        </Marker>
+                                    </MapContainer>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-        <div className="p-5 border-t border-gray-100 bg-white flex gap-4 shrink-0">
-          <button onClick={handleReject} className="flex-1 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-gray-500 font-black text-xs uppercase tracking-widest hover:bg-gray-100 hover:text-gray-700 transition-all active:scale-95">
-            {t('pm_not_mine')}
-          </button>
-          <button onClick={handleConfirm} className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-200/50 transition-all active:scale-95 flex items-center justify-center gap-2">
-            <Check className="w-4 h-4" /> {t('pm_is_mine')}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 px-1">
+                            <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('pm_your_report')}</span>
+                        </div>
+
+                        <div className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm opacity-90 hover:opacity-100 transition-opacity">
+                            <div className="flex gap-4 mb-4">
+                                <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
+                                    {lostReport?.imageUrl ? (
+                                        <img src={lostReport.imageUrl} className="w-full h-full object-cover" alt="Lost" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300"><FileText className="w-6 h-6" /></div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <h3 className="font-bold text-gray-800 text-sm truncate mb-1">{getLocalizedTitle(lostReport) || t('untitled')}</h3>
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-600 bg-orange-50 w-fit px-2.5 py-1 rounded-lg border border-orange-100">
+                                        <Calendar className="w-3 h-3" /> {t('label_date_lost')}: {lostReport?.lostDate ? new Date(lostReport.lostDate).toLocaleDateString() : t('not_applicable')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {lostReport?.latitude && lostReport?.longitude && (
+                                <div className="w-full h-36 rounded-2xl overflow-hidden border border-gray-200/50 relative z-0 grayscale-[50%] hover:grayscale-0 transition-all duration-500">
+                                    <MapContainer
+                                        center={[lostReport.latitude, lostReport.longitude]}
+                                        zoom={14}
+                                        scrollWheelZoom={false}
+                                        zoomControl={false}
+                                        style={{ height: "100%", width: "100%" }}
+                                    >
+                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                        <Marker position={[lostReport.latitude, lostReport.longitude]} />
+                                    </MapContainer>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-5 border-t border-gray-100 bg-white flex gap-4 shrink-0">
+                    <button onClick={handleReject} className="flex-1 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-gray-500 font-black text-xs uppercase tracking-widest hover:bg-gray-100 hover:text-gray-700 transition-all active:scale-95">
+                        {t('pm_not_mine')}
+                    </button>
+                    <button onClick={handleConfirm} className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-200/50 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4" /> {t('pm_is_mine')}
+                    </button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
 };
 
 export default MatchModal;

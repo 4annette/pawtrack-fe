@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
     Plus, Search, Filter, Dog, CheckCircle, Eye, MapPin,
     Loader2, Hash, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Check,
-    Navigation, Map as MapIcon, X, Calendar, Clock, BadgeCheck
+    Navigation, Map as MapIcon, X, Calendar, Clock, BadgeCheck, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
@@ -528,7 +528,14 @@ const FoundReports = () => {
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-gray-900 line-clamp-1">{getLocalizedTitle(report)}</h3>
-                                        <span className="text-xs font-medium text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">{new Date(report.foundDate).toLocaleDateString(currentLocale)}</span>
+                                        <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                                            <span className="text-[10px] font-black text-emerald-600/50 uppercase tracking-tighter flex items-center gap-0.5">
+                                                <Info className="w-2.5 h-2.5" /> {t('date_found_label') || 'Date Found'}
+                                            </span>
+                                            <span className="text-xs font-bold text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">
+                                                {new Date(report.foundDate).toLocaleDateString(currentLocale)}
+                                            </span>
+                                        </div>
                                     </div>
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{getLocalizedDescription(report) || t('no_description_provided')}</p>
 

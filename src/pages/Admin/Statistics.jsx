@@ -19,6 +19,12 @@ import Header from "@/pages/Header";
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
+const SPECIES_COLORS = {
+    DOG: "#f59e0b",    // Πορτοκαλί
+    CAT: "#ef4444",    // Κόκκινο
+    OTHER: "#8b5cf6"   // Μωβ
+};
+
 const VERIFICATION_COLORS = {
     APPROVED: "#10b981",
     PENDING: "#10b981",
@@ -136,6 +142,8 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
+    if (percent === 0) return null;
+
     return (
         <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-[8px] md:text-[10px] font-black">
             {`${(percent * 100).toFixed(0)}%`}
@@ -241,6 +249,24 @@ const Statistics = () => {
         }
         return filterByMonth(formatted, verificationsMonth);
     }, [stats, verificationsMonth, i18n.language, currentYear]);
+
+    const normalizedSpeciesLostStats = useMemo(() => {
+        if (!stats?.speciesLostStats) return [];
+        const species = ["DOG", "CAT", "OTHER"];
+        return species.map(s => {
+            const existing = stats.speciesLostStats.find(item => item.species === s);
+            return { species: s, count: existing ? existing.count : 0 };
+        });
+    }, [stats]);
+
+    const normalizedSpeciesFoundStats = useMemo(() => {
+        if (!stats?.speciesFoundStats) return [];
+        const species = ["DOG", "CAT", "OTHER"];
+        return species.map(s => {
+            const existing = stats.speciesFoundStats.find(item => item.species === s);
+            return { species: s, count: existing ? existing.count : 0 };
+        });
+    }, [stats]);
 
     if (loading && !stats) {
         return (
@@ -445,14 +471,16 @@ const Statistics = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={stats.speciesLostStats || []}
+                                        data={normalizedSpeciesLostStats}
                                         innerRadius={0}
                                         outerRadius={70}
                                         dataKey="count" nameKey="species"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
                                     >
-                                        {(stats.speciesLostStats || []).map((_, i) => <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} stroke="none" />)}
+                                        {normalizedSpeciesLostStats.map((entry, i) => (
+                                            <Cell key={i} fill={SPECIES_COLORS[entry.species]} stroke="none" />
+                                        ))}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
                                     <Legend
@@ -471,14 +499,16 @@ const Statistics = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={stats.speciesFoundStats || []}
+                                        data={normalizedSpeciesFoundStats}
                                         innerRadius={0}
                                         outerRadius={70}
                                         dataKey="count" nameKey="species"
                                         label={renderCustomizedLabel}
                                         labelLine={false}
                                     >
-                                        {(stats.speciesFoundStats || []).map((_, i) => <Cell key={i} fill={COLORS[(i + 3) % COLORS.length]} stroke="none" />)}
+                                        {normalizedSpeciesFoundStats.map((entry, i) => (
+                                            <Cell key={i} fill={SPECIES_COLORS[entry.species]} stroke="none" />
+                                        ))}
                                     </Pie>
                                     <Tooltip formatter={(value, name) => [value, t(name.toLowerCase())]} />
                                     <Legend
