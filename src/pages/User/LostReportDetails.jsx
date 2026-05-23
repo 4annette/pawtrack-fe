@@ -20,7 +20,8 @@ import {
   deleteLostReport,
   uploadLostReportImage,
   deleteLostReportImage,
-  toggleLostReportFoundStatus
+  toggleLostReportFoundStatus,
+  getApiErrorMessage
 } from "../../services/api";
 import Header from "@/pages/Header";
 
@@ -157,7 +158,7 @@ const LostReportDetails = () => {
         setReport(data);
         setOriginalReport(data);
       } catch (err) {
-        toast.error(t('report_not_found_toast'));
+        toast.error(getApiErrorMessage(t, err, 'report_not_found_toast'));
         navigate("/my-reports");
       } finally { setLoading(false); }
     };
@@ -268,7 +269,7 @@ const LostReportDetails = () => {
       setOriginalReport(updated);
     }
     catch (err) {
-      toast.error(t('error_saving_toast'));
+      toast.error(getApiErrorMessage(t, err, 'error_saving_toast'));
     } finally { setSaving(false); }
   };
 
@@ -284,7 +285,7 @@ const LostReportDetails = () => {
         await deleteLostReport(id);
         toast.success(t('report_deleted_toast'));
         navigate("/my-reports", { state: { activeTab: 'lost' } });
-      } catch (err) { toast.error(t('failed_delete_report_toast')); }
+      } catch (err) { toast.error(getApiErrorMessage(t, err, 'failed_delete_report_toast')); }
     }
   };
 
@@ -294,7 +295,7 @@ const LostReportDetails = () => {
         await deleteLostReportImage(id);
         setReport({ ...report, imageUrl: null });
         toast.success(t('photo_removed_toast'));
-      } catch (err) { toast.error(t('could_not_remove_photo_toast')); }
+      } catch (err) { toast.error(getApiErrorMessage(t, err, 'could_not_remove_photo_toast')); }
     }
   };
 

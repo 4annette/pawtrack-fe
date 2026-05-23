@@ -26,7 +26,8 @@ import {
   fetchNearbyOrganizations,
   createClaimVerification,
   fetchClaimVerificationDetails,
-  deleteClaimVerification
+  deleteClaimVerification,
+  getApiErrorMessage
 } from "../../services/api";
 import Header from "@/pages/Header";
 
@@ -198,7 +199,7 @@ const FoundReportDetails = () => {
           }
         }
       } catch (err) {
-        toast.error(t('report_not_found_toast'));
+        toast.error(getApiErrorMessage(t, err, 'report_not_found_toast'));
         navigate("/my-reports");
       } finally { setLoading(false); }
     };
@@ -248,7 +249,7 @@ const FoundReportDetails = () => {
       setShowFoundModal(false);
       toast.success(t('status_updated_toast'));
     } catch (err) {
-      toast.error(t('status_update_failed_toast'));
+      toast.error(getApiErrorMessage(t, err, 'status_update_failed_toast'));
     }
   };
 
@@ -336,7 +337,7 @@ const FoundReportDetails = () => {
       const updated = await fetchFoundReportById(id);
       setReport(updated);
       setOriginalReport(updated);
-    } catch (err) { toast.error(t('error_saving_toast')); }
+    } catch (err) { toast.error(getApiErrorMessage(t, err, 'error_saving_toast')); }
     finally { setSaving(false); }
   };
 
@@ -355,7 +356,7 @@ const FoundReportDetails = () => {
         setOriginalReport(updated);
         setNewImage(null);
         toast.success(t('photo_removed_toast'));
-      } catch (err) { toast.error(t('could_not_remove_photo_toast')); }
+      } catch (err) { toast.error(getApiErrorMessage(t, err, 'could_not_remove_photo_toast')); }
     }
   };
 
@@ -368,7 +369,7 @@ const FoundReportDetails = () => {
       setOriginalReport(updated);
       toast.success(t('status_updated_toast'));
     } catch (err) {
-      toast.error(t('error_saving_toast'));
+      toast.error(getApiErrorMessage(t, err, 'error_saving_toast'));
     } finally {
       setSaving(false);
     }
@@ -376,7 +377,7 @@ const FoundReportDetails = () => {
 
   const handleClaimVerification = async () => {
     if (!selectedOrgId) {
-      toast.error(t('please_select_organization_error'));
+      toast.error(getApiErrorMessage(t, new Error(t('please_select_organization_error')), 'please_select_organization_error'));
       return;
     }
     setSaving(true);
@@ -391,7 +392,7 @@ const FoundReportDetails = () => {
       }
       setSelectedOrgId("");
     } catch (err) {
-      toast.error(t('claim_verification_failed_toast'));
+      toast.error(getApiErrorMessage(t, err, 'claim_verification_failed_toast'));
     } finally {
       setSaving(false);
     }
@@ -412,7 +413,7 @@ const FoundReportDetails = () => {
           setNearbyOrgs(orgsData.content.map(org => ({ label: org.organizationName, value: org.id })));
         }
       } catch (err) {
-        toast.error(t('claim_delete_failed_toast'));
+        toast.error(getApiErrorMessage(t, err, 'claim_delete_failed_toast'));
       } finally {
         setSaving(false);
       }

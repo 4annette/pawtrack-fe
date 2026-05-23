@@ -133,7 +133,7 @@ const OrgAnnouncementDetails = () => {
                 type: data.type || "OTHER"
             });
         } catch (error) {
-            toast.error(t('error_loading_announcement'));
+            toast.error(getApiErrorMessage(t, error, 'error_loading_announcement'));
             navigate("/organization/announcements");
         } finally {
             setLoading(false);
@@ -171,7 +171,7 @@ const OrgAnnouncementDetails = () => {
             setIsEditing(false);
             loadAnnouncement();
         } catch (error) {
-            toast.error(t('error_saving_announcement'));
+            toast.error(getApiErrorMessage(t, error, 'error_saving_announcement'));
         } finally {
             setSaving(false);
         }
@@ -184,7 +184,7 @@ const OrgAnnouncementDetails = () => {
             toast.success(t('announcement_deleted_success'));
             navigate("/organization/announcements");
         } catch (error) {
-            toast.error(t('error_deleting_announcement'));
+            toast.error(getApiErrorMessage(t, error, 'error_deleting_announcement'));
         }
     };
 

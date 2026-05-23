@@ -512,47 +512,50 @@ const FoundReports = () => {
                             <p>{t('no_found_reports_match')}</p>
                         </div>
                     ) : (
-                        reports.map((report) => (
-                            <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1">
-                                <div className="relative h-64 bg-emerald-100 overflow-hidden">
-                                    {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
-                                    <div className="absolute top-3 left-3">
-                                        {report.verified && (
-                                            <div className="p-1 animate-in zoom-in duration-300 drop-shadow-sm">
-                                                <BadgeCheck className="w-7 h-7 text-blue-500" />
+                        reports.map((report) => {
+                            const dateValue = report.foundDate || report.dateFound || report.lostDate || report.dateLost;
+                            return (
+                                <div key={report.id} onClick={() => setDetailReport(report)} className="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full cursor-pointer hover:-translate-y-1">
+                                    <div className="relative h-64 bg-emerald-100 overflow-hidden">
+                                        {report.imageUrl ? <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-emerald-300"><Dog className="w-12 h-12 opacity-50" /></div>}
+                                        <div className="absolute top-3 left-3">
+                                            {report.verified && (
+                                                <div className="p-1 animate-in zoom-in duration-300 drop-shadow-sm">
+                                                    <BadgeCheck className="w-7 h-7 text-blue-500" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="absolute top-3 right-3"><span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${getConditionColor(report.condition)}`}>{t(report.species) || report.species}</span></div>
+                                    </div>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-gray-900 line-clamp-1">{getLocalizedTitle(report)}</h3>
+                                            <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                                                <span className="text-[10px] font-black text-emerald-600/50 uppercase tracking-tighter flex items-center gap-0.5">
+                                                    <Info className="w-2.5 h-2.5" /> {t('date_found_label') || 'Date Found'}
+                                                </span>
+                                                <span className="text-xs font-bold text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">
+                                                    {dateValue ? new Date(dateValue).toLocaleDateString(currentLocale) : t('unknown')}
+                                                </span>
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="absolute top-3 right-3"><span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${getConditionColor(report.condition)}`}>{t(report.species) || report.species}</span></div>
-                                </div>
-                                <div className="p-5 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-900 line-clamp-1">{getLocalizedTitle(report)}</h3>
-                                        <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                                            <span className="text-[10px] font-black text-emerald-600/50 uppercase tracking-tighter flex items-center gap-0.5">
-                                                <Info className="w-2.5 h-2.5" /> {t('date_found_label') || 'Date Found'}
-                                            </span>
-                                            <span className="text-xs font-bold text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-md">
-                                                {new Date(report.foundDate).toLocaleDateString(currentLocale)}
-                                            </span>
                                         </div>
-                                    </div>
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{getLocalizedDescription(report) || t('no_description_provided')}</p>
+                                        <p className="text-sm text-gray-600 line-clamp-2 mb-4">{getLocalizedDescription(report) || t('no_description_provided')}</p>
 
-                                    <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
-                                        <AddressDisplay
-                                            lat={report.latitude}
-                                            lng={report.longitude}
-                                            onClick={() => setMapLocation({ lat: report.latitude, lng: report.longitude })}
-                                        />
-                                        <div className="flex gap-2">
-                                            <button onClick={(e) => { e.stopPropagation(); setSelectedFoundReport(report); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><CheckCircle className="w-4 h-4" /> {t('this_is_my_pet_btn')}</button>
-                                            <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 font-semibold text-xs hover:bg-emerald-50 shadow-sm"><Eye className="w-4 h-4" /> {t('i_saw_this_pet_btn')}</button>
+                                        <div className="mt-auto pt-4 space-y-3 border-t border-emerald-200">
+                                            <AddressDisplay
+                                                lat={report.latitude}
+                                                lng={report.longitude}
+                                                onClick={() => setMapLocation({ lat: report.latitude, lng: report.longitude })}
+                                            />
+                                            <div className="flex gap-2">
+                                                <button onClick={(e) => { e.stopPropagation(); setSelectedFoundReport(report); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm"><CheckCircle className="w-4 h-4" /> {t('this_is_my_pet_btn')}</button>
+                                                <button onClick={(e) => { e.stopPropagation(); setSightingReportId(report.id); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 font-semibold text-xs hover:bg-emerald-50 shadow-sm"><Eye className="w-4 h-4" /> {t('i_saw_this_pet_btn')}</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             )}

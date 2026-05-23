@@ -253,19 +253,35 @@ const AnnouncementsManagement = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const formatJsonDate = (value) => {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+
+        const pad = (num) => String(num).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
     const loadAnnouncements = async () => {
         setLoading(true);
         try {
             const cleanFilters = {
                 search: filters.search || null,
                 type: filters.type.length > 0 ? filters.type : null,
-                dateAfter: filters.dateAfter ? new Date(filters.dateAfter).toISOString() : null,
-                dateBefore: filters.dateBefore ? new Date(filters.dateBefore).toISOString() : null
+                dateAfter: formatJsonDate(filters.dateAfter),
+                dateBefore: formatJsonDate(filters.dateBefore)
             };
             const response = await filterAnnouncements(cleanFilters, 0, 50);
             setAnnouncements(response.content || []);
         } catch (error) {
-            toast.error(t('error_loading_announcements'));
+            toast.error(getApiErrorMessage(t, error, 'error_loading_announcements'));
         } finally {
             setLoading(false);
         }
@@ -292,7 +308,7 @@ const AnnouncementsManagement = () => {
                 setAnnouncements(prev => prev.filter(a => a.id !== id));
                 toast.success(t('announcement_deleted_success'));
             } catch (error) {
-                toast.error(t('error_deleting_announcement'));
+                toast.error(getApiErrorMessage(t, error, 'error_deleting_announcement'));
             }
         }
     };

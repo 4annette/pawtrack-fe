@@ -7,7 +7,7 @@ import {
     ShieldCheck, Info, Dog
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchOrgClaimVerifications, updateClaimVerificationStatus } from "../../services/api";
+import { fetchOrgClaimVerifications, updateClaimVerificationStatus, getApiErrorMessage } from "../../services/api";
 import Header from "@/pages/Header";
 
 const PortalDropdown = ({ isOpen, onClose, anchorRef, options, value, onChange }) => {
@@ -167,7 +167,7 @@ const OrganizationClaims = () => {
             }
             setClaims(filtered);
         } catch (err) {
-            toast.error(t('error_loading_claims'));
+            toast.error(getApiErrorMessage(t, err, 'error_loading_claims'));
         } finally {
             setLoading(false);
         }
@@ -181,7 +181,7 @@ const OrganizationClaims = () => {
             setActiveDropdown({ id: null, type: null });
             loadClaims();
         } catch (err) {
-            toast.error(t('error_updating_claim'));
+            toast.error(getApiErrorMessage(t, err, 'error_updating_claim'));
         } finally {
             setProcessingId(null);
         }

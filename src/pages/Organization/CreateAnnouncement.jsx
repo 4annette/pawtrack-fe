@@ -169,7 +169,7 @@ const CreateAnnouncement = () => {
             toast.success(t('announcement_created_success'));
             navigate("/organization/announcements");
         } catch (error) {
-            toast.error(t('error_saving_announcement'));
+            toast.error(getApiErrorMessage(t, error, 'error_saving_announcement'));
         } finally {
             setLoading(false);
         }

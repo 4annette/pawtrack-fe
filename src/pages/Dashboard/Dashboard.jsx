@@ -150,32 +150,37 @@ const Dashboard = () => {
                   </button>
                 </div>
               ) : (
-                myLostReports.map((report) => (
-                  <button
-                    key={report.id}
-                    disabled={submittingClaim}
-                    onClick={() => handleSelectLostPet(report.id)}
-                    className="w-full flex items-center gap-4 p-3 rounded-2xl border border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-left"
-                  >
-                    <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
-                      {report.imageUrl ? (
-                        <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <User className="w-6 h-6" />
-                        </div>
+                myLostReports.map((report) => {
+                  const dateValue = report.lostDate || report.dateLost || report.foundDate || report.dateFound;
+                  return (
+                    <button
+                      key={report.id}
+                      disabled={submittingClaim}
+                      onClick={() => handleSelectLostPet(report.id)}
+                      className="w-full flex items-center gap-4 p-3 rounded-2xl border border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-left"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
+                        {report.imageUrl ? (
+                          <img src={report.imageUrl} alt={getLocalizedTitle(report)} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <User className="w-6 h-6" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900 truncate group-hover:text-emerald-700">{getLocalizedTitle(report)}</h4>
+                        <p className="text-xs text-gray-500 mt-1 truncate">{t(report.species) || report.species} • {report.breed || t('unknown_breed')}</p>
+                        <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-wide">
+                          {t('lost_badge')}: {dateValue ? dateValue.substring(0, 10) : t('unknown')}
+                        </p>
+                      </div>
+                      {submittingClaim && (
+                        <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                       )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 truncate group-hover:text-emerald-700">{getLocalizedTitle(report)}</h4>
-                      <p className="text-xs text-gray-500 mt-1 truncate">{t(report.species) || report.species} • {report.breed || t('unknown_breed')}</p>
-                      <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-wide">{t('lost_badge')}: {report.lostDate ? report.lostDate.substring(0, 10) : t('unknown')}</p>
-                    </div>
-                    {submittingClaim && (
-                      <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
-                    )}
-                  </button>
-                ))
+                    </button>
+                  );
+                })
               )}
             </div>
 

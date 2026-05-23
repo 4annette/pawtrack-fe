@@ -13,7 +13,7 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-import { fetchFoundReportById, updateFoundReportStatus, markFoundReportAsFound, updateClaimVerificationStatus } from "../../services/api";
+import { fetchFoundReportById, updateFoundReportStatus, toggleOrganizationFoundReportFound, updateClaimVerificationStatus, getApiErrorMessage } from "../../services/api";
 import Header from "@/pages/Header";
 
 let DefaultIcon = L.icon({
@@ -74,7 +74,7 @@ const OrgViewFoundReport = () => {
             const data = await fetchFoundReportById(id);
             setReport(data);
         } catch (err) {
-            toast.error(t('report_not_found_toast'));
+            toast.error(getApiErrorMessage(t, err, 'report_not_found_toast'));
             navigate("/organization/claims");
         } finally {
             setLoading(false);
@@ -129,7 +129,7 @@ const OrgViewFoundReport = () => {
             setIsStatusDropdownOpen(false);
             getReportData();
         } catch (err) {
-            toast.error(t('error_updating_claim'));
+            toast.error(getApiErrorMessage(t, err, 'error_updating_claim'));
         } finally {
             setSaving(false);
         }
@@ -142,7 +142,7 @@ const OrgViewFoundReport = () => {
             toast.success(t('status_updated_toast'));
             getReportData();
         } catch (err) {
-            toast.error(t('error_saving_toast'));
+            toast.error(getApiErrorMessage(t, err, 'error_saving_toast'));
         } finally {
             setSaving(false);
         }
@@ -151,11 +151,11 @@ const OrgViewFoundReport = () => {
     const handleToggleFound = async () => {
         setSaving(true);
         try {
-            await markFoundReportAsFound(id, null);
+            await toggleOrganizationFoundReportFound(id);
             toast.success(t('status_updated_toast'));
             getReportData();
         } catch (err) {
-            toast.error(t('status_update_failed_toast'));
+            toast.error(getApiErrorMessage(t, err, 'status_update_failed_toast'));
         } finally {
             setSaving(false);
         }

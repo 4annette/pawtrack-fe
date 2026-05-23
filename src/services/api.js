@@ -118,6 +118,57 @@ export const toggleNotifyUserAccount = async (notify) => {
   return response.data;
 };
 
+export const getApiErrorMessage = (t, error, fallbackKey = 'error_generic') => {
+  const responseData = error?.response?.data;
+  let rawMessage = '';
+
+  if (responseData?.message) {
+    rawMessage = responseData.message;
+  } else if (responseData?.messages) {
+    rawMessage = Array.isArray(responseData.messages) ? responseData.messages.join(', ') : responseData.messages;
+  } else if (error?.message) {
+    rawMessage = error.message;
+  }
+
+  if (!rawMessage) {
+    return t(fallbackKey);
+  }
+
+  if (typeof rawMessage === 'object') {
+    rawMessage = JSON.stringify(rawMessage);
+  }
+
+  const dynamicPatterns = [
+    {
+      prefix: 'Upload failed: ',
+      key: 'upload_failed',
+      values: (msg) => ({ details: msg.slice('Upload failed: '.length) })
+    },
+    {
+      prefix: 'Delete failed: ',
+      key: 'delete_failed',
+      values: (msg) => ({ details: msg.slice('Delete failed: '.length) })
+    },
+    {
+      prefix: 'Error sending email to ',
+      key: 'error_sending_email',
+      values: (msg) => {
+        const match = msg.match(/^Error sending email to (.+) with template (.+)$/);
+        return match ? { to: match[1], templateName: match[2] } : { to: '', templateName: '' };
+      }
+    }
+  ];
+
+  for (const pattern of dynamicPatterns) {
+    if (rawMessage.startsWith(pattern.prefix)) {
+      return t(pattern.key, { defaultValue: rawMessage, ...pattern.values(rawMessage) });
+    }
+  }
+
+  const translated = t(rawMessage, { defaultValue: rawMessage });
+  return translated || rawMessage;
+};
+
 export const fetchStatistics = async () => {
   const response = await api.get('/statistics');
   return response.data;
@@ -451,6 +502,11 @@ export const fetchAdminStatistics = async (payload) => {
 
 export const updateFoundReportStatus = async (foundId, status) => {
   const response = await api.patch(`/organizations/found-reports/${foundId}/change-status?status=${status}`);
+  return response.data;
+};
+
+export const toggleOrganizationFoundReportFound = async (foundId) => {
+  const response = await api.patch(`/organizations/found-reports/${foundId}/found`);
   return response.data;
 };
 

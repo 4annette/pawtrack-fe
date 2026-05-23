@@ -111,7 +111,7 @@ const FormMapPicker = ({ onLocationSelect }) => {
                 </MapContainer>
             </div>
             <div className="text-[10px] text-gray-400 text-center">
-                {position ? `${t('selected_coords_text')}: ${position[0].toFixed(5)}, ${position[1].toFixed(5)}` : t('tap_map_helper')}
+                ={position ? `${t('selected_coords_text')}: ${position[0].toFixed(5)}, ${position[1].toFixed(5)}` : t('tap_map_helper')}
             </div>
         </div>
     );
@@ -128,7 +128,6 @@ export const CustomDateTimePicker = ({ label, value, onChange }) => {
     const [isMinOpen, setIsMinOpen] = useState(false);
     const containerRef = useRef(null);
 
-    // Ορισμός locale βάσει της επιλεγμένης γλώσσας
     const currentLocale = i18n.language.startsWith('el') ? 'el-GR' : 'en-US';
 
     useEffect(() => {
@@ -641,7 +640,7 @@ export const AddSightingModal = ({ isOpen, onClose, baseReportId, type = "FOUND"
                             {myReports.length === 0 ? <p className="text-gray-500 text-sm text-center py-4">{t('no_matching_reports')}</p> : myReports.map(r => (
                                 <div key={r.id} onClick={() => setSelectedExistingId(r.id)} className={`p-3 border rounded-lg cursor-pointer ${selectedExistingId === r.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'}`}>
                                     <p className="font-bold text-sm">{getLocalizedTitle(r, i18n)}</p>
-                                    <p className="text-xs text-gray-500">{new Date(r.foundDate || r.lostDate).toLocaleDateString(currentLocale)}</p>
+                                    <p className="text-xs text-gray-500">{new Date(r.foundDate || r.dateFound || r.lostDate || r.dateLost).toLocaleDateString(currentLocale)}</p>
                                 </div>
                             ))}
                         </div>
