@@ -568,7 +568,7 @@ const FoundReportDetails = () => {
               )}
 
               {isUser && !isEditing && report.claimVerificationStatus !== "REJECTED" && (
-                <div className="p-4 bg-white rounded-2xl border border-blue-100 shadow-sm space-y-4 animate-in slide-in-from-top-2 relative overflow-hidden">
+                <div className="p-4 bg-white rounded-2xl border border-blue-100 shadow-sm space-y-4 animate-in slide-in-from-top-2 relative overflow-visible">
                   <div className="flex justify-between items-center pr-2">
                     <span className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4" /> {t('claim_verification_title', { format: 'uppercase' })}

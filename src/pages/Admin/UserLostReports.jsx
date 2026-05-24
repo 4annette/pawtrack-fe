@@ -97,7 +97,7 @@ const UserLostReports = () => {
         e.stopPropagation();
         if (!window.confirm(t('confirm_delete_report'))) return;
         try {
-            await api.delete(`/admin/reports/lost/${reportId}`);
+            await api.delete(`/lost-reports/${reportId}`);
             toast.success(t('report_deleted_success'));
             loadReports();
         } catch (error) { toast.error(t('delete_report_failed')); }

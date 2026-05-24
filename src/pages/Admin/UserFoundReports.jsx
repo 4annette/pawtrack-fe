@@ -169,7 +169,7 @@ const UserFoundReports = () => {
         e.stopPropagation();
         if (!window.confirm(t('confirm_delete_report'))) return;
         try {
-            await api.delete(`/admin/reports/found/${reportId}`);
+            await api.delete(`/found-reports/${reportId}`);
             toast.success(t('report_deleted_success'));
             loadReports();
         } catch (error) {
