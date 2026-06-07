@@ -256,14 +256,19 @@ const Announcements = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const formatBackendDate = (dateStr, isEndOfDay = false) => {
+        if (!dateStr) return null;
+        return isEndOfDay ? `${dateStr} 23:59:59` : `${dateStr} 00:00:00`;
+    };
+
     const loadAnnouncements = async () => {
         setLoading(true);
         try {
             const payload = {
                 search: filters.search || null,
                 type: filters.type.length > 0 ? filters.type : null,
-                dateAfter: filters.dateAfter ? new Date(filters.dateAfter).toISOString() : null,
-                dateBefore: filters.dateBefore ? new Date(filters.dateBefore).toISOString() : null,
+                dateAfter: formatBackendDate(filters.dateAfter),
+                dateBefore: formatBackendDate(filters.dateBefore, true),
                 organizationIds: filters.organizationId ? [parseInt(filters.organizationId)] : null,
                 latitude: userLocation ? userLocation.latitude : null,
                 longitude: userLocation ? userLocation.longitude : null,

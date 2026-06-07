@@ -129,7 +129,7 @@ const MatchModal = ({ notification, onClose, onChat }) => {
                                     <span className="text-sm font-bold text-emerald-900 truncate">
                                         {notification.fromUserName}
                                     </span>
-                                    <span className="text-sm font-black text-emerald-600">
+                                    <span className="text-sm font-black text-emerald-600 break-words whitespace-normal">
                                         {notification.fromUserPhone || foundReport?.creator?.phone || t('no_phone')}
                                     </span>
                                 </div>

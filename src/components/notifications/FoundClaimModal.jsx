@@ -130,8 +130,13 @@ const FoundClaimModal = ({ notification, onClose, onChat }) => {
                                     <span className="text-sm font-bold text-emerald-900 truncate">
                                         {notification.fromUserName || lostReport?.creator?.username || t('unknown')}
                                     </span>
+<<<<<<< HEAD
                                     <span className="text-sm font-black text-emerald-600">
                                         {notification.fromUserPhone || lostReport?.creator?.phone || t('no_phone')}
+=======
+                                    <span className="text-sm font-black text-emerald-600 break-words whitespace-normal">
+                                        {lostReport?.creator?.phone || t('no_phone')}
+>>>>>>> 6f4b2ceedf21fe5bb8b7bea37f7f44fe61547aad
                                     </span>
                                 </div>
                                 {lostReport?.creator && (
