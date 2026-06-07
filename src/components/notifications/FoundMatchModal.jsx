@@ -127,10 +127,10 @@ const FoundMatchModal = ({ notification, onClose, onChat }) => {
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-sm font-bold text-emerald-900 truncate">
-                                        {theirFoundReport?.creator?.username || t('unknown')}
+                                        {notification.fromUserName || theirFoundReport?.creator?.username || t('unknown')}
                                     </span>
                                     <span className="text-sm font-black text-emerald-600">
-                                        {theirFoundReport?.creator?.phone || t('no_phone')}
+                                        {notification.fromUserPhone || theirFoundReport?.creator?.phone || t('no_phone')}
                                     </span>
                                 </div>
                                 {theirFoundReport?.creator && (

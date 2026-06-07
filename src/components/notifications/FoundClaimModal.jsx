@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { X, Phone, Calendar, FileText, Check, AlertCircle, MapPin, Trash2, Send } from "lucide-react";
+import { X, Phone, Calendar, FileText, AlertCircle, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -82,8 +82,6 @@ const FoundClaimModal = ({ notification, onClose, onChat }) => {
         fetchData();
     }, [notification, onClose, t]);
 
-    if (!notification || loading) return null;
-
     const handleDisconnect = async () => {
         if (window.confirm(t('confirm_not_match'))) {
             try {
@@ -95,6 +93,8 @@ const FoundClaimModal = ({ notification, onClose, onChat }) => {
             }
         }
     };
+
+    if (!notification || loading) return null;
 
     return createPortal(
         <div
@@ -128,10 +128,10 @@ const FoundClaimModal = ({ notification, onClose, onChat }) => {
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-sm font-bold text-emerald-900 truncate">
-                                        {lostReport?.creator?.username || t('unknown')}
+                                        {notification.fromUserName || lostReport?.creator?.username || t('unknown')}
                                     </span>
                                     <span className="text-sm font-black text-emerald-600">
-                                        {lostReport?.creator?.phone || t('no_phone')}
+                                        {notification.fromUserPhone || lostReport?.creator?.phone || t('no_phone')}
                                     </span>
                                 </div>
                                 {lostReport?.creator && (

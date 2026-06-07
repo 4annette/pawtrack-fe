@@ -685,7 +685,8 @@ const resources = {
             "chat_you": "You",
             "chat_active_status": "ACTIVE CHAT",
             "chat_error_send": "Failed to send message",
-            "chat_input_placeholder": "Type a message..."
+            "chat_input_placeholder": "Type a message...",
+            "match_modal_finder_info": "Contact Finder",
         }
     },
     el: {
@@ -1573,7 +1574,8 @@ const resources = {
             "chat_you": "Εσείς",
             "chat_active_status": "ΕΝΕΡΓΗ ΣΥΝΟΜΙΛΙΑ",
             "chat_error_send": "Αποτυχία αποστολής μηνύματος",
-            "chat_input_placeholder": "Πληκτρολογήστε ένα μήνυμα..."
+            "chat_input_placeholder": "Πληκτρολογήστε ένα μήνυμα...",
+            "match_modal_finder_info": "ΕΠΙΚΟΙΝΩΝΙΣΤΕ ΜΕ ΤΟΝ ΧΡΗΣΤΗ ΠΟΥ ΒΡΗΚΕ ΤΟ ΙΔΙΟ ΚΑΤΟΙΚΙΔΙΟ ΜΕ ΕΣΑΣ",
         }
     }
 };
